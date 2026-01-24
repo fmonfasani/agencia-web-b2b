@@ -20,13 +20,17 @@ const Header = () => {
           </div>
 
           <nav className="hidden md:flex items-center gap-10">
-            {["Servicios", "Proceso", "Contacto"].map((item) => (
+            {[
+              { name: "Servicios", href: "/#servicios" },
+              { name: "Proceso", href: "/#proceso" },
+              { name: "Precios", href: "/pricing" },
+            ].map((item) => (
               <a
-                key={item}
+                key={item.name}
                 className="text-[13px] font-bold uppercase tracking-widest text-text-secondary hover:text-primary transition-colors"
-                href={`#${item.toLowerCase()}`}
+                href={item.href}
               >
-                {item}
+                {item.name}
               </a>
             ))}
           </nav>
@@ -58,14 +62,18 @@ const Header = () => {
             className="md:hidden bg-white border-b border-slate-100 overflow-hidden"
           >
             <div className="px-4 py-8 space-y-6">
-              {["Servicios", "Proceso", "Contacto"].map((item) => (
+              {[
+                { name: "Servicios", href: "/#servicios" },
+                { name: "Proceso", href: "/#proceso" },
+                { name: "Precios", href: "/pricing" },
+              ].map((item) => (
                 <a
-                  key={item}
+                  key={item.name}
                   className="block text-lg font-bold text-text-main"
-                  href={`#${item.toLowerCase()}`}
+                  href={item.href}
                   onClick={() => setIsOpen(false)}
                 >
-                  {item}
+                  {item.name}
                 </a>
               ))}
               <a
