@@ -22,6 +22,7 @@ export default function RootLayout({
     <html lang="es" className="scroll-smooth">
       <body
         className={`${manrope.variable} font-sans antialiased text-text-main bg-white`}
+        suppressHydrationWarning
       >
         {children}
       </body>
