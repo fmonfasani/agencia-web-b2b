@@ -32,3 +32,7 @@ Object.defineProperty(window, "matchMedia", {
     dispatchEvent: jest.fn(),
   })),
 });
+
+// Mock gtag globally
+global.window.gtag = jest.fn();
+global.window.dataLayer = [];
