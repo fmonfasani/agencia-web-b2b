@@ -1,5 +1,6 @@
 "use client";
 import { MessageCircle } from "lucide-react";
+import { trackWhatsAppClick } from "@/lib/analytics";
 
 interface WhatsAppButtonProps {
   phoneNumber?: string;
@@ -21,6 +22,7 @@ export default function WhatsAppButton({
       href={whatsappUrl}
       target="_blank"
       rel="noopener noreferrer"
+      onClick={() => trackWhatsAppClick()}
     >
       <MessageCircle size={28} />
       <span className="max-w-0 overflow-hidden group-hover:max-w-xs group-hover:ml-2 transition-all duration-300 font-bold whitespace-nowrap">
