@@ -32,7 +32,7 @@ const steps = [
 const Process = () => {
   return (
     <section
-      className="py-32 bg-surface technical-grid relative overflow-hidden"
+      className="section-padding bg-surface technical-grid relative overflow-hidden"
       id="proceso"
     >
       <div className="absolute inset-0 bg-gradient-to-b from-white via-transparent to-white pointer-events-none" />
@@ -52,7 +52,7 @@ const Process = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-text-secondary font-medium text-lg"
+            className="text-text-secondary font-medium text-lg text-balance"
           >
             Un flujo de trabajo riguroso diseñado para la previsibilidad y la
             excelencia.

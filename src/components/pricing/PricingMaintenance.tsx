@@ -12,7 +12,7 @@ import { motion } from "framer-motion";
 
 const PricingMaintenance = () => {
   return (
-    <section className="py-24 bg-surface technical-grid">
+    <section className="section-padding bg-surface technical-grid">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
           {/* Mantenimiento */}
@@ -37,7 +37,7 @@ const PricingMaintenance = () => {
                   className="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-100 shadow-sm"
                 >
                   <div className="size-10 rounded-lg bg-primary/5 flex items-center justify-center text-primary">
-                    <item.icon size={20} />
+                    <item.icon size={20} strokeWidth={2.5} />
                   </div>
                   <span className="text-sm font-bold text-text-main">
                     {item.title}
@@ -52,7 +52,7 @@ const PricingMaintenance = () => {
             initial={{ opacity: 0, x: 20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            className="p-10 rounded-[32px] bg-white border border-slate-100 shadow-premium"
+            className="p-10 rounded-3xl bg-white border border-slate-100 shadow-premium"
           >
             <h3 className="text-xl font-bold text-text-main mb-6">
               Claridad absoluta

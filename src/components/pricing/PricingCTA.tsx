@@ -5,19 +5,19 @@ import { motion } from "framer-motion";
 
 const PricingCTA = () => {
   return (
-    <section className="py-24 bg-white">
+    <section className="section-padding bg-white">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
-          className="bg-primary/5 border border-primary/10 rounded-[40px] p-12 md:p-20 relative overflow-hidden"
+          className="bg-primary/5 border border-primary/10 rounded-3xl p-12 md:p-20 relative overflow-hidden"
         >
           <div className="absolute top-0 right-0 p-8 opacity-10">
             <PhoneCall size={120} className="text-primary rotate-12" />
           </div>
 
-          <h2 className="text-3xl md:text-5xl font-extrabold text-text-main mb-6 tracking-tight relative z-10">
+          <h2 className="text-3xl md:text-5xl font-extrabold text-text-main mb-6 tracking-tight relative z-10 leading-tight">
             ¿No sabés qué plan te conviene?
           </h2>
           <p className="text-lg md:text-xl text-text-secondary font-medium mb-12 max-w-xl mx-auto relative z-10">

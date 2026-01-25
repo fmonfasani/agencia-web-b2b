@@ -41,7 +41,7 @@ const painPoints = [
 
 const PainPoints = () => {
   return (
-    <section className="py-32 bg-surface">
+    <section className="section-padding bg-surface">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto mb-20">
           <motion.h2
@@ -57,7 +57,7 @@ const PainPoints = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-text-secondary font-medium text-lg"
+            className="text-text-secondary font-medium text-lg text-balance"
           >
             Identificamos los cuellos de botella más comunes en sitios
             empresariales B2B.
@@ -73,10 +73,10 @@ const PainPoints = () => {
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
               whileHover={{ y: -5 }}
-              className="group bg-white p-8 rounded-2xl border border-slate-100 hover:border-slate-200 shadow-premium hover:shadow-premium-hover transition-all duration-300"
+              className="group bg-white p-8 rounded-3xl border border-slate-100 hover:border-slate-200 shadow-premium hover:shadow-premium-hover transition-all duration-300"
             >
               <div
-                className={`w-12 h-12 rounded-xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110 duration-300
+                className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110 duration-300
                 ${point.color === "red" ? "bg-red-50 text-red-500" : ""}
                 ${point.color === "orange" ? "bg-orange-50 text-orange-500" : ""}
                 ${point.color === "yellow" ? "bg-yellow-50 text-yellow-600" : ""}

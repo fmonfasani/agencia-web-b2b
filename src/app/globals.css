@@ -71,6 +71,14 @@
   .text-balance {
     text-wrap: balance;
   }
+
+  .section-padding {
+    @apply py-24 md:py-32;
+  }
+
+  .section-padding-sm {
+    @apply py-16 md:py-20;
+  }
 }
 
 html {

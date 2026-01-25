@@ -89,7 +89,7 @@ const Header = () => {
               href="#contacto"
               onClick={handleCTAClick}
             >
-              Agendar Llamada
+              Agendar llamada
             </a>
             <button
               className="md:hidden p-2 text-text-main"
@@ -133,7 +133,7 @@ const Header = () => {
                 href="#contacto"
                 onClick={handleCTAClick}
               >
-                Agendar Llamada
+                Agendar llamada
               </a>
             </div>
           </motion.div>

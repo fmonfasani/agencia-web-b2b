@@ -69,7 +69,7 @@ const itemVariants = {
 
 const Services = () => {
   return (
-    <section className="py-32 bg-white" id="servicios">
+    <section className="section-padding bg-white" id="servicios">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto mb-24">
           <motion.span
@@ -94,7 +94,7 @@ const Services = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
-            className="text-text-secondary font-medium text-lg"
+            className="text-text-secondary font-medium text-lg text-balance"
           >
             Desarrollamos infraestructura web que se alinea con tus objetivos de
             ventas B2B.
@@ -134,7 +134,7 @@ const Services = () => {
                   ${service.color === "purple" ? "bg-purple-50 text-purple-600" : ""}
                 `}
                 >
-                  <service.icon size={28} strokeWidth={1.5} />
+                  <service.icon size={28} strokeWidth={2} />
                 </div>
                 <h3 className="text-2xl font-bold text-text-main tracking-tight mb-4">
                   {service.title}

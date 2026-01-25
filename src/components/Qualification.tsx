@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 
 const Qualification = () => {
   return (
-    <section className="py-32 bg-white">
+    <section className="section-padding bg-white">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-24">
           <motion.div
@@ -30,6 +30,7 @@ const Qualification = () => {
                   <CheckCircle2
                     className="text-green-500 shrink-0 mt-0.5"
                     size={18}
+                    strokeWidth={2.5}
                   />
                   <span className="text-text-secondary text-[15px] font-medium leading-relaxed">
                     {item}
@@ -58,7 +59,11 @@ const Qualification = () => {
                 "No considerás que el diseño y la performance influyan en tus objetivos comerciales.",
               ].map((item, i) => (
                 <li key={i} className="flex gap-4">
-                  <XCircle className="text-red-400 shrink-0 mt-0.5" size={18} />
+                  <XCircle
+                    className="text-red-400 shrink-0 mt-0.5"
+                    size={18}
+                    strokeWidth={2.5}
+                  />
                   <span className="text-text-secondary text-[15px] font-medium leading-relaxed">
                     {item}
                   </span>

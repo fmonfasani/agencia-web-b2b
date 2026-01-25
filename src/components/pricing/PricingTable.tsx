@@ -55,9 +55,9 @@ const plans = [
 
 const PricingTable = () => {
   return (
-    <section className="py-20 bg-white">
+    <section className="section-padding bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch pt-12">
           {plans.map((plan, index) => (
             <motion.div
               key={plan.name}
@@ -65,7 +65,7 @@ const PricingTable = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
-              className={`flex flex-col p-8 rounded-[32px] border transition-all relative ${
+              className={`flex flex-col p-8 rounded-3xl border transition-all relative ${
                 plan.highlight
                   ? "border-primary/20 bg-primary/[0.02] shadow-premium-hover scale-[1.05] z-10"
                   : "border-slate-100 bg-white shadow-premium"
@@ -78,7 +78,7 @@ const PricingTable = () => {
               )}
 
               <div className="mb-8">
-                <h3 className="text-xl font-bold text-text-main mb-2">
+                <h3 className="text-xl font-bold text-text-main mb-2 tracking-tight">
                   {plan.name}
                 </h3>
                 <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-6">
