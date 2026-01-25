@@ -2,6 +2,7 @@
 import React from "react";
 import { ShieldCheck, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
+import { trackCTAClick } from "@/lib/analytics";
 
 const Hero = () => {
   return (
@@ -52,6 +53,7 @@ const Hero = () => {
               <a
                 className="w-full sm:w-auto inline-flex items-center justify-center h-14 px-10 rounded-xl bg-primary text-white font-bold text-lg hover:bg-primary-dark transition-all shadow-lg shadow-primary/20 group"
                 href="#contacto"
+                onClick={() => trackCTAClick("hero", "Agendar llamada")}
               >
                 Agendar llamada
                 <ArrowRight

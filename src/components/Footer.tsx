@@ -9,6 +9,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { trackFormSubmit } from "@/lib/analytics";
 
 const Footer = () => {
   const [status, setStatus] = useState<
@@ -34,6 +35,12 @@ const Footer = () => {
       if (response.ok) {
         setStatus("success");
         setFormData({ name: "", email: "", message: "" });
+
+        // Track successful form submission
+        trackFormSubmit("footer_contact_form", {
+          form_location: "footer",
+          user_name: formData.name,
+        });
       } else {
         setStatus("error");
       }

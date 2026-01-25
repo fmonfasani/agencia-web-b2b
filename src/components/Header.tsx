@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Code2, Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { trackCTAClick, trackNavigation } from "@/lib/analytics";
 
 const Header = () => {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -19,6 +20,9 @@ const Header = () => {
     e.preventDefault();
     setIsOpen(false);
 
+    // Track CTA click
+    trackCTAClick("header", "Agendar llamada");
+
     if (pathname === "/") {
       const contactSection = document.getElementById("contacto");
       contactSection?.scrollIntoView({ behavior: "smooth" });
@@ -29,10 +33,14 @@ const Header = () => {
 
   const handleNavigation = (
     href: string,
+    itemName: string,
     e: React.MouseEvent<HTMLAnchorElement>,
   ) => {
     e.preventDefault();
     setIsOpen(false);
+
+    // Track navigation click
+    trackNavigation(href, "header_nav");
 
     if (href.startsWith("/#")) {
       const elementId = href.replace("/#", "");
@@ -75,7 +83,7 @@ const Header = () => {
                       : "text-text-secondary hover:text-primary"
                   }`}
                   href={item.href}
-                  onClick={(e) => handleNavigation(item.href, e)}
+                  onClick={(e) => handleNavigation(item.href, item.name, e)}
                 >
                   {item.name}
                 </a>
@@ -122,7 +130,7 @@ const Header = () => {
                       isActive ? "text-primary" : "text-text-main"
                     }`}
                     href={item.href}
-                    onClick={(e) => handleNavigation(item.href, e)}
+                    onClick={(e) => handleNavigation(item.href, item.name, e)}
                   >
                     {item.name}
                   </a>

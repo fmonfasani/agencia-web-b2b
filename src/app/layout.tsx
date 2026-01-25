@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Manrope } from "next/font/google";
 import "./globals.css";
 import StructuredData from "@/components/StructuredData";
+import GoogleTagManager from "@/components/GoogleTagManager";
+import Analytics from "@/components/Analytics";
+import CookieConsent from "@/components/CookieConsent";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -45,12 +48,27 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className="scroll-smooth">
+      <head>
+        <GoogleTagManager />
+      </head>
       <body
         className={`${manrope.variable} font-sans antialiased text-text-main bg-white`}
         suppressHydrationWarning
       >
+        {/* GTM noscript fallback */}
+        <noscript>
+          <iframe
+            src={`https://www.googletagmanager.com/ns.html?id=${process.env.NEXT_PUBLIC_GTM_ID}`}
+            height="0"
+            width="0"
+            style={{ display: "none", visibility: "hidden" }}
+          />
+        </noscript>
+
         <StructuredData />
+        <Analytics />
         {children}
+        <CookieConsent />
       </body>
     </html>
   );

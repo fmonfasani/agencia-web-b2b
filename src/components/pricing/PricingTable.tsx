@@ -2,6 +2,7 @@
 import React from "react";
 import { Check, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
+import { trackPricingPlanClick } from "@/lib/analytics";
 
 const plans = [
   {
@@ -129,6 +130,7 @@ const PricingTable = () => {
 
               <a
                 href="#contacto"
+                onClick={() => trackPricingPlanClick(plan.name, plan.setup)}
                 className={`w-full py-4 rounded-xl font-bold text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
                   plan.highlight
                     ? "bg-primary text-white hover:bg-primary-dark shadow-xl shadow-primary/20"
