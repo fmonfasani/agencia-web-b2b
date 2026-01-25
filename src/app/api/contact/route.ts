@@ -1,31 +1,55 @@
 import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, email, message } = body;
+    const { name, email, message, company, budget } = body;
 
     // Validación básica
     if (!name || !email || !message) {
       return NextResponse.json(
-        { error: "Todos los campos son obligatorios" },
+        { error: "Todos los campos obligatorios son requeridos" },
         { status: 400 },
       );
     }
 
-    // Aquí iría la integración real (Resend, SendGrid, etc.)
-    // Por ahora simulamos éxito y logueamos en servidor
-    console.log("Nueva consulta recibida:", { name, email, message });
+    try {
+      // Guardar en Base de Datos
+      const lead = await prisma.lead.create({
+        data: {
+          name,
+          email,
+          message,
+          company: company || null,
+          budget: budget || null,
+          source: "contact_form",
+          status: "NEW", // Explicit default, though schema has it too
+        },
+      });
 
-    // Simulamos un leve retraso de red
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+      console.log("Nuevo lead creado:", lead.id);
 
-    return NextResponse.json(
-      { success: true, message: "Consulta enviada con éxito" },
-      { status: 200 },
-    );
+      // Aquí iría el envío de email (Resend/NodeMailer)
+      // await sendNotificationEmail(lead);
+
+      return NextResponse.json(
+        {
+          success: true,
+          message: "Consulta enviada con éxito",
+          leadId: lead.id,
+        },
+        { status: 200 },
+      );
+    } catch (dbError) {
+      console.error("Error de base de datos:", dbError);
+      return NextResponse.json(
+        { error: "Error al guardar tu consulta. Por favor intenta más tarde." },
+        { status: 503 }, // Service Unavailable
+      );
+    }
   } catch (error) {
-    console.error("Error en API de contacto:", error);
+    console.error("Error general en API:", error);
     return NextResponse.json(
       { error: "Hubo un error al procesar tu solicitud" },
       { status: 500 },

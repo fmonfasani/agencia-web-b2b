@@ -15,6 +15,7 @@ Documentos de auditoría, walkthroughs y reportes de sprints completados.
 
 - **[26-01-25_01-21_FCM_general-audit.md](./analysis/26-01-25_01-21_FCM_general-audit.md)** - Auditoría técnica completa del proyecto
 - **[26-01-25_01-21_FCM_sprint3-walkthrough.md](./analysis/26-01-25_01-21_FCM_sprint3-walkthrough.md)** - Walkthrough del Sprint 3 (Testing & QA)
+- **[26-01-25_12-20_FCM_improvement-analysis.md](./analysis/26-01-25_12-20_FCM_improvement-analysis.md)** - Análisis de mejoras estratégicas V2
 
 ### `implementation/` - Planes de Implementación
 
@@ -22,19 +23,28 @@ Planes detallados de implementación para cada sprint, con breakdown técnico.
 
 - **[26-01-25_01-21_FCM_sprint3-testing-plan.md](./implementation/26-01-25_01-21_FCM_sprint3-testing-plan.md)** - Plan de implementación del Sprint 3
 - **[26-01-25_01-21_FCM_sprint4-analytics-plan.md](./implementation/26-01-25_01-21_FCM_sprint4-analytics-plan.md)** - Plan de implementación del Sprint 4 (Analytics)
+- **[26-01-25_12-20_FCM_v2-implementation-plan.md](./implementation/26-01-25_12-20_FCM_v2-implementation-plan.md)** - Plan de cimientos para la V2 Product Evolution
 
 ### `proposal/` - Propuestas Técnicas
 
 Propuestas de nuevas features, arquitectura y expansiones del proyecto.
 
-- **[26-01-25_01-21_FCM_backend-expansion-proposal.md](./proposal/26-01-25_01-21_FCM_backend-expansion-proposal.md)** - Propuesta de expansión de backend con database, APIs y admin dashboard
+- **[26-01-25_01-21_FCM_backend-expansion-proposal.md](./proposal/26-01-25_01-21_FCM_backend-expansion-proposal.md)** - Propuesta de expansión de backend inicial
+- **[26-01-25_12-20_FCM_v2-evolution-proposal.md](./proposal/26-01-25_12-20_FCM_v2-evolution-proposal.md)** - Propuesta integral de Ecosistema Digital B2B
 
 ### `tasks/` - Task Breakdowns
 
 Desglose día a día de tareas por sprint, con tipo (backend/frontend/fullstack/devops) y fases.
 
-- **[26-01-25_01-21_FCM_task-checklist.md](./tasks/26-01-25_01-21_FCM_task-checklist.md)** - Checklist general de todos los sprints
+- **[26-01-25_01-21_FCM_task-checklist.md](./tasks/26-01-25_01-21_FCM_task-checklist.md)** - Checklist general (Sprints 0 a 3)
 - **[26-01-25_01-21_FCM_sprint4-daily-tasks.md](./tasks/26-01-25_01-21_FCM_sprint4-daily-tasks.md)** - Desglose diario del Sprint 4
+- **[26-01-25_12-20_FCM_v2-tasks.md](./tasks/26-01-25_12-20_FCM_v2-tasks.md)** - Checklist de tareas para la evolución V2
+
+---
+
+## 📈 Negocio y Estrategia
+
+- **[VISION_STRATEGY.md](./VISION_STRATEGY.md)** - Visión, Misión y Estrategia de la Agencia
 
 ---
 

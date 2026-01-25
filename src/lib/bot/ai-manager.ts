@@ -1,9 +1,11 @@
 import OpenAI from "openai";
 import { MessageContext } from "./redis-context";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const openai = process.env.OPENAI_API_KEY
+  ? new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    })
+  : null;
 
 const SYSTEM_PROMPT = `
 Eres el asistente inteligente de Agencia Web B2B (AgenciaWebB2B.com). 
@@ -33,6 +35,13 @@ export async function generateAIResponse(
   userMessage: string,
 ): Promise<string> {
   try {
+    if (!openai) {
+      console.warn(
+        "[AI Manager] OpenAI API Key missing. Returning dummy response.",
+      );
+      return "⚠️ [MODO DESARROLLO] La IA no está configurada. Por favor agrega OPENAI_API_KEY en .env.local para recibir respuestas inteligentes.";
+    }
+
     const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
       { role: "system", content: SYSTEM_PROMPT },
       ...history.map((msg) => ({
@@ -85,6 +94,8 @@ export async function extractLeadData(
       
       Responde SOLO el JSON purificado.
     `;
+
+    if (!openai) return null;
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",

@@ -18,6 +18,8 @@ const Footer = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    company: "",
+    budget: "",
     message: "",
   });
 
@@ -182,6 +184,78 @@ const Footer = () => {
                             className="w-full bg-white/5 border border-white/10 rounded-xl h-12 px-4 text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all"
                             placeholder="juan@empresa.com"
                           />
+                        </div>
+                        <div className="space-y-2">
+                          <label
+                            htmlFor="company"
+                            className="text-[11px] uppercase tracking-widest font-bold text-white/40 ml-1"
+                          >
+                            Empresa
+                          </label>
+                          <input
+                            id="company"
+                            type="text"
+                            value={formData.company}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                company: e.target.value,
+                              })
+                            }
+                            className="w-full bg-white/5 border border-white/10 rounded-xl h-12 px-4 text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all"
+                            placeholder="Nombre de tu empresa"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label
+                            htmlFor="budget"
+                            className="text-[11px] uppercase tracking-widest font-bold text-white/40 ml-1"
+                          >
+                            Presupuesto Estimado
+                          </label>
+                          <select
+                            id="budget"
+                            value={formData.budget}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                budget: e.target.value,
+                              })
+                            }
+                            className="w-full bg-white/5 border border-white/10 rounded-xl h-12 px-4 text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all text-white appearance-none"
+                            style={{ backgroundImage: "none" }}
+                          >
+                            <option
+                              value=""
+                              className="text-slate-900 bg-white"
+                            >
+                              Selecciona un rango
+                            </option>
+                            <option
+                              value="range_1"
+                              className="text-slate-900 bg-white"
+                            >
+                              &lt; $1,000 USD
+                            </option>
+                            <option
+                              value="range_2"
+                              className="text-slate-900 bg-white"
+                            >
+                              $1,000 - $3,000 USD
+                            </option>
+                            <option
+                              value="range_3"
+                              className="text-slate-900 bg-white"
+                            >
+                              $3,000 - $5,000 USD
+                            </option>
+                            <option
+                              value="range_4"
+                              className="text-slate-900 bg-white"
+                            >
+                              &gt; $5,000 USD
+                            </option>
+                          </select>
                         </div>
                       </div>
                       <div className="space-y-2">

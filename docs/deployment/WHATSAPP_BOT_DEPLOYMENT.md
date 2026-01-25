@@ -45,3 +45,14 @@ Si deseas que el bot cambie su comportamiento o califique leads de forma distint
 
 > [!TIP]
 > **Handoff Humano:** Actualmente, el bot notifica a la consola. Para escalar, puedes conectar el `notification-manager.ts` con un webhook de Slack o un servicio de envío de Emails.
+
+## Local Development & Troubleshooting
+
+### Lazy Initialization (Modo Fallback)
+
+Para facilitar el desarrollo del frontend sin necesidad de configurar todas las credenciales externas, el bot cuenta con un modo "tolerante a fallos":
+
+- **Si falta `UPSTASH_REDIS_REST_URL`**: La persistencia de conversaciones se desactiva. El bot tratará cada mensaje como nuevo y no guardará contexto.
+- **Si falta `OPENAI_API_KEY`**: El bot responderá con un mensaje por defecto indicando que está en modo desarrollo en lugar de crashear.
+
+Esto permite levantar la aplicación con `npm run dev` incluso si el archivo `.env.local` está incompleto o vacío.
