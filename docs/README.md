@@ -1,58 +1,111 @@
 # Documentación del Proyecto - Agencia Web B2B
 
-Esta carpeta contiene toda la documentación de planificación, análisis y seguimiento del desarrollo del sitio web.
+**Última actualización:** 26-01-25 01:21 AM (ART)  
+**Mantenido por:** Fede (FCM)
 
-## Archivos
+Esta carpeta contiene toda la documentación técnica, planes y análisis del proyecto organizados por tipo.
 
-### Planificación y Seguimiento
+---
 
-- **[task.md](./task.md)** - Lista de tareas (checklist) de todos los sprints del proyecto
-- **[implementation_plan.md](./implementation_plan.md)** - Plan detallado del Sprint 3 (Testing & QA)
+## 📁 Estructura de Carpetas
 
-### Análisis Inicial
+### `analysis/` - Análisis Técnicos
 
-- **[auditoria_general.md](./auditoria_general.md)** - Auditoría completa del código base inicial
-- **[plan_implementacion.md](./plan_implementacion.md)** - Plan de implementación original de mejoras
-- **[tareas.md](./tareas.md)** - Desglose de tareas priorizadas
+Documentos de auditoría, walkthroughs y reportes de sprints completados.
 
-## Sprints Completados
+- **[26-01-25_01-21_FCM_general-audit.md](./analysis/26-01-25_01-21_FCM_general-audit.md)** - Auditoría técnica completa del proyecto
+- **[26-01-25_01-21_FCM_sprint3-walkthrough.md](./analysis/26-01-25_01-21_FCM_sprint3-walkthrough.md)** - Walkthrough del Sprint 3 (Testing & QA)
 
-### ✅ Sprint P0: Hotfix Crítico
+### `implementation/` - Planes de Implementación
 
-- Logo clickeable
-- Botón WhatsApp funcional
-- Navegación inteligente
-- Hash links multi-página
+Planes detallados de implementación para cada sprint, con breakdown técnico.
 
-### ✅ Sprint 1: Foundation & SEO
+- **[26-01-25_01-21_FCM_sprint3-testing-plan.md](./implementation/26-01-25_01-21_FCM_sprint3-testing-plan.md)** - Plan de implementación del Sprint 3
+- **[26-01-25_01-21_FCM_sprint4-analytics-plan.md](./implementation/26-01-25_01-21_FCM_sprint4-analytics-plan.md)** - Plan de implementación del Sprint 4 (Analytics)
 
-- Metadata por página
-- OpenGraph & Twitter Cards
-- Sitemap & Robots.txt
-- Structured Data (JSON-LD)
-- API de contacto
-- Mejoras de accesibilidad
+### `proposal/` - Propuestas Técnicas
 
-### ✅ Sprint 2: UX & Conversión
+Propuestas de nuevas features, arquitectura y expansiones del proyecto.
 
-- Sistema de spacing unificado
-- Tokens de diseño centralizados
-- Loading states
-- Página 404 personalizada
-- Optimizaciones visuales
+- **[26-01-25_01-21_FCM_backend-expansion-proposal.md](./proposal/26-01-25_01-21_FCM_backend-expansion-proposal.md)** - Propuesta de expansión de backend con database, APIs y admin dashboard
 
-### 🔧 Sprint 3: Testing & QA (En planificación)
+### `tasks/` - Task Breakdowns
 
-- Jest + React Testing Library
-- Playwright E2E
-- Husky pre-commit hooks
-- GitHub Actions CI/CD
+Desglose día a día de tareas por sprint, con tipo (backend/frontend/fullstack/devops) y fases.
 
-## Stack Tecnológico
+- **[26-01-25_01-21_FCM_task-checklist.md](./tasks/26-01-25_01-21_FCM_task-checklist.md)** - Checklist general de todos los sprints
+- **[26-01-25_01-21_FCM_sprint4-daily-tasks.md](./tasks/26-01-25_01-21_FCM_sprint4-daily-tasks.md)** - Desglose diario del Sprint 4
 
-- **Framework:** Next.js 15
-- **Styling:** TailwindCSS v4
-- **Animaciones:** Framer Motion
-- **Iconos:** Lucide React
-- **Lenguaje:** TypeScript
-- **Testing:** Jest, Playwright (planificado)
+---
+
+## 📋 Convención de Nombres
+
+Todos los documentos siguen el formato:
+
+```
+YY-MM-DD_HH-MM_INITIALS_document-name.md
+```
+
+**Ejemplo:**
+
+```
+26-01-25_01-21_FCM_sprint4-analytics-plan.md
+```
+
+Donde:
+
+- `26-01-25` - Fecha (año-mes-día)
+- `01-21` - Hora (HH-MM en formato 24h)
+- `FCM` - Iniciales del solicitante (Fede)
+- `sprint4-analytics-plan` - Nombre descriptivo del documento
+
+---
+
+## 🗂️ Documentos Históricos (Legacy)
+
+Documentos previos a la reorganización (sin formato de nombres estándar):
+
+- `auditoria_general.md` - Primera auditoría (legacy)
+- `plan_implementacion.md` - Plan original (legacy)
+- `tareas.md` - Tareas iniciales (legacy)
+
+---
+
+## 📊 Estado del Proyecto
+
+### Sprints Completados
+
+| Sprint        | Estado        | Documentación                                                                        |
+| ------------- | ------------- | ------------------------------------------------------------------------------------ | -------------- | ------------- | ------------------ |
+| **Sprint P0** | ✅ Completado | Ver task checklist                                                                   |
+| **Sprint 1**  | ✅ Completado | Ver task checklist                                                                   | - **Sprint 2** | ✅ Completado | Ver task checklist |
+| **Sprint 3**  | ✅ Completado | [Walkthrough](./analysis/26-01-25_01-21_FCM_sprint3-walkthrough.md)                  |
+| **Sprint 4**  | 📋 Planeado   | [Implementation Plan](./implementation/26-01-25_01-21_FCM_sprint4-analytics-plan.md) |
+
+---
+
+## 🎯 Próximos Pasos
+
+1. **Sprint 4: Analytics & Conversion** - 7 días
+   - Google Analytics 4
+   - Conversion tracking
+   - E2E tests in CI
+   - Lighthouse CI
+
+2. **Backend Expansion** - 3 semanas
+   - Database setup (PostgreSQL)
+   - Lead management API
+   - Newsletter system
+   - Admin dashboard
+
+---
+
+## 📞 Contact
+
+**Project Owner:** Fede (FCM)  
+**Repository:** [github.com/fmonfasani/agencia-web-b2b](https://github.com/fmonfasani/agencia-web-b2b)  
+**Tech Stack:** Next.js 15 + TypeScript + TailwindCSS v4
+
+---
+
+**Última actualización:** 26 de Enero, 2026 - 01:21 AM (ART)
