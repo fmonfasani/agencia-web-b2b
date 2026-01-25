@@ -10,7 +10,7 @@
 
 ### 1. Preparación de Infraestructura
 
-- [ ] **Configurar Proyecto en Vercel**
+- [x] **Configurar Proyecto en Vercel**
   - Conectar repositorio GitHub `fmonfasani/agencia-web-b2b`.
   - Configurar Root Directory (si aplica, por defecto `./`).
 - [ ] **Provisionar Base de Datos (Postgres)**
@@ -30,7 +30,8 @@
 ### 3. Build & CI/CD
 
 - [x] **Optimización de Build Script** (Realizado en pre-sprint: `prisma generate && next build`).
-- [ ] **Ejecución de Primer Despliegue**
+- [x] **Ejecución de Primer Despliegue**
+  - Estado: 🔴 Falló por falta de Variables de Entorno.
   - Verificar logs de Build.
   - Verificar logs de Runtime (Serverless Functions).
 - [ ] **Migración de Base de Datos**
