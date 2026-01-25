@@ -62,8 +62,8 @@ export default function CookieConsent() {
                 <p className="text-sm text-text-secondary leading-relaxed">
                   Utilizamos cookies para mejorar tu experiencia, analizar el
                   tráfico del sitio y personalizar el contenido. Al hacer clic
-                  en "Aceptar", aceptás el uso de todas las cookies. Podés leer
-                  más en nuestra{" "}
+                  en &quot;Aceptar&quot;, aceptás el uso de todas las cookies.
+                  Podés leer más en nuestra{" "}
                   <a
                     href="/privacy"
                     className="text-primary underline hover:text-primary-dark"

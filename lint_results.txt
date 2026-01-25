@@ -1,0 +1,71 @@
+
+> agencia-web-b2b@0.1.0 lint
+> eslint
+
+
+F:\Software Developer\Porfolio\agencia-web-b2b\src\app\admin\dashboard\page.tsx
+   3:3   warning  'Table' is defined but never used        @typescript-eslint/no-unused-vars
+   4:3   warning  'TableBody' is defined but never used    @typescript-eslint/no-unused-vars
+   5:3   warning  'TableCell' is defined but never used    @typescript-eslint/no-unused-vars
+   6:3   warning  'TableHead' is defined but never used    @typescript-eslint/no-unused-vars
+   7:3   warning  'TableHeader' is defined but never used  @typescript-eslint/no-unused-vars
+   8:3   warning  'TableRow' is defined but never used     @typescript-eslint/no-unused-vars
+  10:10  warning  'Badge' is defined but never used        @typescript-eslint/no-unused-vars
+  11:10  warning  'formatDate' is defined but never used   @typescript-eslint/no-unused-vars
+
+F:\Software Developer\Porfolio\agencia-web-b2b\src\components\CookieConsent.tsx
+  65:22  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  65:30  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+F:\Software Developer\Porfolio\agencia-web-b2b\src\components\Header.tsx
+  52:9  error  Error: This value cannot be modified
+
+Modifying a variable defined outside a component or hook is not allowed. Consider using an effect.
+
+F:\Software Developer\Porfolio\agencia-web-b2b\src\components\Header.tsx:52:9
+  50 |         element?.scrollIntoView({ behavior: "smooth" });
+  51 |       } else {
+> 52 |         window.location.href = href;
+     |         ^^^^^^^^^^^^^^^ value cannot be modified
+  53 |       }
+  54 |     } else {
+  55 |       window.location.href = href;  react-hooks/immutability
+  55:7  error  Error: This value cannot be modified
+
+Modifying a variable defined outside a component or hook is not allowed. Consider using an effect.
+
+F:\Software Developer\Porfolio\agencia-web-b2b\src\components\Header.tsx:55:7
+  53 |       }
+  54 |     } else {
+> 55 |       window.location.href = href;
+     |       ^^^^^^^^^^^^^^^ value cannot be modified
+  56 |     }
+  57 |   };
+  58 |                                                                                                      react-hooks/immutability
+
+F:\Software Developer\Porfolio\agencia-web-b2b\src\components\__tests__\Footer.test.tsx
+   9:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  10:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  11:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  12:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  14:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\Software Developer\Porfolio\agencia-web-b2b\src\components\__tests__\Header.test.tsx
+  11:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  12:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  13:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  14:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  16:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\Software Developer\Porfolio\agencia-web-b2b\src\components\pricing\PricingMaintenance.tsx
+  9:3  warning  'ArrowRight' is defined but never used  @typescript-eslint/no-unused-vars
+
+F:\Software Developer\Porfolio\agencia-web-b2b\src\lib\analytics.ts
+   17:31  error    Unexpected any. Specify a different type                        @typescript-eslint/no-explicit-any
+   19:17  error    Unexpected any. Specify a different type                        @typescript-eslint/no-explicit-any
+   28:32  error    Unexpected any. Specify a different type                        @typescript-eslint/no-explicit-any
+   53:35  error    Unexpected any. Specify a different type                        @typescript-eslint/no-explicit-any
+  109:1   warning  Assign object to a variable before exporting as module default  import/no-anonymous-default-export
+
+✖ 28 problems (18 errors, 10 warnings)
+

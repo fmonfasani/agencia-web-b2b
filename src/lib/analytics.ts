@@ -14,9 +14,9 @@ declare global {
     gtag?: (
       command: string,
       targetId: string,
-      config?: Record<string, any>,
+      config?: Record<string, unknown>,
     ) => void;
-    dataLayer?: any[];
+    dataLayer?: unknown[];
   }
 }
 
@@ -25,7 +25,7 @@ declare global {
  */
 export const trackEvent = (
   eventName: string,
-  eventParams?: Record<string, any>,
+  eventParams?: Record<string, unknown>,
 ) => {
   if (typeof window !== "undefined" && window.gtag) {
     window.gtag("event", eventName, eventParams);
@@ -50,7 +50,7 @@ export const trackPageView = (url: string) => {
  */
 export const trackFormSubmit = (
   formName: string,
-  additionalData?: Record<string, any>,
+  additionalData?: Record<string, unknown>,
 ) => {
   trackEvent("form_submit", {
     form_name: formName,

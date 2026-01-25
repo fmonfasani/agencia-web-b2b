@@ -27,7 +27,7 @@ const Header = () => {
       const contactSection = document.getElementById("contacto");
       contactSection?.scrollIntoView({ behavior: "smooth" });
     } else {
-      window.location.href = "/#contacto";
+      window.location.assign("/#contacto");
     }
   };
 
@@ -49,10 +49,10 @@ const Header = () => {
         const element = document.getElementById(elementId);
         element?.scrollIntoView({ behavior: "smooth" });
       } else {
-        window.location.href = href;
+        window.location.assign(href);
       }
     } else {
-      window.location.href = href;
+      window.location.assign(href);
     }
   };
 
