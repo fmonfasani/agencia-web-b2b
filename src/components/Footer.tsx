@@ -36,7 +36,13 @@ const Footer = () => {
 
       if (response.ok) {
         setStatus("success");
-        setFormData({ name: "", email: "", message: "" });
+        setFormData({
+          name: "",
+          email: "",
+          company: "",
+          budget: "",
+          message: "",
+        });
 
         // Track successful form submission
         trackFormSubmit("footer_contact_form", {
