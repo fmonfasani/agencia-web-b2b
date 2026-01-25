@@ -43,6 +43,7 @@ Proponemos una arquitectura **Serverless / Managed** para reducir el mantenimien
     - _Justificación_: Escalado automático y sleeping en tiers gratuitos/bajos costos.
 3.  **Redis**: **Upstash** (Vía integración Vercel KV o directo).
     - _Uso_: Caching de respuestas de IA, Rate Limiting para formularios/chats.
+    - _Adaptación_: Se implementó `Lazy Initialization` en `redis-context.ts` para evitar fallos de build durante la generación estática.
 4.  **Dominio**: Configuración de DNS en Vercel apuntando al dominio de la agencia.
 
 ### Flujo de CI/CD:
@@ -80,6 +81,14 @@ Proponemos una arquitectura **Serverless / Managed** para reducir el mantenimien
     - Opción A: Comando personalizado `prisma migrate deploy && next build`.
     - Opción B: Correr migraciones manualmente o vía GitHub Action separada (Más seguro).
     - _Recomendación_: Opción A para empezar.
+
+### Fase 4: Adaptación para Supabase (Específico)
+
+Dada la integración nativa de Supabase en Vercel, se realizaron cambios en `schema.prisma`:
+
+- Uso de `POSTGRES_PRISMA_URL` para connection pooling.
+- Uso de `POSTGRES_URL_NON_POOLING` para migraciones directas.
+- Esto elimina el error de "Missing DATABASE_URL" en el build pipeline.
 
 ---
 
