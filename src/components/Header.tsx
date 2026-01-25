@@ -62,16 +62,25 @@ const Header = () => {
           </Link>
 
           <nav className="hidden md:flex items-center gap-10">
-            {navItems.map((item) => (
-              <a
-                key={item.name}
-                className="text-[13px] font-bold uppercase tracking-widest text-text-secondary hover:text-primary transition-colors"
-                href={item.href}
-                onClick={(e) => handleNavigation(item.href, e)}
-              >
-                {item.name}
-              </a>
-            ))}
+            {navItems.map((item) => {
+              const isActive =
+                pathname === item.href ||
+                (pathname === "/" && item.href.startsWith("/#"));
+              return (
+                <a
+                  key={item.name}
+                  className={`text-[13px] font-bold uppercase tracking-widest transition-colors ${
+                    isActive
+                      ? "text-primary"
+                      : "text-text-secondary hover:text-primary"
+                  }`}
+                  href={item.href}
+                  onClick={(e) => handleNavigation(item.href, e)}
+                >
+                  {item.name}
+                </a>
+              );
+            })}
           </nav>
 
           <div className="flex items-center gap-6">
@@ -102,16 +111,23 @@ const Header = () => {
             className="md:hidden bg-white border-b border-slate-100 overflow-hidden"
           >
             <div className="px-4 py-8 space-y-6">
-              {navItems.map((item) => (
-                <a
-                  key={item.name}
-                  className="block text-lg font-bold text-text-main"
-                  href={item.href}
-                  onClick={(e) => handleNavigation(item.href, e)}
-                >
-                  {item.name}
-                </a>
-              ))}
+              {navItems.map((item) => {
+                const isActive =
+                  pathname === item.href ||
+                  (pathname === "/" && item.href.startsWith("/#"));
+                return (
+                  <a
+                    key={item.name}
+                    className={`block text-lg font-bold ${
+                      isActive ? "text-primary" : "text-text-main"
+                    }`}
+                    href={item.href}
+                    onClick={(e) => handleNavigation(item.href, e)}
+                  >
+                    {item.name}
+                  </a>
+                );
+              })}
               <a
                 className="block w-full text-center bg-primary text-white py-4 rounded-xl font-bold"
                 href="#contacto"

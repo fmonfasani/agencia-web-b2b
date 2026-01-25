@@ -97,6 +97,7 @@ const Hero = () => {
                   viewBox="0 0 400 400"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true"
                 >
                   {/* Grid Lines */}
                   {[...Array(10)].map((_, i) => (

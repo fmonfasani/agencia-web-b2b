@@ -1,9 +1,48 @@
 "use client";
-import React from "react";
-import { Code2, ArrowUpRight, Send, Mail, MapPin, Phone } from "lucide-react";
-import { motion } from "framer-motion";
+import React, { useState } from "react";
+import {
+  Code2,
+  ArrowUpRight,
+  Send,
+  Mail,
+  MapPin,
+  CheckCircle2,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const Footer = () => {
+  const [status, setStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    message: "",
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus("loading");
+
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        setStatus("success");
+        setFormData({ name: "", email: "", message: "" });
+      } else {
+        setStatus("error");
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      setStatus("error");
+    }
+  };
+
   return (
     <footer
       className="bg-[#0a0a0b] text-white pt-32 pb-16 relative overflow-hidden"
@@ -53,52 +92,133 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Quick Contact Form (Simplified) */}
+          {/* Quick Contact Form */}
           <div className="lg:col-span-6">
-            <div className="bg-white/[0.03] border border-white/10 p-10 rounded-[32px] backdrop-blur-md">
-              <h3 className="text-xl font-bold mb-8 flex items-center gap-2">
-                Iniciemos un proyecto
-                <ArrowUpRight className="text-primary" size={20} />
-              </h3>
+            <div className="bg-white/[0.03] border border-white/10 p-10 rounded-[32px] backdrop-blur-md relative overflow-hidden h-full flex flex-col justify-center">
+              <AnimatePresence mode="wait">
+                {status === "success" ? (
+                  <motion.div
+                    key="success"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    className="text-center py-10"
+                  >
+                    <div className="size-16 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <CheckCircle2 size={32} />
+                    </div>
+                    <h3 className="text-2xl font-bold mb-3">
+                      ¡Consulta enviada!
+                    </h3>
+                    <p className="text-slate-400 text-sm mb-8">
+                      Te contactaremos en menos de 24 horas para agendar tu
+                      llamada.
+                    </p>
+                    <button
+                      onClick={() => setStatus("idle")}
+                      className="text-primary text-sm font-bold uppercase tracking-widest hover:underline"
+                    >
+                      Enviar otro mensaje
+                    </button>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="form"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                  >
+                    <h3 className="text-xl font-bold mb-8 flex items-center gap-2">
+                      Iniciemos un proyecto
+                      <ArrowUpRight className="text-primary" size={20} />
+                    </h3>
 
-              <form className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-[11px] uppercase tracking-widest font-bold text-white/40 ml-1">
-                      Nombre Colaborador
-                    </label>
-                    <input
-                      type="text"
-                      className="w-full bg-white/5 border border-white/10 rounded-xl h-12 px-4 text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all"
-                      placeholder="Ej. Juan Perez"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[11px] uppercase tracking-widest font-bold text-white/40 ml-1">
-                      Email Corporativo
-                    </label>
-                    <input
-                      type="email"
-                      className="w-full bg-white/5 border border-white/10 rounded-xl h-12 px-4 text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all"
-                      placeholder="juan@empresa.com"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[11px] uppercase tracking-widest font-bold text-white/40 ml-1">
-                    Mensaje
-                  </label>
-                  <textarea
-                    rows={4}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all resize-none"
-                    placeholder="¿Cómo podemos ayudarte?"
-                  />
-                </div>
-                <button className="w-full bg-primary hover:bg-primary-dark text-white h-14 rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-sm uppercase tracking-widest">
-                  Enviar consulta
-                  <Send size={16} />
-                </button>
-              </form>
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <label
+                            htmlFor="name"
+                            className="text-[11px] uppercase tracking-widest font-bold text-white/40 ml-1"
+                          >
+                            Nombre Colaborador
+                          </label>
+                          <input
+                            id="name"
+                            type="text"
+                            required
+                            value={formData.name}
+                            onChange={(e) =>
+                              setFormData({ ...formData, name: e.target.value })
+                            }
+                            className="w-full bg-white/5 border border-white/10 rounded-xl h-12 px-4 text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all"
+                            placeholder="Ej. Juan Perez"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label
+                            htmlFor="email"
+                            className="text-[11px] uppercase tracking-widest font-bold text-white/40 ml-1"
+                          >
+                            Email Corporativo
+                          </label>
+                          <input
+                            id="email"
+                            type="email"
+                            required
+                            value={formData.email}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                email: e.target.value,
+                              })
+                            }
+                            className="w-full bg-white/5 border border-white/10 rounded-xl h-12 px-4 text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all"
+                            placeholder="juan@empresa.com"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label
+                          htmlFor="message"
+                          className="text-[11px] uppercase tracking-widest font-bold text-white/40 ml-1"
+                        >
+                          Mensaje
+                        </label>
+                        <textarea
+                          id="message"
+                          rows={4}
+                          required
+                          value={formData.message}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              message: e.target.value,
+                            })
+                          }
+                          className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all resize-none"
+                          placeholder="¿Cómo podemos ayudarte?"
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={status === "loading"}
+                        className="w-full bg-primary hover:bg-primary-dark disabled:opacity-50 text-white h-14 rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-sm uppercase tracking-widest"
+                      >
+                        {status === "loading"
+                          ? "Enviando..."
+                          : "Enviar consulta"}
+                        <Send size={16} />
+                      </button>
+                      {status === "error" && (
+                        <p className="text-red-400 text-xs text-center mt-4">
+                          Hubo un error. Por favor, reintenta o escribinos por
+                          WhatsApp.
+                        </p>
+                      )}
+                    </form>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </div>

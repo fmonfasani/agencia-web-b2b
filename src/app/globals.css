@@ -10,7 +10,7 @@
   --color-surface: #f9fafb;
   --color-surface-hover: #f3f4f6;
   --color-text-main: #0f172a;
-  --color-text-secondary: #64748b;
+  --color-text-secondary: #475569;
   --color-border-subtle: #f1f5f9;
 
   --radius-lg: 0.5rem;
@@ -33,6 +33,10 @@
 @layer base {
   body {
     @apply bg-white text-text-main selection:bg-primary/10 selection:text-primary;
+  }
+
+  *:focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2;
   }
 }
 
