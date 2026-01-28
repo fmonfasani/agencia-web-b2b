@@ -96,6 +96,7 @@
     "description": "Especialistas en desarrollo web para empresas de servicios B2B. Sitios de alto rendimiento que convierten visitantes en leads calificados."
   },
   "Process": {
+    "chip": "Proceso",
     "title": "Nuestra Metodología",
     "subtitle": "Un flujo de trabajo riguroso diseñado para la previsibilidad y la excelencia.",
     "steps": {

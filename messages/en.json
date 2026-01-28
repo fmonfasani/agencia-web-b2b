@@ -96,6 +96,7 @@
     "description": "Specialists in web development for B2B service companies. High-performance sites that turn visitors into qualified leads."
   },
   "Process": {
+    "chip": "Process",
     "title": "Our Methodology",
     "subtitle": "A rigorous workflow designed for predictability and excellence.",
     "steps": {
