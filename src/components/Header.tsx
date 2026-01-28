@@ -2,7 +2,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Code2, Menu, X } from "lucide-react";
+import { Code2, Menu, X, Languages } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { trackCTAClick, trackNavigation } from "@/lib/analytics";
 
@@ -57,7 +57,7 @@ const Header = () => {
   };
 
   return (
-    <header className="sticky top-0 z-[100] w-full bg-white/80 backdrop-blur-xl border-b border-slate-100/50">
+    <header className="sticky top-0 z-100 w-full bg-white/80 backdrop-blur-xl border-b border-slate-100/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           <Link href="/" className="flex items-center gap-3">
@@ -77,11 +77,10 @@ const Header = () => {
               return (
                 <a
                   key={item.name}
-                  className={`text-[13px] font-bold uppercase tracking-widest transition-colors ${
-                    isActive
-                      ? "text-primary"
-                      : "text-text-secondary hover:text-primary"
-                  }`}
+                  className={`text-[13px] font-bold uppercase tracking-widest transition-colors ${isActive
+                    ? "text-primary"
+                    : "text-text-secondary hover:text-primary"
+                    }`}
                   href={item.href}
                   onClick={(e) => handleNavigation(item.href, item.name, e)}
                 >
@@ -92,6 +91,12 @@ const Header = () => {
           </nav>
 
           <div className="flex items-center gap-6">
+            <button
+              className="flex items-center justify-center w-10 h-10 rounded-full text-text-secondary hover:text-primary hover:bg-slate-50 transition-all"
+              aria-label="Cambiar idioma"
+            >
+              <Languages size={20} />
+            </button>
             <a
               className="hidden md:flex bg-text-main hover:bg-primary text-white text-[12px] font-bold uppercase tracking-widest px-6 py-3 rounded-full transition-all duration-300 shadow-xl shadow-slate-200"
               href="#contacto"
@@ -126,9 +131,8 @@ const Header = () => {
                 return (
                   <a
                     key={item.name}
-                    className={`block text-lg font-bold ${
-                      isActive ? "text-primary" : "text-text-main"
-                    }`}
+                    className={`block text-lg font-bold ${isActive ? "text-primary" : "text-text-main"
+                      }`}
                     href={item.href}
                     onClick={(e) => handleNavigation(item.href, item.name, e)}
                   >
