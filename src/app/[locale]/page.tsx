@@ -9,13 +9,30 @@ import Qualification from "@/components/Qualification";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 
-export const metadata: Metadata = {
-  title: "Agencia Web | Performance B2B",
-  description:
-    "Especialistas en desarrollo web para empresas de servicios B2B. Sitios de alto rendimiento que convierten visitantes en leads calificados.",
-};
+import { getTranslations } from 'next-intl/server';
 
-export default function Home() {
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'Metadata' });
+
+  return {
+    title: t('title'),
+    description: t('description')
+  };
+}
+
+import { setRequestLocale } from "next-intl/server";
+
+export default async function Home({
+  params
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+
+  // Enable static rendering
+  setRequestLocale(locale);
+
   return (
     <main className="min-h-screen">
       <Header />

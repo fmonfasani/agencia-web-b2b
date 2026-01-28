@@ -1,0 +1,264 @@
+{
+  "Header": {
+    "nav": {
+      "services": "Services",
+      "process": "Process",
+      "pricing": "Pricing",
+      "cta": "Book a Call"
+    }
+  },
+  "HomePage": {
+    "title": "B2B Web Agency"
+  },
+  "Hero": {
+    "badge": "Performance-Driven B2B",
+    "titleStart": "Turn your website into a",
+    "titleHighlight": "lead machine",
+    "titleEnd": "",
+    "description": "We build high-performance websites specialized for B2B services. Fast delivery, direct support, and total focus on conversions.",
+    "cta": "Book a Call",
+    "features": {
+      "delivery": "7-14 Days",
+      "legacy": "Zero Legacy",
+      "support": "Senior Support"
+    },
+    "chart": {
+      "leads": "LEADS",
+      "upload": "UPLOAD 0.2s"
+    }
+  },
+  "PainPoints": {
+    "title": "Is your current website costing you real opportunities?",
+    "subtitle": "We identify the most common bottlenecks in B2B enterprise sites.",
+    "cards": {
+      "slow": {
+        "title": "Slow Loading",
+        "description": "53% of users leave if it takes more than 3s. Don't give away clients."
+      },
+      "sales": {
+        "title": "Your site doesn't convert",
+        "description": "Pretty designs that don't convert are a cost, not an investment."
+      },
+      "security": {
+        "title": "Security Risks",
+        "description": "Vulnerable sites scare away leads and damage your corporate reputation."
+      },
+      "outdated": {
+        "title": "Outdated Presence",
+        "description": "If your site looks old, clients assume your processes are too."
+      }
+    }
+  },
+  "Services": {
+    "label": "Capabilities",
+    "title": "Technical Focus. Commercial Results.",
+    "subtitle": "We develop web infrastructure aligned with your B2B sales goals.",
+    "cards": {
+      "landing": {
+        "title": "Landing Performance",
+        "description": "Designed for high-investment ad campaigns and qualified lead capture.",
+        "features": {
+          "0": "Conversion Rate Optimization (CRO)",
+          "1": "Low latency Cloud Infrastructure",
+          "2": "Native integration with Hubspot/Salesforce",
+          "3": "Direct response copywriting"
+        },
+        "cta": "Check Plan"
+      },
+      "corporate": {
+        "title": "B2B Corporate Site",
+        "description": "Robust digital presence for companies demanding authority and technical SEO.",
+        "features": {
+          "0": "Architecture up to 8 key sections",
+          "1": "Headless CMS",
+          "2": "Core Web Vitals SEO Optimization",
+          "3": "Priority post-launch support",
+          "4": "Custom metric dashboards"
+        },
+        "cta": "Book a Call",
+        "tag": "Recommended for Enterprise"
+      },
+      "scale": {
+        "title": "Management & Scale",
+        "description": "Technology partner for maintenance, security, and continuous optimization.",
+        "features": {
+          "0": "24/7 monitoring and proactive security",
+          "1": "Daily immutable backups",
+          "2": "Zero-downtime software updates",
+          "3": "Development hours for evolution"
+        },
+        "cta": "Learn More"
+      }
+    }
+  },
+  "Metadata": {
+    "title": "Web Agency | B2B Performance",
+    "description": "Specialists in web development for B2B service companies. High-performance sites that turn visitors into qualified leads."
+  },
+  "Process": {
+    "title": "Our Methodology",
+    "subtitle": "A rigorous workflow designed for predictability and excellence.",
+    "steps": {
+      "0": {
+        "title": "Technical Briefing",
+        "description": "We analyze your sales funnel and detect current conversion leaks."
+      },
+      "1": {
+        "title": "Visual Strategy",
+        "description": "We define the architecture and visual language to convey authority."
+      },
+      "2": {
+        "title": "Development Sprint",
+        "description": "Modular construction under extreme performance standards (90+ PageSpeed)."
+      },
+      "3": {
+        "title": "Launch & QA",
+        "description": "Controlled deployment with metric monitoring and team training."
+      }
+    }
+  },
+  "Qualification": {
+    "good": {
+      "title": "This is for you if...",
+      "items": {
+        "0": "You are looking for a long-term technology partner, not just a one-off vendor.",
+        "1": "You understand that a professional website is an investment to generate sales.",
+        "2": "You want to delegate the technical side to focus on scaling your business."
+      }
+    },
+    "bad": {
+      "title": "This is not for you if...",
+      "items": {
+        "0": "You are looking for the lowest cost option without prioritizing quality.",
+        "1": "You need the website for 'yesterday' and can't dedicate time to the strategic process.",
+        "2": "You don't consider that design and performance influence your business goals."
+      }
+    }
+  },
+  "Footer": {
+    "claim": "We build your company's most valuable digital asset.",
+    "contact": {
+      "locLabel": "Location",
+      "locValue": "Buenos Aires, Argentina",
+      "emailLabel": "Email"
+    },
+    "whatsApp": {
+      "label": "Contact Us",
+      "message": "Hi, I want to inquire about your B2B web services"
+    },
+    "form": {
+      "title": "Let's start a project",
+      "name": "Work Name",
+      "email": "Work Email",
+      "company": "Company",
+      "budget": "Estimated Budget",
+      "budgetPlaceholder": "Select a range",
+      "budgetOptions": {
+        "range_1": "Less than $1,000 USD",
+        "range_2": "$1,000 - $3,000 USD",
+        "range_3": "$3,000 - $5,000 USD",
+        "range_4": "More than $5,000 USD"
+      },
+      "message": "Message",
+      "submit": "Send Inquiry",
+      "sending": "Sending...",
+      "success": {
+        "title": "Inquiry sent!",
+        "text": "We will contact you within 24 hours to schedule your call.",
+        "button": "Send another message"
+      },
+      "error": "There was an error. Please retry or message us on WhatsApp."
+    },
+    "bottom": {
+      "terms": "Terms",
+      "privacy": "Privacy",
+      "cookies": "Cookies",
+      "copyright": "Web Agency. Maintained with high-performance standards."
+    }
+  },
+  "Pricing": {
+    "Metadata": {
+      "title": "Pricing & Plans",
+      "description": "Clear and transparent plans to scale your B2B digital presence. Fast delivery, managed hosting, and priority technical support."
+    },
+    "Hero": {
+      "titleStart": "Clear pricing to",
+      "titleHighlight": "grow",
+      "titleEnd": "with your web",
+      "subtitle": "Web solutions with hosting included, real support, and no surprises.",
+      "features": {
+        "0": "Delivery in 7–21 days",
+        "1": "Hosting included",
+        "2": "No lock-in",
+        "3": "Human support"
+      }
+    },
+    "plans": {
+      "landing": {
+        "name": "Professional Landing",
+        "ideal": "Ideal for campaigns, validation, specific services",
+        "features": {
+          "0": "One-page Landing",
+          "1": "Modern responsive design",
+          "2": "Contact-oriented copy",
+          "3": "Hosting + SSL",
+          "4": "Form + WhatsApp",
+          "5": "Delivery in 7–10 days"
+        }
+      },
+      "professional": {
+        "name": "Professional Web + Marketplace",
+        "ideal": "Ideal for growing companies",
+        "badge": "Most Popular",
+        "features": {
+          "0": "Corporate web (up to 6 sections)",
+          "1": "CMS Admin Panel",
+          "2": "Marketplace module (services/products)",
+          "3": "Basic SEO",
+          "4": "Managed Hosting",
+          "5": "Enhanced Security",
+          "6": "Delivery in 14–21 days"
+        }
+      },
+      "corporate": {
+        "name": "Premium Corporate Web",
+        "ideal": "Ideal for companies selling high-value services",
+        "features": {
+          "0": "Complete corporate web",
+          "1": "Premium Design",
+          "2": "Blog / News",
+          "3": "Advanced On-page SEO",
+          "4": "CRM / Analytics Integrations",
+          "5": "High-performance Hosting"
+        }
+      },
+      "labels": {
+        "setup": "setup",
+        "month": "/ month",
+        "cta": "Book a Call"
+      }
+    },
+    "Maintenance": {
+      "title": "What does maintenance include?",
+      "features": {
+        "0": "Managed Hosting",
+        "1": "Daily Backups",
+        "2": "Proactive Security",
+        "3": "Real Technical Support",
+        "4": "Uptime Monitoring"
+      },
+      "clearTitle": "Absolute Clarity",
+      "clearPoints": {
+        "0": "No long contracts or fine print",
+        "1": "No mandatory permanence",
+        "2": "Major changes quoted separately",
+        "3": "Direct access to senior developers"
+      }
+    },
+    "CTA": {
+      "title": "Don't know which plan fits best?",
+      "subtitle": "Book a call and we'll recommend the best option for your business.",
+      "button": "Book a Call"
+    }
+  }
+}

@@ -8,13 +8,28 @@ import PricingMaintenance from "@/components/pricing/PricingMaintenance";
 import PricingCTA from "@/components/pricing/PricingCTA";
 import WhatsAppButton from "@/components/WhatsAppButton";
 
-export const metadata: Metadata = {
-  title: "Precios y Planes",
-  description:
-    "Planes claros y transparentes para escalar tu presencia digital B2B. Entrega rápida, hosting administrado y soporte técnico prioritario.",
-};
+import { getTranslations } from "next-intl/server";
 
-export default function PricingPage() {
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'Pricing.Metadata' });
+
+  return {
+    title: t('title'),
+    description: t('description')
+  };
+}
+
+import { setRequestLocale } from "next-intl/server";
+
+export default async function PricingPage({
+  params
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+
   return (
     <main className="min-h-screen">
       <Header />

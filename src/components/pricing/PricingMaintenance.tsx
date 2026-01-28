@@ -10,7 +10,10 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 
+import { useTranslations } from "next-intl";
+
 const PricingMaintenance = () => {
+  const t = useTranslations('Pricing.Maintenance');
   return (
     <section className="section-padding bg-surface technical-grid">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -22,25 +25,23 @@ const PricingMaintenance = () => {
             viewport={{ once: true }}
           >
             <h2 className="text-3xl font-extrabold text-text-main mb-8 tracking-tight">
-              ¿Qué incluye el mantenimiento?
+              {t('title')}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {[
-                { icon: HardDrive, title: "Hosting administrado" },
-                { icon: Clock, title: "Backups diarios" },
-                { icon: Shield, title: "Seguridad proactiva" },
-                { icon: Headphones, title: "Soporte técnico real" },
-                { icon: Activity, title: "Monitoreo uptime" },
-              ].map((item, i) => (
+              {Array.from({ length: 5 }).map((_, i) => (
                 <div
                   key={i}
                   className="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-100 shadow-sm"
                 >
                   <div className="size-10 rounded-lg bg-primary/5 flex items-center justify-center text-primary">
-                    <item.icon size={20} strokeWidth={2.5} />
+                    {i === 0 && <HardDrive size={20} strokeWidth={2.5} />}
+                    {i === 1 && <Clock size={20} strokeWidth={2.5} />}
+                    {i === 2 && <Shield size={20} strokeWidth={2.5} />}
+                    {i === 3 && <Headphones size={20} strokeWidth={2.5} />}
+                    {i === 4 && <Activity size={20} strokeWidth={2.5} />}
                   </div>
                   <span className="text-sm font-bold text-text-main">
-                    {item.title}
+                    {t(`features.${i}`)}
                   </span>
                 </div>
               ))}
@@ -55,21 +56,16 @@ const PricingMaintenance = () => {
             className="p-10 rounded-3xl bg-white border border-slate-100 shadow-premium"
           >
             <h3 className="text-xl font-bold text-text-main mb-6">
-              Claridad absoluta
+              {t('clearTitle')}
             </h3>
             <ul className="space-y-4">
-              {[
-                "Sin contratos largos ni letra chica",
-                "Sin permanencia obligatoria",
-                "Cambios grandes se presupuestan aparte",
-                "Hablás directo con desarrolladores senior",
-              ].map((text, i) => (
+              {Array.from({ length: 4 }).map((_, i) => (
                 <li
                   key={i}
                   className="flex items-center gap-3 text-text-secondary font-medium"
                 >
                   <div className="size-1.5 rounded-full bg-primary" />
-                  <span>{text}</span>
+                  <span>{t(`clearPoints.${i}`)}</span>
                 </li>
               ))}
             </ul>

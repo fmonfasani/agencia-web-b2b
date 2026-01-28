@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { Manrope } from "next/font/google";
-import "./globals.css";
+import "../globals.css";
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages } from 'next-intl/server';
+import { notFound } from 'next/navigation';
+import { routing } from '@/i18n/routing';
 import StructuredData from "@/components/StructuredData";
 import GoogleTagManager from "@/components/GoogleTagManager";
 import Analytics from "@/components/Analytics";
@@ -41,13 +45,23 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
-}: Readonly<{
+  params
+}: {
   children: React.ReactNode;
-}>) {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+
+  if (!routing.locales.includes(locale as any)) {
+    notFound();
+  }
+
+  const messages = await getMessages();
+
   return (
-    <html lang="es" className="scroll-smooth">
+    <html lang={locale} className="scroll-smooth">
       <head>
         <GoogleTagManager />
       </head>
@@ -55,20 +69,22 @@ export default function RootLayout({
         className={`${manrope.variable} font-sans antialiased text-text-main bg-white`}
         suppressHydrationWarning
       >
-        {/* GTM noscript fallback */}
-        <noscript>
-          <iframe
-            src={`https://www.googletagmanager.com/ns.html?id=${process.env.NEXT_PUBLIC_GTM_ID}`}
-            height="0"
-            width="0"
-            style={{ display: "none", visibility: "hidden" }}
-          />
-        </noscript>
+        <NextIntlClientProvider messages={messages} locale={locale}>
+          {/* GTM noscript fallback */}
+          <noscript>
+            <iframe
+              src={`https://www.googletagmanager.com/ns.html?id=${process.env.NEXT_PUBLIC_GTM_ID}`}
+              height="0"
+              width="0"
+              style={{ display: "none", visibility: "hidden" }}
+            />
+          </noscript>
 
-        <StructuredData />
-        <Analytics />
-        {children}
-        <CookieConsent />
+          <StructuredData />
+          <Analytics />
+          {children}
+          <CookieConsent />
+        </NextIntlClientProvider>
       </body>
     </html>
   );

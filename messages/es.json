@@ -1,0 +1,264 @@
+{
+  "Header": {
+    "nav": {
+      "services": "Servicios",
+      "process": "Proceso",
+      "pricing": "Precios",
+      "cta": "Agendar llamada"
+    }
+  },
+  "HomePage": {
+    "title": "Agencia Web B2B"
+  },
+  "Hero": {
+    "badge": "B2B orientado al rendimiento",
+    "titleStart": "Convertí tu web en una",
+    "titleHighlight": "máquina",
+    "titleEnd": "de consultas",
+    "description": "Desarrollamos sitios de alto rendimiento especializados en servicios B2B. Entrega rápida, soporte directo y enfoque total en conversiones.",
+    "cta": "Agendar llamada",
+    "features": {
+      "delivery": "7-14 días",
+      "legacy": "De Vanguardia",
+      "support": "Soporte Senior"
+    },
+    "chart": {
+      "leads": "LEADS",
+      "upload": "CARGA 0.2s"
+    }
+  },
+  "PainPoints": {
+    "title": "¿Tu web actual te está costando oportunidades reales?",
+    "subtitle": "Identificamos los cuellos de botella más comunes en sitios empresariales B2B.",
+    "cards": {
+      "slow": {
+        "title": "Carga lenta",
+        "description": "El 53% de los usuarios abandona si tarda más de 3s. No regalés clientes."
+      },
+      "sales": {
+        "title": "Tu web no factura",
+        "description": "Diseños prolijos que no convierten son un costo, no una inversión."
+      },
+      "security": {
+        "title": "Riesgos de seguridad",
+        "description": "Sitios vulnerables ahuyentan leads y dañan tu reputación corporativa."
+      },
+      "outdated": {
+        "title": "Presencia anticuada",
+        "description": "Si tu web se ve vieja, tus clientes asumen que tus procesos también lo son."
+      }
+    }
+  },
+  "Services": {
+    "label": "Capacidades",
+    "title": "Enfoque técnico. Resultados comerciales.",
+    "subtitle": "Desarrollamos infraestructura web que se alinea con tus objetivos de ventas B2B.",
+    "cards": {
+      "landing": {
+        "title": "Rendimiento y Eficiencia",
+        "description": "Diseñada para pautas publicitarias de alta inversión y captura de leads calificados.",
+        "features": {
+          "0": "Optimización de Tasa de Conversión (CRO)",
+          "1": "Infraestructura Cloud de baja latencia",
+          "2": "Integración nativa con Hubspot/Salesforce",
+          "3": "Copywriting orientado a respuesta directa"
+        },
+        "cta": "Consultar plan"
+      },
+      "corporate": {
+        "title": "Sitio Corporativo B2B",
+        "description": "Presencia digital robusta para empresas que exigen autoridad y SEO técnico.",
+        "features": {
+          "0": "Arquitectura de hasta 8 secciones clave",
+          "1": "Sistema de contenidos (CMS) headless",
+          "2": "Optimización SEO Core Web Vitals",
+          "3": "Soporte prioritario post-lanzamiento",
+          "4": "Paneles de métricas personalizados"
+        },
+        "cta": "Agendar llamada",
+        "tag": "Recomendado para Empresas"
+      },
+      "scale": {
+        "title": "Gestión y Escala",
+        "description": "Socio tecnológico para el mantenimiento, seguridad y optimización continua.",
+        "features": {
+          "0": "Monitoreo 24/7 y seguridad proactiva",
+          "1": "Respaldos inmutables diarios",
+          "2": "Actualizaciones de software sin caídas",
+          "3": "Horas de desarrollo para evolutivos"
+        },
+        "cta": "Saber más"
+      }
+    }
+  },
+  "Metadata": {
+    "title": "Agencia Web | Rendimiento B2B",
+    "description": "Especialistas en desarrollo web para empresas de servicios B2B. Sitios de alto rendimiento que convierten visitantes en leads calificados."
+  },
+  "Process": {
+    "title": "Nuestra Metodología",
+    "subtitle": "Un flujo de trabajo riguroso diseñado para la previsibilidad y la excelencia.",
+    "steps": {
+      "0": {
+        "title": "Briefing Técnico",
+        "description": "Analizamos tu funnel comercial y detectamos las fugas de conversión actuales."
+      },
+      "1": {
+        "title": "Estrategia Visual",
+        "description": "Definimos la arquitectura y el lenguaje visual que transmitirá autoridad."
+      },
+      "2": {
+        "title": "Sprint de Desarrollo",
+        "description": "Construcción modular bajo estándares de rendimiento extremo (90+ PageSpeed)."
+      },
+      "3": {
+        "title": "Lanzamiento & QA",
+        "description": "Despliegue controlado con monitoreo de métricas y capacitación de equipo."
+      }
+    }
+  },
+  "Qualification": {
+    "good": {
+      "title": "Esto es para vos si...",
+      "items": {
+        "0": "Buscás un socio tecnológico a largo plazo, no solo un proveedor puntual.",
+        "1": "Entendés que una web profesional es una inversión para generar ventas.",
+        "2": "Querés delegar la parte técnica para enfocarte en escalar tu negocio."
+      }
+    },
+    "bad": {
+      "title": "No es para vos si...",
+      "items": {
+        "0": "Estás buscando la opción de menor costo del mercado sin priorizar la calidad.",
+        "1": "Necesitás la web para 'ayer' y no podés dedicar tiempo al proceso estratégico.",
+        "2": "No considerás que el diseño y el rendimiento influyan en tus objetivos comerciales."
+      }
+    }
+  },
+  "Footer": {
+    "claim": "Construimos el activo digital más valioso de tu empresa.",
+    "contact": {
+      "locLabel": "Ubicación",
+      "locValue": "Buenos Aires, Argentina",
+      "emailLabel": "Email"
+    },
+    "whatsApp": {
+      "label": "Contactanos",
+      "message": "Hola, quiero consultar sobre sus servicios web B2B"
+    },
+    "form": {
+      "title": "Iniciemos un proyecto",
+      "name": "Nombre Colaborador",
+      "email": "Email Corporativo",
+      "company": "Empresa",
+      "budget": "Presupuesto Estimado",
+      "budgetPlaceholder": "Selecciona un rango",
+      "budgetOptions": {
+        "range_1": "Menos de $1,000 USD",
+        "range_2": "$1,000 - $3,000 USD",
+        "range_3": "$3,000 - $5,000 USD",
+        "range_4": "Más de $5,000 USD"
+      },
+      "message": "Mensaje",
+      "submit": "Enviar consulta",
+      "sending": "Enviando...",
+      "success": {
+        "title": "¡Consulta enviada!",
+        "text": "Te contactaremos en menos de 24 horas para agendar tu llamada.",
+        "button": "Enviar otro mensaje"
+      },
+      "error": "Hubo un error. Por favor, reintenta o escribinos por WhatsApp."
+    },
+    "bottom": {
+      "terms": "Términos",
+      "privacy": "Privacidad",
+      "cookies": "Cookies",
+      "copyright": "Agencia Web. Mantenido con estándares de alto rendimiento."
+    }
+  },
+  "Pricing": {
+    "Metadata": {
+      "title": "Precios y Planes",
+      "description": "Planes claros y transparentes para escalar tu presencia digital B2B. Entrega rápida, hosting administrado y soporte técnico prioritario."
+    },
+    "Hero": {
+      "titleStart": "Precios claros para",
+      "titleHighlight": "crecer",
+      "titleEnd": "con tu web",
+      "subtitle": "Soluciones web con hosting incluido, soporte real y sin sorpresas.",
+      "features": {
+        "0": "Entrega en 7–21 días",
+        "1": "Hosting incluido",
+        "2": "Sin permanencia",
+        "3": "Soporte humano"
+      }
+    },
+    "plans": {
+      "landing": {
+        "name": "Landing Profesional",
+        "ideal": "Ideal para campañas, validación, servicios puntuales",
+        "features": {
+          "0": "Landing one-page",
+          "1": "Diseño moderno responsive",
+          "2": "Textos orientados a contacto",
+          "3": "Hosting + SSL",
+          "4": "Formulario + WhatsApp",
+          "5": "Entrega en 7–10 días"
+        }
+      },
+      "professional": {
+        "name": "Web Profesional + Marketplace",
+        "ideal": "Ideal para empresas en crecimiento",
+        "badge": "Más elegido",
+        "features": {
+          "0": "Web corporativa (hasta 6 secciones)",
+          "1": "Panel autoadministrable",
+          "2": "Módulo marketplace (servicios/productos)",
+          "3": "SEO básico",
+          "4": "Hosting administrado",
+          "5": "Seguridad reforzada",
+          "6": "Entrega en 14–21 días"
+        }
+      },
+      "corporate": {
+        "name": "Web Corporativa Premium",
+        "ideal": "Ideal para empresas que venden servicios de alto valor",
+        "features": {
+          "0": "Web corporativa completa",
+          "1": "Diseño premium",
+          "2": "Blog / noticias",
+          "3": "SEO on-page avanzado",
+          "4": "Integraciones CRM / Analytics",
+          "5": "Hosting de alto rendimiento"
+        }
+      },
+      "labels": {
+        "setup": "setup",
+        "month": "/ mes",
+        "cta": "Agendar llamada"
+      }
+    },
+    "Maintenance": {
+      "title": "¿Qué incluye el mantenimiento?",
+      "features": {
+        "0": "Hosting administrado",
+        "1": "Backups diarios",
+        "2": "Seguridad proactiva",
+        "3": "Soporte técnico real",
+        "4": "Monitoreo uptime"
+      },
+      "clearTitle": "Claridad absoluta",
+      "clearPoints": {
+        "0": "Sin contratos largos ni letra chica",
+        "1": "Sin permanencia obligatoria",
+        "2": "Cambios grandes se presupuestan aparte",
+        "3": "Hablás directo con desarrolladores senior"
+      }
+    },
+    "CTA": {
+      "title": "¿No sabés qué plan te conviene?",
+      "subtitle": "Agendá una llamada y te recomendamos la mejor opción según tu negocio.",
+      "button": "Agendar llamada"
+    }
+  }
+}

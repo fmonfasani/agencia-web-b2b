@@ -2,8 +2,11 @@
 import React from "react";
 import { PhoneCall } from "lucide-react";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 const PricingCTA = () => {
+  const t = useTranslations('Pricing.CTA');
+
   return (
     <section className="section-padding bg-white">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -18,18 +21,17 @@ const PricingCTA = () => {
           </div>
 
           <h2 className="text-3xl md:text-5xl font-extrabold text-text-main mb-6 tracking-tight relative z-10 leading-tight">
-            ¿No sabés qué plan te conviene?
+            {t('title')}
           </h2>
           <p className="text-lg md:text-xl text-text-secondary font-medium mb-12 max-w-xl mx-auto relative z-10">
-            Agendá una llamada y te recomendamos la mejor opción según tu
-            negocio.
+            {t('subtitle')}
           </p>
 
           <a
             href="#contacto"
             className="inline-flex items-center justify-center h-16 px-12 rounded-2xl bg-primary text-white font-bold text-lg hover:bg-primary-dark transition-all shadow-xl shadow-primary/30 relative z-10"
           >
-            Agendar llamada
+            {t('button')}
           </a>
         </motion.div>
       </div>

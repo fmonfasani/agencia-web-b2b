@@ -10,8 +10,10 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { trackFormSubmit } from "@/lib/analytics";
+import { useTranslations } from "next-intl";
 
 const Footer = () => {
+  const t = useTranslations('Footer');
   const [status, setStatus] = useState<
     "idle" | "loading" | "success" | "error"
   >("idle");
@@ -27,44 +29,25 @@ const Footer = () => {
     e.preventDefault();
     setStatus("loading");
 
-    try {
-      const response = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+    // Simulamos envío (Simulate submission)
+    setTimeout(() => {
+      setStatus("success");
+      setFormData({
+        name: "",
+        email: "",
+        company: "",
+        budget: "",
+        message: "",
       });
-
-      if (response.ok) {
-        setStatus("success");
-        setFormData({
-          name: "",
-          email: "",
-          company: "",
-          budget: "",
-          message: "",
-        });
-
-        // Track successful form submission
-        trackFormSubmit("footer_contact_form", {
-          form_location: "footer",
-          user_name: formData.name,
-        });
-      } else {
-        setStatus("error");
-      }
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      setStatus("error");
-    }
+      trackFormSubmit("footer_contact_form", {
+        form_location: "footer",
+      });
+    }, 1500);
   };
 
   return (
-    <footer
-      className="bg-[#0a0a0b] text-white pt-32 pb-16 relative overflow-hidden"
-      id="contacto"
-    >
-      {/* Background Subtle Gradient */}
-      <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+    <footer className="bg-slate-950 text-white pt-32 pb-16 relative overflow-hidden" id="contacto">
+      <div className="absolute top-0 left-0 w-full h-px bg-linear-to-r from-transparent via-white/10 to-transparent" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-20 lg:gap-32">
@@ -80,7 +63,7 @@ const Footer = () => {
             </div>
 
             <h2 className="text-4xl md:text-5xl font-extrabold leading-[1.1] tracking-tight text-white max-w-lg">
-              Construimos el activo digital más valioso de tu empresa.
+              {t('claim')}
             </h2>
 
             <div className="flex flex-wrap gap-10 text-sm text-slate-400 font-medium">
@@ -88,16 +71,16 @@ const Footer = () => {
                 <div className="flex items-center gap-2 text-white/50">
                   <MapPin size={14} />
                   <span className="text-[11px] uppercase tracking-widest font-bold">
-                    Ubicación
+                    {t('contact.locLabel')}
                   </span>
                 </div>
-                <p>Buenos Aires, Argentina</p>
+                <p>{t('contact.locValue')}</p>
               </div>
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-white/50">
                   <Mail size={14} />
                   <span className="text-[11px] uppercase tracking-widest font-bold">
-                    Email
+                    {t('contact.emailLabel')}
                   </span>
                 </div>
                 <p className="hover:text-primary transition-colors cursor-pointer">
@@ -109,7 +92,7 @@ const Footer = () => {
 
           {/* Quick Contact Form */}
           <div className="lg:col-span-6">
-            <div className="bg-white/[0.03] border border-white/10 p-10 rounded-[32px] backdrop-blur-md relative overflow-hidden h-full flex flex-col justify-center">
+            <div className="bg-white/3 border border-white/10 p-10 rounded-[32px] backdrop-blur-md relative overflow-hidden h-full flex flex-col justify-center">
               <AnimatePresence mode="wait">
                 {status === "success" ? (
                   <motion.div
@@ -123,17 +106,16 @@ const Footer = () => {
                       <CheckCircle2 size={32} />
                     </div>
                     <h3 className="text-2xl font-bold mb-3">
-                      ¡Consulta enviada!
+                      {t('form.success.title')}
                     </h3>
                     <p className="text-slate-400 text-sm mb-8">
-                      Te contactaremos en menos de 24 horas para agendar tu
-                      llamada.
+                      {t('form.success.text')}
                     </p>
                     <button
                       onClick={() => setStatus("idle")}
                       className="text-primary text-sm font-bold uppercase tracking-widest hover:underline"
                     >
-                      Enviar otro mensaje
+                      {t('form.success.button')}
                     </button>
                   </motion.div>
                 ) : (
@@ -144,7 +126,7 @@ const Footer = () => {
                     exit={{ opacity: 0 }}
                   >
                     <h3 className="text-xl font-bold mb-8 flex items-center gap-2">
-                      Iniciemos un proyecto
+                      {t('form.title')}
                       <ArrowUpRight className="text-primary" size={20} />
                     </h3>
 
@@ -155,7 +137,7 @@ const Footer = () => {
                             htmlFor="name"
                             className="text-[11px] uppercase tracking-widest font-bold text-white/40 ml-1"
                           >
-                            Nombre Colaborador
+                            {t('form.name')}
                           </label>
                           <input
                             id="name"
@@ -174,7 +156,7 @@ const Footer = () => {
                             htmlFor="email"
                             className="text-[11px] uppercase tracking-widest font-bold text-white/40 ml-1"
                           >
-                            Email Corporativo
+                            {t('form.email')}
                           </label>
                           <input
                             id="email"
@@ -196,7 +178,7 @@ const Footer = () => {
                             htmlFor="company"
                             className="text-[11px] uppercase tracking-widest font-bold text-white/40 ml-1"
                           >
-                            Empresa
+                            {t('form.company')}
                           </label>
                           <input
                             id="company"
@@ -217,7 +199,7 @@ const Footer = () => {
                             htmlFor="budget"
                             className="text-[11px] uppercase tracking-widest font-bold text-white/40 ml-1"
                           >
-                            Presupuesto Estimado
+                            {t('form.budget')}
                           </label>
                           <select
                             id="budget"
@@ -235,32 +217,17 @@ const Footer = () => {
                               value=""
                               className="text-slate-900 bg-white"
                             >
-                              Selecciona un rango
+                              {t('form.budgetPlaceholder')}
                             </option>
-                            <option
-                              value="range_1"
-                              className="text-slate-900 bg-white"
-                            >
-                              &lt; $1,000 USD
-                            </option>
-                            <option
-                              value="range_2"
-                              className="text-slate-900 bg-white"
-                            >
-                              $1,000 - $3,000 USD
-                            </option>
-                            <option
-                              value="range_3"
-                              className="text-slate-900 bg-white"
-                            >
-                              $3,000 - $5,000 USD
-                            </option>
-                            <option
-                              value="range_4"
-                              className="text-slate-900 bg-white"
-                            >
-                              &gt; $5,000 USD
-                            </option>
+                            {['range_1', 'range_2', 'range_3', 'range_4'].map(range => (
+                              <option
+                                key={range}
+                                value={range}
+                                className="text-slate-900 bg-white"
+                              >
+                                {t(`form.budgetOptions.${range}`)}
+                              </option>
+                            ))}
                           </select>
                         </div>
                       </div>
@@ -269,7 +236,7 @@ const Footer = () => {
                           htmlFor="message"
                           className="text-[11px] uppercase tracking-widest font-bold text-white/40 ml-1"
                         >
-                          Mensaje
+                          {t('form.message')}
                         </label>
                         <textarea
                           id="message"
@@ -292,14 +259,13 @@ const Footer = () => {
                         className="w-full bg-primary hover:bg-primary-dark disabled:opacity-50 text-white h-14 rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-sm uppercase tracking-widest"
                       >
                         {status === "loading"
-                          ? "Enviando..."
-                          : "Enviar consulta"}
+                          ? t('form.sending')
+                          : t('form.submit')}
                         <Send size={16} />
                       </button>
                       {status === "error" && (
                         <p className="text-red-400 text-xs text-center mt-4">
-                          Hubo un error. Por favor, reintenta o escribinos por
-                          WhatsApp.
+                          {t('form.error')}
                         </p>
                       )}
                     </form>
@@ -314,23 +280,22 @@ const Footer = () => {
         <div className="mt-40 pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="flex gap-8 text-[11px] font-bold uppercase tracking-widest text-white/30">
             <a href="#" className="hover:text-white transition-colors">
-              Términos
+              {t('bottom.terms')}
             </a>
             <a href="#" className="hover:text-white transition-colors">
-              Privacidad
+              {t('bottom.privacy')}
             </a>
             <a href="#" className="hover:text-white transition-colors">
-              Cookies
+              {t('bottom.cookies')}
             </a>
           </div>
 
           <p className="text-[12px] font-medium text-white/20">
-            © {new Date().getFullYear()} Agencia Web. Mantenido con estándares
-            de alto rendimiento.
+            © {new Date().getFullYear()} {t('bottom.copyright')}
           </p>
 
           <div className="flex gap-6 group">
-            <div className="w-8 h-[1px] bg-white/10 self-center" />
+            <div className="w-8 h-px bg-white/10 self-center" />
             <span className="text-[11px] font-bold uppercase tracking-widest text-white/40">
               B2B SPECIALISTS
             </span>

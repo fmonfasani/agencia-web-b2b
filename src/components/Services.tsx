@@ -2,6 +2,7 @@
 import React from "react";
 import { Rocket, Building2, ShieldCheck, Check } from "lucide-react";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 const services = [
   {
@@ -68,6 +69,32 @@ const itemVariants = {
 };
 
 const Services = () => {
+  const t = useTranslations('Services');
+
+  const servicesConfig = [
+    {
+      id: "landing",
+      icon: Rocket,
+      highlight: false,
+      color: "blue",
+      featureCount: 4
+    },
+    {
+      id: "corporate",
+      icon: Building2,
+      highlight: true,
+      color: "primary",
+      featureCount: 5
+    },
+    {
+      id: "scale",
+      icon: ShieldCheck,
+      highlight: false,
+      color: "purple",
+      featureCount: 4
+    },
+  ];
+
   return (
     <section className="section-padding bg-white" id="servicios">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -78,7 +105,7 @@ const Services = () => {
             viewport={{ once: true }}
             className="text-primary font-bold text-[12px] tracking-[0.2em] uppercase mb-4 block"
           >
-            Capabilities
+            {t('label')}
           </motion.span>
           <motion.h2
             initial={{ opacity: 0, y: 10 }}
@@ -87,7 +114,7 @@ const Services = () => {
             transition={{ delay: 0.1 }}
             className="text-4xl md:text-5xl font-extrabold text-text-main mt-2 mb-6 tracking-tight text-balance"
           >
-            Enfoque técnico. Resultados comerciales.
+            {t('title')}
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 10 }}
@@ -96,8 +123,7 @@ const Services = () => {
             transition={{ delay: 0.2 }}
             className="text-text-secondary font-medium text-lg text-balance"
           >
-            Desarrollamos infraestructura web que se alinea con tus objetivos de
-            ventas B2B.
+            {t('subtitle')}
           </motion.p>
         </div>
 
@@ -108,22 +134,21 @@ const Services = () => {
           viewport={{ once: true }}
           className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch"
         >
-          {services.map((service, index) => (
+          {servicesConfig.map((service, index) => (
             <motion.div
-              key={index}
+              key={service.id}
               variants={itemVariants}
               whileHover={{ y: -8 }}
               className={`flex flex-col p-10 rounded-3xl border transition-all h-full relative group
-                ${
-                  service.highlight
-                    ? "border-primary/20 bg-primary/[0.02] shadow-premium-hover z-10 lg:-translate-y-6 scale-[1.02]"
-                    : "border-slate-100 bg-white shadow-premium hover:shadow-premium-hover"
+                ${service.highlight
+                  ? "border-primary/20 bg-primary/[0.02] shadow-premium-hover z-10 lg:-translate-y-6 scale-[1.02]"
+                  : "border-slate-100 bg-white shadow-premium hover:shadow-premium-hover"
                 }
               `}
             >
               {service.highlight && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-white text-[10px] font-bold px-4 py-1.5 rounded-full shadow-lg shadow-primary/20 tracking-widest uppercase">
-                  Recomendado para Empresas
+                  {t(`cards.${service.id}.tag`)}
                 </div>
               )}
 
@@ -137,42 +162,41 @@ const Services = () => {
                   <service.icon size={28} strokeWidth={2} />
                 </div>
                 <h3 className="text-2xl font-bold text-text-main tracking-tight mb-4">
-                  {service.title}
+                  {t(`cards.${service.id}.title`)}
                 </h3>
                 <p className="text-[15px] leading-relaxed text-text-secondary font-medium">
-                  {service.description}
+                  {t(`cards.${service.id}.description`)}
                 </p>
               </div>
 
               <ul className="flex-1 space-y-5 mb-12">
-                {service.features.map((feature, fIndex) => (
+                {Array.from({ length: service.featureCount }).map((_, fIndex) => (
                   <li
                     key={fIndex}
                     className="flex items-start gap-4 text-[14px] text-text-main font-semibold"
                   >
-                    <div className="mt-1 flex-shrink-0 w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
+                    <div className="mt-1 shrink-0 w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
                       <Check
                         className="text-primary"
                         size={12}
                         strokeWidth={3}
                       />
                     </div>
-                    <span>{feature}</span>
+                    <span>{t(`cards.${service.id}.features.${fIndex}`)}</span>
                   </li>
                 ))}
               </ul>
 
               <a
                 className={`w-full block text-center py-4 rounded-xl font-bold transition-all text-sm uppercase tracking-widest
-                  ${
-                    service.highlight
-                      ? "bg-primary text-white hover:bg-primary-dark shadow-xl shadow-primary/25"
-                      : "bg-slate-50 text-text-main hover:bg-slate-100 border border-slate-200"
+                  ${service.highlight
+                    ? "bg-primary text-white hover:bg-primary-dark shadow-xl shadow-primary/25"
+                    : "bg-slate-50 text-text-main hover:bg-slate-100 border border-slate-200"
                   }
                 `}
                 href="#contacto"
               >
-                {service.cta}
+                {t(`cards.${service.id}.cta`)}
               </a>
             </motion.div>
           ))}

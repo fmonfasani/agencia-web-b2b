@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link, usePathname, useRouter } from "@/i18n/routing";
+import { useLocale, useTranslations } from "next-intl";
 import { Code2, Menu, X, Languages } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { trackCTAClick, trackNavigation } from "@/lib/analytics";
@@ -9,11 +9,19 @@ import { trackCTAClick, trackNavigation } from "@/lib/analytics";
 const Header = () => {
   const [isOpen, setIsOpen] = React.useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations('Header');
+
+  const handleLanguageSwitch = () => {
+    const nextLocale = locale === "es" ? "en" : "es";
+    router.replace(pathname, { locale: nextLocale });
+  };
 
   const navItems = [
-    { name: "Servicios", href: "/#servicios" },
-    { name: "Proceso", href: "/#proceso" },
-    { name: "Precios", href: "/pricing" },
+    { name: t('nav.services'), href: "/#servicios" },
+    { name: t('nav.process'), href: "/#proceso" },
+    { name: t('nav.pricing'), href: "/pricing" },
   ];
 
   const handleCTAClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -27,7 +35,7 @@ const Header = () => {
       const contactSection = document.getElementById("contacto");
       contactSection?.scrollIntoView({ behavior: "smooth" });
     } else {
-      window.location.assign("/#contacto");
+      router.push("/#contacto");
     }
   };
 
@@ -49,10 +57,10 @@ const Header = () => {
         const element = document.getElementById(elementId);
         element?.scrollIntoView({ behavior: "smooth" });
       } else {
-        window.location.assign(href);
+        router.push(href);
       }
     } else {
-      window.location.assign(href);
+      router.push(href);
     }
   };
 
@@ -94,6 +102,7 @@ const Header = () => {
             <button
               className="flex items-center justify-center w-10 h-10 rounded-full text-text-secondary hover:text-primary hover:bg-slate-50 transition-all"
               aria-label="Cambiar idioma"
+              onClick={handleLanguageSwitch}
             >
               <Languages size={20} />
             </button>
@@ -102,7 +111,7 @@ const Header = () => {
               href="#contacto"
               onClick={handleCTAClick}
             >
-              Agendar llamada
+              {t('nav.cta')}
             </a>
             <button
               className="md:hidden p-2 text-text-main"
@@ -145,7 +154,7 @@ const Header = () => {
                 href="#contacto"
                 onClick={handleCTAClick}
               >
-                Agendar llamada
+                {t('nav.cta')}
               </a>
             </div>
           </motion.div>

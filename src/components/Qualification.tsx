@@ -2,8 +2,11 @@
 import React from "react";
 import { ThumbsUp, ThumbsDown, CheckCircle2, XCircle } from "lucide-react";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 const Qualification = () => {
+  const t = useTranslations('Qualification');
+
   return (
     <section className="section-padding bg-white">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -18,14 +21,10 @@ const Qualification = () => {
               <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center">
                 <ThumbsUp className="text-green-600" size={18} />
               </div>
-              Esto es para vos si...
+              {t('good.title')}
             </h3>
             <ul className="space-y-6">
-              {[
-                "Buscás un socio tecnológico a largo plazo, no solo un proveedor puntual.",
-                "Entendés que una web profesional es una inversión para generar ventas.",
-                "Querés delegar la parte técnica para enfocarte en escalar tu negocio.",
-              ].map((item, i) => (
+              {Array.from({ length: 3 }).map((_, i) => (
                 <li key={i} className="flex gap-4">
                   <CheckCircle2
                     className="text-green-500 shrink-0 mt-0.5"
@@ -33,7 +32,7 @@ const Qualification = () => {
                     strokeWidth={2.5}
                   />
                   <span className="text-text-secondary text-[15px] font-medium leading-relaxed">
-                    {item}
+                    {t(`good.items.${i}`)}
                   </span>
                 </li>
               ))}
@@ -50,14 +49,10 @@ const Qualification = () => {
               <div className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center">
                 <ThumbsDown className="text-red-500" size={18} />
               </div>
-              No es para vos si...
+              {t('bad.title')}
             </h3>
             <ul className="space-y-6">
-              {[
-                "Estás buscando la opción de menor costo del mercado sin priorizar la calidad.",
-                "Necesitás la web para &quot;ayer&quot; y no podés dedicar tiempo al proceso estratégico.",
-                "No considerás que el diseño y la performance influyan en tus objetivos comerciales.",
-              ].map((item, i) => (
+              {Array.from({ length: 3 }).map((_, i) => (
                 <li key={i} className="flex gap-4">
                   <XCircle
                     className="text-red-400 shrink-0 mt-0.5"
@@ -65,7 +60,7 @@ const Qualification = () => {
                     strokeWidth={2.5}
                   />
                   <span className="text-text-secondary text-[15px] font-medium leading-relaxed">
-                    {item}
+                    {t(`bad.items.${i}`)}
                   </span>
                 </li>
               ))}

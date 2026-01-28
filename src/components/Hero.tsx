@@ -3,8 +3,10 @@ import React from "react";
 import { ShieldCheck, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { trackCTAClick } from "@/lib/analytics";
+import { useTranslations } from "next-intl";
 
 const Hero = () => {
+  const t = useTranslations('Hero');
   return (
     <section className="relative pt-24 pb-20 md:pt-32 md:pb-40 bg-white overflow-hidden technical-grid">
       <div className="absolute inset-0 glow-mesh pointer-events-none" />
@@ -20,7 +22,7 @@ const Hero = () => {
               className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 text-primary text-[11px] font-bold uppercase tracking-wider mb-8 border border-primary/10"
             >
               <span className="flex h-1.5 w-1.5 rounded-full bg-primary animate-pulse"></span>
-              Performance-Driven B2B
+              {t('badge')}
             </motion.div>
 
             <motion.h1
@@ -29,8 +31,7 @@ const Hero = () => {
               transition={{ duration: 0.6, delay: 0.1 }}
               className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-text-main leading-[1.05] mb-8 text-balance"
             >
-              Convertí tu web en una{" "}
-              <span className="text-primary">máquina</span> de consultas
+              {t('titleStart')} <span className="text-primary">{t('titleHighlight')}</span> {t('titleEnd')}
             </motion.h1>
 
             <motion.p
@@ -39,9 +40,7 @@ const Hero = () => {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="text-lg md:text-xl text-text-secondary max-w-lg mb-12 leading-relaxed font-medium"
             >
-              Desarrollamos sitios de alto rendimiento especializados en
-              servicios B2B. Entrega rápida, soporte directo y enfoque total en
-              conversiones.
+              {t('description')}
             </motion.p>
 
             <motion.div
@@ -55,7 +54,7 @@ const Hero = () => {
                 href="#contacto"
                 onClick={() => trackCTAClick("hero", "Agendar llamada")}
               >
-                Agendar llamada
+                {t('cta')}
                 <ArrowRight
                   className="ml-2 group-hover:translate-x-1 transition-transform"
                   size={20}
@@ -71,15 +70,15 @@ const Hero = () => {
             >
               <div className="flex items-center gap-2">
                 <ShieldCheck className="text-primary/40" size={18} />
-                <span>7-14 días</span>
+                <span>{t('features.delivery')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <ShieldCheck className="text-primary/40" size={18} />
-                <span>Zero Legacy</span>
+                <span>{t('features.legacy')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <ShieldCheck className="text-primary/40" size={18} />
-                <span>Soporte Senior</span>
+                <span>{t('features.support')}</span>
               </div>
             </motion.div>
           </div>
@@ -185,7 +184,7 @@ const Hero = () => {
                     fontWeight="bold"
                     fill="#64748b"
                   >
-                    LEADS
+                    {t('chart.leads')}
                   </motion.text>
 
                   <motion.rect
@@ -207,7 +206,7 @@ const Hero = () => {
                     fontWeight="bold"
                     fill="#135bec"
                   >
-                    UPLOAD 0.2s
+                    {t('chart.upload')}
                   </motion.text>
 
                   <defs>

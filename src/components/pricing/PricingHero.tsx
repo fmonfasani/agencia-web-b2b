@@ -2,8 +2,11 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Clock, Globe, ShieldCheck, User } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 const PricingHero = () => {
+  const t = useTranslations('Pricing.Hero');
+
   return (
     <section className="relative pt-32 pb-20 bg-white technical-grid overflow-hidden">
       <div className="absolute inset-0 glow-mesh pointer-events-none opacity-40" />
@@ -15,11 +18,10 @@ const PricingHero = () => {
           transition={{ duration: 0.5 }}
         >
           <h1 className="text-5xl md:text-6xl font-extrabold text-text-main tracking-tight mb-6 text-balance">
-            Precios claros para <span className="text-primary">crecer</span> con
-            tu web
+            {t('titleStart')} <span className="text-primary">{t('titleHighlight')}</span> {t('titleEnd')}
           </h1>
           <p className="text-xl text-text-secondary max-w-2xl mx-auto font-medium mb-10 text-balance">
-            Soluciones web con hosting incluido, soporte real y sin sorpresas.
+            {t('subtitle')}
           </p>
         </motion.div>
 
@@ -29,18 +31,16 @@ const PricingHero = () => {
           transition={{ delay: 0.3, duration: 0.8 }}
           className="flex flex-wrap justify-center items-center gap-x-8 gap-y-4"
         >
-          {[
-            { icon: Clock, text: "Entrega en 7–21 días" },
-            { icon: Globe, text: "Hosting incluido" },
-            { icon: ShieldCheck, text: "Sin permanencia" },
-            { icon: User, text: "Soporte humano" },
-          ].map((item, i) => (
+          {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}
               className="flex items-center gap-2 text-sm font-bold text-text-main/70 uppercase tracking-widest"
             >
-              <item.icon size={16} className="text-primary" />
-              <span>{item.text}</span>
+              {i === 0 && <Clock size={16} className="text-primary" />}
+              {i === 1 && <Globe size={16} className="text-primary" />}
+              {i === 2 && <ShieldCheck size={16} className="text-primary" />}
+              {i === 3 && <User size={16} className="text-primary" />}
+              <span>{t(`features.${i}`)}</span>
             </div>
           ))}
         </motion.div>
