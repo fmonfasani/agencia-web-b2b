@@ -27,7 +27,7 @@ const PainPoints = () => {
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-3xl md:text-4xl font-bold text-text-main mb-6 tracking-tight text-balance"
+            className="opacity-0 text-3xl md:text-4xl font-bold text-text-main mb-6 tracking-tight text-balance"
           >
             {t("title")}
           </motion.h2>
@@ -36,7 +36,7 @@ const PainPoints = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-text-secondary font-medium text-lg text-balance"
+            className="opacity-0 text-text-secondary font-medium text-lg text-balance"
           >
             {t("subtitle")}
           </motion.p>
@@ -51,7 +51,7 @@ const PainPoints = () => {
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
               whileHover={{ y: -5 }}
-              className="group bg-white p-8 rounded-3xl border border-slate-100 hover:border-slate-200 shadow-premium hover:shadow-premium-hover transition-all duration-300"
+              className="opacity-0 group bg-white p-8 rounded-3xl border border-slate-100 hover:border-slate-200 shadow-premium hover:shadow-premium-hover transition-[box-shadow,border-color] duration-300"
             >
               <div
                 className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110 duration-300
