@@ -55,7 +55,7 @@ const Services = () => {
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            className="text-primary font-bold text-[12px] tracking-[0.2em] uppercase mb-4 block"
+            className="opacity-0 text-primary font-bold text-[12px] tracking-[0.2em] uppercase mb-4 block"
           >
             {t("label")}
           </motion.span>
@@ -64,7 +64,7 @@ const Services = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-4xl md:text-5xl font-extrabold text-text-main mt-2 mb-6 tracking-tight text-balance"
+            className="opacity-0 text-4xl md:text-5xl font-extrabold text-text-main mt-2 mb-6 tracking-tight text-balance"
           >
             {t("title")}
           </motion.h2>
@@ -73,7 +73,7 @@ const Services = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
-            className="text-text-secondary font-medium text-lg text-balance"
+            className="opacity-0 text-text-secondary font-medium text-lg text-balance"
           >
             {t("subtitle")}
           </motion.p>
@@ -84,17 +84,17 @@ const Services = () => {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
-          className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch"
+          className="opacity-0 grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch"
         >
           {servicesConfig.map((service) => (
             <motion.div
               key={service.id}
               variants={itemVariants}
               whileHover={{ y: -8 }}
-              className={`flex flex-col p-10 rounded-3xl border transition-all h-full relative group
+              className={`flex flex-col p-10 rounded-3xl border transition-[box-shadow,gap,border-color,background-color] duration-300 h-full relative group
                 ${
                   service.highlight
-                    ? "border-primary/20 bg-primary/[0.02] shadow-premium-hover z-10 lg:-translate-y-6 scale-[1.02]"
+                    ? "border-primary/20 bg-primary/2 shadow-premium-hover z-10 lg:-translate-y-6 scale-[1.02]"
                     : "border-slate-100 bg-white shadow-premium hover:shadow-premium-hover"
                 }
               `}
