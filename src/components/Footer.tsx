@@ -13,7 +13,8 @@ import { trackFormSubmit } from "@/lib/analytics";
 import { useTranslations } from "next-intl";
 
 const Footer = () => {
-  const t = useTranslations('Footer');
+  // Inicializamos el hook apuntando al namespace 'Footer' para el formulario y textos del pie de página
+  const t = useTranslations("Footer");
   const [status, setStatus] = useState<
     "idle" | "loading" | "success" | "error"
   >("idle");
@@ -46,7 +47,10 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-slate-950 text-white pt-32 pb-16 relative overflow-hidden" id="contacto">
+    <footer
+      className="bg-slate-950 text-white pt-32 pb-16 relative overflow-hidden"
+      id="contacto"
+    >
       <div className="absolute top-0 left-0 w-full h-px bg-linear-to-r from-transparent via-white/10 to-transparent" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -63,7 +67,7 @@ const Footer = () => {
             </div>
 
             <h2 className="text-4xl md:text-5xl font-extrabold leading-[1.1] tracking-tight text-white max-w-lg">
-              {t('claim')}
+              {t("claim")}
             </h2>
 
             <div className="flex flex-wrap gap-10 text-sm text-slate-400 font-medium">
@@ -71,16 +75,16 @@ const Footer = () => {
                 <div className="flex items-center gap-2 text-white/50">
                   <MapPin size={14} />
                   <span className="text-[11px] uppercase tracking-widest font-bold">
-                    {t('contact.locLabel')}
+                    {t("contact.locLabel")}
                   </span>
                 </div>
-                <p>{t('contact.locValue')}</p>
+                <p>{t("contact.locValue")}</p>
               </div>
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-white/50">
                   <Mail size={14} />
                   <span className="text-[11px] uppercase tracking-widest font-bold">
-                    {t('contact.emailLabel')}
+                    {t("contact.emailLabel")}
                   </span>
                 </div>
                 <p className="hover:text-primary transition-colors cursor-pointer">
@@ -106,16 +110,16 @@ const Footer = () => {
                       <CheckCircle2 size={32} />
                     </div>
                     <h3 className="text-2xl font-bold mb-3">
-                      {t('form.success.title')}
+                      {t("form.success.title")}
                     </h3>
                     <p className="text-slate-400 text-sm mb-8">
-                      {t('form.success.text')}
+                      {t("form.success.text")}
                     </p>
                     <button
                       onClick={() => setStatus("idle")}
                       className="text-primary text-sm font-bold uppercase tracking-widest hover:underline"
                     >
-                      {t('form.success.button')}
+                      {t("form.success.button")}
                     </button>
                   </motion.div>
                 ) : (
@@ -126,7 +130,7 @@ const Footer = () => {
                     exit={{ opacity: 0 }}
                   >
                     <h3 className="text-xl font-bold mb-8 flex items-center gap-2">
-                      {t('form.title')}
+                      {t("form.title")}
                       <ArrowUpRight className="text-primary" size={20} />
                     </h3>
 
@@ -137,7 +141,7 @@ const Footer = () => {
                             htmlFor="name"
                             className="text-[11px] uppercase tracking-widest font-bold text-white/40 ml-1"
                           >
-                            {t('form.name')}
+                            {t("form.name")}
                           </label>
                           <input
                             id="name"
@@ -156,7 +160,7 @@ const Footer = () => {
                             htmlFor="email"
                             className="text-[11px] uppercase tracking-widest font-bold text-white/40 ml-1"
                           >
-                            {t('form.email')}
+                            {t("form.email")}
                           </label>
                           <input
                             id="email"
@@ -178,7 +182,7 @@ const Footer = () => {
                             htmlFor="company"
                             className="text-[11px] uppercase tracking-widest font-bold text-white/40 ml-1"
                           >
-                            {t('form.company')}
+                            {t("form.company")}
                           </label>
                           <input
                             id="company"
@@ -199,7 +203,7 @@ const Footer = () => {
                             htmlFor="budget"
                             className="text-[11px] uppercase tracking-widest font-bold text-white/40 ml-1"
                           >
-                            {t('form.budget')}
+                            {t("form.budget")}
                           </label>
                           <select
                             id="budget"
@@ -217,17 +221,19 @@ const Footer = () => {
                               value=""
                               className="text-slate-900 bg-white"
                             >
-                              {t('form.budgetPlaceholder')}
+                              {t("form.budgetPlaceholder")}
                             </option>
-                            {['range_1', 'range_2', 'range_3', 'range_4'].map(range => (
-                              <option
-                                key={range}
-                                value={range}
-                                className="text-slate-900 bg-white"
-                              >
-                                {t(`form.budgetOptions.${range}`)}
-                              </option>
-                            ))}
+                            {["range_1", "range_2", "range_3", "range_4"].map(
+                              (range) => (
+                                <option
+                                  key={range}
+                                  value={range}
+                                  className="text-slate-900 bg-white"
+                                >
+                                  {t(`form.budgetOptions.${range}`)}
+                                </option>
+                              ),
+                            )}
                           </select>
                         </div>
                       </div>
@@ -236,7 +242,7 @@ const Footer = () => {
                           htmlFor="message"
                           className="text-[11px] uppercase tracking-widest font-bold text-white/40 ml-1"
                         >
-                          {t('form.message')}
+                          {t("form.message")}
                         </label>
                         <textarea
                           id="message"
@@ -259,13 +265,13 @@ const Footer = () => {
                         className="w-full bg-primary hover:bg-primary-dark disabled:opacity-50 text-white h-14 rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-sm uppercase tracking-widest"
                       >
                         {status === "loading"
-                          ? t('form.sending')
-                          : t('form.submit')}
+                          ? t("form.sending")
+                          : t("form.submit")}
                         <Send size={16} />
                       </button>
                       {status === "error" && (
                         <p className="text-red-400 text-xs text-center mt-4">
-                          {t('form.error')}
+                          {t("form.error")}
                         </p>
                       )}
                     </form>
@@ -280,18 +286,18 @@ const Footer = () => {
         <div className="mt-40 pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="flex gap-8 text-[11px] font-bold uppercase tracking-widest text-white/30">
             <a href="#" className="hover:text-white transition-colors">
-              {t('bottom.terms')}
+              {t("bottom.terms")}
             </a>
             <a href="#" className="hover:text-white transition-colors">
-              {t('bottom.privacy')}
+              {t("bottom.privacy")}
             </a>
             <a href="#" className="hover:text-white transition-colors">
-              {t('bottom.cookies')}
+              {t("bottom.cookies")}
             </a>
           </div>
 
           <p className="text-[12px] font-medium text-white/20">
-            © {new Date().getFullYear()} {t('bottom.copyright')}
+            © {new Date().getFullYear()} {t("bottom.copyright")}
           </p>
 
           <div className="flex gap-6 group">

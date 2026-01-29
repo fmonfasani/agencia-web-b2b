@@ -5,7 +5,8 @@ import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 
 const Qualification = () => {
-  const t = useTranslations('Qualification');
+  // Hook para acceder a las traducciones del namespace 'Qualification'
+  const t = useTranslations("Qualification");
 
   return (
     <section className="section-padding bg-white">
@@ -21,7 +22,7 @@ const Qualification = () => {
               <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center">
                 <ThumbsUp className="text-green-600" size={18} />
               </div>
-              {t('good.title')}
+              {t("good.title")}
             </h3>
             <ul className="space-y-6">
               {Array.from({ length: 3 }).map((_, i) => (
@@ -49,7 +50,7 @@ const Qualification = () => {
               <div className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center">
                 <ThumbsDown className="text-red-500" size={18} />
               </div>
-              {t('bad.title')}
+              {t("bad.title")}
             </h3>
             <ul className="space-y-6">
               {Array.from({ length: 3 }).map((_, i) => (

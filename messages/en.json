@@ -261,5 +261,13 @@
       "subtitle": "Book a call and we'll recommend the best option for your business.",
       "button": "Book a Call"
     }
+  },
+  "CookieConsent": {
+    "title": "🍪 We use cookies",
+    "description": "We use cookies to improve your experience, analyze site traffic, and personalize content. By clicking \"Accept\", you agree to the use of all cookies. You can read more in our ",
+    "privacyPolicy": "Privacy Policy",
+    "decline": "Decline",
+    "accept": "Accept all",
+    "close": "Close"
   }
 }

@@ -261,5 +261,13 @@
       "subtitle": "Agendá una llamada y te recomendamos la mejor opción según tu negocio.",
       "button": "Agendar llamada"
     }
+  },
+  "CookieConsent": {
+    "title": "🍪 Usamos cookies",
+    "description": "Utilizamos cookies para mejorar tu experiencia, analizar el tráfico del sitio y personalizar el contenido. Al hacer clic en \"Aceptar\", aceptás el uso de todas las cookies. Podés leer más en nuestra ",
+    "privacyPolicy": "Política de Privacidad",
+    "decline": "Rechazar",
+    "accept": "Aceptar todas",
+    "close": "Cerrar"
   }
 }

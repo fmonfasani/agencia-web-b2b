@@ -10,12 +10,13 @@ import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 
 const PainPoints = () => {
-  const t = useTranslations('PainPoints');
+  // Hook para acceder a las traducciones del namespace 'PainPoints'
+  const t = useTranslations("PainPoints");
   const points = [
-    { id: 'slow', icon: TimerOff, color: 'red' },
-    { id: 'sales', icon: BadgeDollarSign, color: 'orange' },
-    { id: 'security', icon: ShieldAlert, color: 'yellow' },
-    { id: 'outdated', icon: LaptopMinimal, color: 'gray' },
+    { id: "slow", icon: TimerOff, color: "red" },
+    { id: "sales", icon: BadgeDollarSign, color: "orange" },
+    { id: "security", icon: ShieldAlert, color: "yellow" },
+    { id: "outdated", icon: LaptopMinimal, color: "gray" },
   ];
 
   return (
@@ -28,7 +29,7 @@ const PainPoints = () => {
             viewport={{ once: true }}
             className="text-3xl md:text-4xl font-bold text-text-main mb-6 tracking-tight text-balance"
           >
-            {t('title')}
+            {t("title")}
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 10 }}
@@ -37,7 +38,7 @@ const PainPoints = () => {
             transition={{ delay: 0.1 }}
             className="text-text-secondary font-medium text-lg text-balance"
           >
-            {t('subtitle')}
+            {t("subtitle")}
           </motion.p>
         </div>
 

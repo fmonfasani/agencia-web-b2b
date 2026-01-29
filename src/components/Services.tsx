@@ -4,55 +4,6 @@ import { Rocket, Building2, ShieldCheck, Check } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 
-const services = [
-  {
-    icon: Rocket,
-    title: "Landing Performance",
-    description:
-      "Diseñada para pautas publicitarias de alta inversión y captura de leads calificados.",
-    features: [
-      "Optimización de Tasa de Conversión (CRO)",
-      "Infraestructura Cloud de baja latencia",
-      "Integración nativa con Hubspot/Salesforce",
-      "Copywriting orientado a respuesta directa",
-    ],
-    cta: "Consultar plan",
-    highlight: false,
-    color: "blue",
-  },
-  {
-    icon: Building2,
-    title: "Sitio Corporativo B2B",
-    description:
-      "Presencia digital robusta para empresas que exigen autoridad y SEO técnico.",
-    features: [
-      "Arquitectura de hasta 8 secciones clave",
-      "Sistema de contenidos (CMS) headless",
-      "Optimización SEO Core Web Vitals",
-      "Soporte prioritario post-lanzamiento",
-      "Dashboards de métricas personalizados",
-    ],
-    cta: "Agendar llamada",
-    highlight: true,
-    color: "primary",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Management & Escala",
-    description:
-      "Socio tecnológico para el mantenimiento, seguridad y optimización continua.",
-    features: [
-      "Monitoreo 24/7 y seguridad proactiva",
-      "Backups inmutables diarios",
-      "Actualizaciones de software sin downtime",
-      "Horas de desarrollo para evolutivos",
-    ],
-    cta: "Saber más",
-    highlight: false,
-    color: "purple",
-  },
-];
-
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -69,7 +20,8 @@ const itemVariants = {
 };
 
 const Services = () => {
-  const t = useTranslations('Services');
+  // Hook para obtener traducciones del namespace 'Services'
+  const t = useTranslations("Services");
 
   const servicesConfig = [
     {
@@ -77,21 +29,21 @@ const Services = () => {
       icon: Rocket,
       highlight: false,
       color: "blue",
-      featureCount: 4
+      featureCount: 4,
     },
     {
       id: "corporate",
       icon: Building2,
       highlight: true,
       color: "primary",
-      featureCount: 5
+      featureCount: 5,
     },
     {
       id: "scale",
       icon: ShieldCheck,
       highlight: false,
       color: "purple",
-      featureCount: 4
+      featureCount: 4,
     },
   ];
 
@@ -105,7 +57,7 @@ const Services = () => {
             viewport={{ once: true }}
             className="text-primary font-bold text-[12px] tracking-[0.2em] uppercase mb-4 block"
           >
-            {t('label')}
+            {t("label")}
           </motion.span>
           <motion.h2
             initial={{ opacity: 0, y: 10 }}
@@ -114,7 +66,7 @@ const Services = () => {
             transition={{ delay: 0.1 }}
             className="text-4xl md:text-5xl font-extrabold text-text-main mt-2 mb-6 tracking-tight text-balance"
           >
-            {t('title')}
+            {t("title")}
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 10 }}
@@ -123,7 +75,7 @@ const Services = () => {
             transition={{ delay: 0.2 }}
             className="text-text-secondary font-medium text-lg text-balance"
           >
-            {t('subtitle')}
+            {t("subtitle")}
           </motion.p>
         </div>
 
@@ -134,15 +86,16 @@ const Services = () => {
           viewport={{ once: true }}
           className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch"
         >
-          {servicesConfig.map((service, index) => (
+          {servicesConfig.map((service) => (
             <motion.div
               key={service.id}
               variants={itemVariants}
               whileHover={{ y: -8 }}
               className={`flex flex-col p-10 rounded-3xl border transition-all h-full relative group
-                ${service.highlight
-                  ? "border-primary/20 bg-primary/[0.02] shadow-premium-hover z-10 lg:-translate-y-6 scale-[1.02]"
-                  : "border-slate-100 bg-white shadow-premium hover:shadow-premium-hover"
+                ${
+                  service.highlight
+                    ? "border-primary/20 bg-primary/[0.02] shadow-premium-hover z-10 lg:-translate-y-6 scale-[1.02]"
+                    : "border-slate-100 bg-white shadow-premium hover:shadow-premium-hover"
                 }
               `}
             >
@@ -170,28 +123,31 @@ const Services = () => {
               </div>
 
               <ul className="flex-1 space-y-5 mb-12">
-                {Array.from({ length: service.featureCount }).map((_, fIndex) => (
-                  <li
-                    key={fIndex}
-                    className="flex items-start gap-4 text-[14px] text-text-main font-semibold"
-                  >
-                    <div className="mt-1 shrink-0 w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Check
-                        className="text-primary"
-                        size={12}
-                        strokeWidth={3}
-                      />
-                    </div>
-                    <span>{t(`cards.${service.id}.features.${fIndex}`)}</span>
-                  </li>
-                ))}
+                {Array.from({ length: service.featureCount }).map(
+                  (_, fIndex) => (
+                    <li
+                      key={fIndex}
+                      className="flex items-start gap-4 text-[14px] text-text-main font-semibold"
+                    >
+                      <div className="mt-1 shrink-0 w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Check
+                          className="text-primary"
+                          size={12}
+                          strokeWidth={3}
+                        />
+                      </div>
+                      <span>{t(`cards.${service.id}.features.${fIndex}`)}</span>
+                    </li>
+                  ),
+                )}
               </ul>
 
               <a
                 className={`w-full block text-center py-4 rounded-xl font-bold transition-all text-sm uppercase tracking-widest
-                  ${service.highlight
-                    ? "bg-primary text-white hover:bg-primary-dark shadow-xl shadow-primary/25"
-                    : "bg-slate-50 text-text-main hover:bg-slate-100 border border-slate-200"
+                  ${
+                    service.highlight
+                      ? "bg-primary text-white hover:bg-primary-dark shadow-xl shadow-primary/25"
+                      : "bg-slate-50 text-text-main hover:bg-slate-100 border border-slate-200"
                   }
                 `}
                 href="#contacto"

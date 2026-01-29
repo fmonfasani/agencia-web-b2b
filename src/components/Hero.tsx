@@ -6,7 +6,8 @@ import { trackCTAClick } from "@/lib/analytics";
 import { useTranslations } from "next-intl";
 
 const Hero = () => {
-  const t = useTranslations('Hero');
+  // Inicializamos el hook apuntando al namespace 'Hero' para la sección principal
+  const t = useTranslations("Hero");
   return (
     <section className="relative pt-24 pb-20 md:pt-32 md:pb-40 bg-white overflow-hidden technical-grid">
       <div className="absolute inset-0 glow-mesh pointer-events-none" />
@@ -22,7 +23,7 @@ const Hero = () => {
               className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 text-primary text-[11px] font-bold uppercase tracking-wider mb-8 border border-primary/10"
             >
               <span className="flex h-1.5 w-1.5 rounded-full bg-primary animate-pulse"></span>
-              {t('badge')}
+              {t("badge")}
             </motion.div>
 
             <motion.h1
@@ -31,7 +32,9 @@ const Hero = () => {
               transition={{ duration: 0.6, delay: 0.1 }}
               className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-text-main leading-[1.05] mb-8 text-balance"
             >
-              {t('titleStart')} <span className="text-primary">{t('titleHighlight')}</span> {t('titleEnd')}
+              {t("titleStart")}{" "}
+              <span className="text-primary">{t("titleHighlight")}</span>{" "}
+              {t("titleEnd")}
             </motion.h1>
 
             <motion.p
@@ -40,7 +43,7 @@ const Hero = () => {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="text-lg md:text-xl text-text-secondary max-w-lg mb-12 leading-relaxed font-medium"
             >
-              {t('description')}
+              {t("description")}
             </motion.p>
 
             <motion.div
@@ -54,7 +57,7 @@ const Hero = () => {
                 href="#contacto"
                 onClick={() => trackCTAClick("hero", "Agendar llamada")}
               >
-                {t('cta')}
+                {t("cta")}
                 <ArrowRight
                   className="ml-2 group-hover:translate-x-1 transition-transform"
                   size={20}
@@ -70,15 +73,15 @@ const Hero = () => {
             >
               <div className="flex items-center gap-2">
                 <ShieldCheck className="text-primary/40" size={18} />
-                <span>{t('features.delivery')}</span>
+                <span>{t("features.delivery")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <ShieldCheck className="text-primary/40" size={18} />
-                <span>{t('features.legacy')}</span>
+                <span>{t("features.legacy")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <ShieldCheck className="text-primary/40" size={18} />
-                <span>{t('features.support')}</span>
+                <span>{t("features.support")}</span>
               </div>
             </motion.div>
           </div>
@@ -184,7 +187,7 @@ const Hero = () => {
                     fontWeight="bold"
                     fill="#64748b"
                   >
-                    {t('chart.leads')}
+                    {t("chart.leads")}
                   </motion.text>
 
                   <motion.rect
@@ -206,7 +209,7 @@ const Hero = () => {
                     fontWeight="bold"
                     fill="#135bec"
                   >
-                    {t('chart.upload')}
+                    {t("chart.upload")}
                   </motion.text>
 
                   <defs>

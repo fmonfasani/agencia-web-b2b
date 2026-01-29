@@ -5,7 +5,8 @@ import { Clock, Globe, ShieldCheck, User } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 const PricingHero = () => {
-  const t = useTranslations('Pricing.Hero');
+  // Inicializamos el hook apuntando al namespace 'Pricing.Hero' para textos específicos de esta sección
+  const t = useTranslations("Pricing.Hero");
 
   return (
     <section className="relative pt-32 pb-20 bg-white technical-grid overflow-hidden">
@@ -18,10 +19,12 @@ const PricingHero = () => {
           transition={{ duration: 0.5 }}
         >
           <h1 className="text-5xl md:text-6xl font-extrabold text-text-main tracking-tight mb-6 text-balance">
-            {t('titleStart')} <span className="text-primary">{t('titleHighlight')}</span> {t('titleEnd')}
+            {t("titleStart")}{" "}
+            <span className="text-primary">{t("titleHighlight")}</span>{" "}
+            {t("titleEnd")}
           </h1>
           <p className="text-xl text-text-secondary max-w-2xl mx-auto font-medium mb-10 text-balance">
-            {t('subtitle')}
+            {t("subtitle")}
           </p>
         </motion.div>
 

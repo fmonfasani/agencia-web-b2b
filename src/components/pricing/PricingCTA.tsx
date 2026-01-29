@@ -5,7 +5,8 @@ import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 
 const PricingCTA = () => {
-  const t = useTranslations('Pricing.CTA');
+  // Inicializamos el hook apuntando al namespace 'Pricing.CTA'
+  const t = useTranslations("Pricing.CTA");
 
   return (
     <section className="section-padding bg-white">
@@ -21,17 +22,17 @@ const PricingCTA = () => {
           </div>
 
           <h2 className="text-3xl md:text-5xl font-extrabold text-text-main mb-6 tracking-tight relative z-10 leading-tight">
-            {t('title')}
+            {t("title")}
           </h2>
           <p className="text-lg md:text-xl text-text-secondary font-medium mb-12 max-w-xl mx-auto relative z-10">
-            {t('subtitle')}
+            {t("subtitle")}
           </p>
 
           <a
             href="#contacto"
             className="inline-flex items-center justify-center h-16 px-12 rounded-2xl bg-primary text-white font-bold text-lg hover:bg-primary-dark transition-all shadow-xl shadow-primary/30 relative z-10"
           >
-            {t('button')}
+            {t("button")}
           </a>
         </motion.div>
       </div>

@@ -11,7 +11,8 @@ const Header = () => {
   const pathname = usePathname();
   const router = useRouter();
   const locale = useLocale();
-  const t = useTranslations('Header');
+  // Hook para acceder a las traducciones del namespace 'Header' (navegación)
+  const t = useTranslations("Header");
 
   const handleLanguageSwitch = () => {
     const nextLocale = locale === "es" ? "en" : "es";
@@ -19,9 +20,9 @@ const Header = () => {
   };
 
   const navItems = [
-    { name: t('nav.services'), href: "/#servicios" },
-    { name: t('nav.process'), href: "/#proceso" },
-    { name: t('nav.pricing'), href: "/pricing" },
+    { name: t("nav.services"), href: "/#servicios" },
+    { name: t("nav.process"), href: "/#proceso" },
+    { name: t("nav.pricing"), href: "/pricing" },
   ];
 
   const handleCTAClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -85,10 +86,11 @@ const Header = () => {
               return (
                 <a
                   key={item.name}
-                  className={`text-[13px] font-bold uppercase tracking-widest transition-colors ${isActive
-                    ? "text-primary"
-                    : "text-text-secondary hover:text-primary"
-                    }`}
+                  className={`text-[13px] font-bold uppercase tracking-widest transition-colors ${
+                    isActive
+                      ? "text-primary"
+                      : "text-text-secondary hover:text-primary"
+                  }`}
                   href={item.href}
                   onClick={(e) => handleNavigation(item.href, item.name, e)}
                 >
@@ -111,7 +113,7 @@ const Header = () => {
               href="#contacto"
               onClick={handleCTAClick}
             >
-              {t('nav.cta')}
+              {t("nav.cta")}
             </a>
             <button
               className="md:hidden p-2 text-text-main"
@@ -140,8 +142,9 @@ const Header = () => {
                 return (
                   <a
                     key={item.name}
-                    className={`block text-lg font-bold ${isActive ? "text-primary" : "text-text-main"
-                      }`}
+                    className={`block text-lg font-bold ${
+                      isActive ? "text-primary" : "text-text-main"
+                    }`}
                     href={item.href}
                     onClick={(e) => handleNavigation(item.href, item.name, e)}
                   >
@@ -154,7 +157,7 @@ const Header = () => {
                 href="#contacto"
                 onClick={handleCTAClick}
               >
-                {t('nav.cta')}
+                {t("nav.cta")}
               </a>
             </div>
           </motion.div>

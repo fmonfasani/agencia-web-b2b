@@ -1,19 +1,13 @@
 "use client";
 import React from "react";
-import {
-  Shield,
-  Clock,
-  HardDrive,
-  Headphones,
-  Activity,
-  ArrowRight,
-} from "lucide-react";
+import { Shield, Clock, HardDrive, Headphones, Activity } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { useTranslations } from "next-intl";
 
 const PricingMaintenance = () => {
-  const t = useTranslations('Pricing.Maintenance');
+  // Inicializamos el hook apuntando al namespace 'Pricing.Maintenance'
+  const t = useTranslations("Pricing.Maintenance");
   return (
     <section className="section-padding bg-surface technical-grid">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -25,7 +19,7 @@ const PricingMaintenance = () => {
             viewport={{ once: true }}
           >
             <h2 className="text-3xl font-extrabold text-text-main mb-8 tracking-tight">
-              {t('title')}
+              {t("title")}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {Array.from({ length: 5 }).map((_, i) => (
@@ -56,7 +50,7 @@ const PricingMaintenance = () => {
             className="p-10 rounded-3xl bg-white border border-slate-100 shadow-premium"
           >
             <h3 className="text-xl font-bold text-text-main mb-6">
-              {t('clearTitle')}
+              {t("clearTitle")}
             </h3>
             <ul className="space-y-4">
               {Array.from({ length: 4 }).map((_, i) => (

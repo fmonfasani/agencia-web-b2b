@@ -7,14 +7,14 @@ import { useTranslations } from "next-intl";
 
 const plansConfig = [
   {
-    id: 'landing',
+    id: "landing",
     priceSetup: "299",
     priceMaint: "29.99",
     featureCount: 6,
     highlight: false,
   },
   {
-    id: 'professional',
+    id: "professional",
     priceSetup: "1.499",
     priceMaint: "149",
     featureCount: 7,
@@ -22,7 +22,7 @@ const plansConfig = [
     hasBadge: true,
   },
   {
-    id: 'corporate',
+    id: "corporate",
     priceSetup: "2.399",
     priceMaint: "239",
     featureCount: 6,
@@ -31,7 +31,8 @@ const plansConfig = [
 ];
 
 const PricingTable = () => {
-  const t = useTranslations('Pricing.plans');
+  // Inicializamos el hook para 'Pricing.plans' y accedemos dinámicamente usando las keys de los planes (landing, professional, corporate)
+  const t = useTranslations("Pricing.plans");
 
   return (
     <section className="section-padding bg-white">
@@ -44,10 +45,11 @@ const PricingTable = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
-              className={`flex flex-col p-8 rounded-3xl border transition-all relative ${plan.highlight
-                ? "border-primary/20 bg-primary/2 shadow-premium-hover scale-[1.05] z-10"
-                : "border-slate-100 bg-white shadow-premium"
-                }`}
+              className={`flex flex-col p-8 rounded-3xl border transition-all relative ${
+                plan.highlight
+                  ? "border-primary/20 bg-primary/2 shadow-premium-hover scale-[1.05] z-10"
+                  : "border-slate-100 bg-white shadow-premium"
+              }`}
             >
               {plan.hasBadge && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-white text-[10px] font-bold px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg shadow-primary/20">
@@ -72,7 +74,7 @@ const PricingTable = () => {
                       {plan.priceSetup}
                     </span>
                     <span className="text-sm font-semibold text-text-secondary">
-                      {t('labels.setup')}
+                      {t("labels.setup")}
                     </span>
                   </div>
                   <div className="flex items-baseline gap-2 text-primary">
@@ -81,7 +83,7 @@ const PricingTable = () => {
                       {plan.priceMaint}
                     </span>
                     <span className="text-sm font-semibold opacity-80">
-                      {t('labels.month')}
+                      {t("labels.month")}
                     </span>
                   </div>
                 </div>
@@ -108,12 +110,13 @@ const PricingTable = () => {
               <a
                 href="#contacto"
                 onClick={() => trackPricingPlanClick(plan.id, plan.priceSetup)}
-                className={`w-full py-4 rounded-xl font-bold text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${plan.highlight
-                  ? "bg-primary text-white hover:bg-primary-dark shadow-xl shadow-primary/20"
-                  : "bg-slate-50 text-text-main hover:bg-slate-100 border border-slate-200"
-                  }`}
+                className={`w-full py-4 rounded-xl font-bold text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
+                  plan.highlight
+                    ? "bg-primary text-white hover:bg-primary-dark shadow-xl shadow-primary/20"
+                    : "bg-slate-50 text-text-main hover:bg-slate-100 border border-slate-200"
+                }`}
               >
-                {t('labels.cta')}
+                {t("labels.cta")}
                 <ArrowRight size={16} />
               </a>
             </motion.div>

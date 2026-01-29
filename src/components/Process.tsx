@@ -4,35 +4,9 @@ import { motion } from "framer-motion";
 import { GitCommit } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-const steps = [
-  {
-    number: "01",
-    title: "Briefing Técnico",
-    description:
-      "Analizamos tu funnel comercial y detectamos las fugas de conversión actuales.",
-  },
-  {
-    number: "02",
-    title: "Estrategia Visual",
-    description:
-      "Definimos la arquitectura y el lenguaje visual que transmitirá autoridad.",
-  },
-  {
-    number: "03",
-    title: "Sprint de Desarrollo",
-    description:
-      "Construcción modular bajo estándares de performance extrema (90+ PageSpeed).",
-  },
-  {
-    number: "04",
-    title: "Lanzamiento & QA",
-    description:
-      "Despliegue controlado con monitoreo de métricas y capacitación de equipo.",
-  },
-];
-
 const Process = () => {
-  const t = useTranslations('Process');
+  // Hook para acceder a las traducciones del namespace 'Process' (definido en es.json/en.json)
+  const t = useTranslations("Process");
 
   return (
     <section
@@ -54,17 +28,13 @@ const Process = () => {
             className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest mb-6"
           >
             <GitCommit size={14} />
-            {t('chip')}
+            {t("chip")}
           </motion.div>
-          <motion.h2
-            className="text-3xl md:text-5xl font-extrabold text-text-main mb-6 tracking-tight"
-          >
-            {t('title')}
+          <motion.h2 className="text-3xl md:text-5xl font-extrabold text-text-main mb-6 tracking-tight">
+            {t("title")}
           </motion.h2>
-          <motion.p
-            className="text-lg text-text-secondary leading-relaxed font-medium"
-          >
-            {t('subtitle')}
+          <motion.p className="text-lg text-text-secondary leading-relaxed font-medium">
+            {t("subtitle")}
           </motion.p>
         </motion.div>
 

@@ -3,8 +3,12 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/routing";
 
 export default function CookieConsent() {
+  // Hook para acceder a las traducciones del namespace 'CookieConsent'
+  const t = useTranslations("CookieConsent");
   const [show, setShow] = useState(false);
 
   useEffect(() => {
@@ -57,19 +61,16 @@ export default function CookieConsent() {
               {/* Content */}
               <div className="flex-1 pr-4">
                 <h3 className="text-lg font-bold text-text-main mb-2">
-                  🍪 Usamos cookies
+                  {t("title")}
                 </h3>
                 <p className="text-sm text-text-secondary leading-relaxed">
-                  Utilizamos cookies para mejorar tu experiencia, analizar el
-                  tráfico del sitio y personalizar el contenido. Al hacer clic
-                  en &quot;Aceptar&quot;, aceptás el uso de todas las cookies.
-                  Podés leer más en nuestra{" "}
-                  <a
+                  {t("description")}
+                  <Link
                     href="/privacy"
                     className="text-primary underline hover:text-primary-dark"
                   >
-                    Política de Privacidad
-                  </a>
+                    {t("privacyPolicy")}
+                  </Link>
                   .
                 </p>
               </div>
@@ -80,13 +81,13 @@ export default function CookieConsent() {
                   onClick={declineCookies}
                   className="px-6 py-3 text-sm font-bold text-text-secondary hover:text-text-main transition-colors rounded-xl border-2 border-slate-200 hover:border-slate-300"
                 >
-                  Rechazar
+                  {t("decline")}
                 </button>
                 <button
                   onClick={acceptCookies}
                   className="px-6 py-3 text-sm font-bold bg-primary text-white rounded-xl hover:bg-primary-dark transition-all shadow-lg shadow-primary/20"
                 >
-                  Aceptar todas
+                  {t("accept")}
                 </button>
               </div>
 
@@ -94,7 +95,7 @@ export default function CookieConsent() {
               <button
                 onClick={declineCookies}
                 className="absolute top-4 right-4 p-1 text-slate-400 hover:text-slate-600 transition-colors md:hidden"
-                aria-label="Cerrar"
+                aria-label={t("close")}
               >
                 <X size={20} />
               </button>
