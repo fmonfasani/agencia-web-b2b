@@ -150,8 +150,11 @@
     "form": {
       "title": "Iniciemos un proyecto",
       "name": "Nombre Colaborador",
+      "namePlaceholder": "Ej. Juan Perez",
       "email": "Email Corporativo",
+      "emailPlaceholder": "juan@empresa.com",
       "company": "Empresa",
+      "companyPlaceholder": "Nombre de tu empresa",
       "budget": "Presupuesto Estimado",
       "budgetPlaceholder": "Selecciona un rango",
       "budgetOptions": {
@@ -161,6 +164,7 @@
         "range_4": "Más de $5,000 USD"
       },
       "message": "Mensaje",
+      "messagePlaceholder": "¿Cómo podemos ayudarte?",
       "submit": "Enviar consulta",
       "sending": "Enviando...",
       "success": {

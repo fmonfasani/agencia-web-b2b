@@ -150,8 +150,11 @@
     "form": {
       "title": "Let's start a project",
       "name": "Work Name",
+      "namePlaceholder": "Ex. John Doe",
       "email": "Work Email",
+      "emailPlaceholder": "john@company.com",
       "company": "Company",
+      "companyPlaceholder": "Your company name",
       "budget": "Estimated Budget",
       "budgetPlaceholder": "Select a range",
       "budgetOptions": {
@@ -161,6 +164,7 @@
         "range_4": "More than $5,000 USD"
       },
       "message": "Message",
+      "messagePlaceholder": "How can we help you?",
       "submit": "Send Inquiry",
       "sending": "Sending...",
       "success": {

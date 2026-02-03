@@ -152,7 +152,7 @@ const Footer = () => {
                               setFormData({ ...formData, name: e.target.value })
                             }
                             className="w-full bg-white/5 border border-white/10 rounded-xl h-12 px-4 text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all"
-                            placeholder="Ej. Juan Perez"
+                            placeholder={t("form.namePlaceholder")}
                           />
                         </div>
                         <div className="space-y-2">
@@ -174,7 +174,7 @@ const Footer = () => {
                               })
                             }
                             className="w-full bg-white/5 border border-white/10 rounded-xl h-12 px-4 text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all"
-                            placeholder="juan@empresa.com"
+                            placeholder={t("form.emailPlaceholder")}
                           />
                         </div>
                         <div className="space-y-2">
@@ -195,7 +195,7 @@ const Footer = () => {
                               })
                             }
                             className="w-full bg-white/5 border border-white/10 rounded-xl h-12 px-4 text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all"
-                            placeholder="Nombre de tu empresa"
+                            placeholder={t("form.companyPlaceholder")}
                           />
                         </div>
                         <div className="space-y-2">
@@ -256,7 +256,7 @@ const Footer = () => {
                             })
                           }
                           className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all resize-none"
-                          placeholder="¿Cómo podemos ayudarte?"
+                          placeholder={t("form.messagePlaceholder")}
                         />
                       </div>
                       <button
