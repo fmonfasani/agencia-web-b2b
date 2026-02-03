@@ -54,7 +54,7 @@ const Footer = () => {
       <div className="absolute top-0 left-0 w-full h-px bg-linear-to-r from-transparent via-white/10 to-transparent" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-20 lg:gap-32">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
           {/* Brand & Claim */}
           <div className="lg:col-span-6 space-y-12">
             <div className="flex items-center gap-3">
