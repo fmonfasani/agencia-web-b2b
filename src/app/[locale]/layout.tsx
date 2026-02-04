@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { Manrope } from "next/font/google";
 import "../globals.css";
-import { NextIntlClientProvider } from 'next-intl';
-import { getMessages } from 'next-intl/server';
-import { notFound } from 'next/navigation';
-import { routing } from '@/i18n/routing';
+import { NextIntlClientProvider } from "next-intl";
+import { getMessages } from "next-intl/server";
+import { notFound } from "next/navigation";
+import { routing } from "@/i18n/routing";
 import StructuredData from "@/components/StructuredData";
 import GoogleTagManager from "@/components/GoogleTagManager";
 import Analytics from "@/components/Analytics";
@@ -44,17 +44,21 @@ export const metadata: Metadata = {
       "Potenciamos empresas de servicios B2B con desarrollo web de alto rendimiento.",
   },
 };
+type Locale = (typeof routing.locales)[number];
+
+const isLocale = (value: string): value is Locale =>
+  routing.locales.includes(value as Locale);
 
 export default async function RootLayout({
   children,
-  params
+  params,
 }: {
   children: React.ReactNode;
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
 
-  if (!routing.locales.includes(locale as any)) {
+  if (!isLocale(locale)) {
     notFound();
   }
 
