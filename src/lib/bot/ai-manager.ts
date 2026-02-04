@@ -1,5 +1,7 @@
 import OpenAI from "openai";
 import { MessageContext } from "./redis-context";
+import type { LeadInfo } from "./lead-manager";
+
 
 const openai = process.env.OPENAI_API_KEY
   ? new OpenAI({
@@ -74,15 +76,8 @@ export async function generateAIResponse(
 export async function extractLeadData(
   history: MessageContext[],
   phone: string,
-): Promise<{
-  name: string;
-  company: string;
-  need: string;
-  budget: string;
-  phone: string;
-  timestamp: string;
-  status: string;
-} | null> {
+): Promise<LeadInfo | null> {
+
   try {
     const prompt = `
       Basado en la siguiente conversación de WhatsApp, extrae la información del lead en formato JSON.
