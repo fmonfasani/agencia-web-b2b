@@ -1,6 +1,5 @@
-import { render } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, jest } from "@jest/globals";
-import { screen, fireEvent, waitFor } from "@testing-library/dom";
 import Footer from "../Footer";
 
 // Mock framer-motion
@@ -15,11 +14,12 @@ jest.mock("framer-motion", () => ({
 }));
 
 // Mock fetch
-global.fetch = jest.fn();
+const mockFetch = jest.fn<Promise<Response>, Parameters<typeof fetch>>();
+global.fetch = mockFetch as typeof fetch;
 
-describe("Footer Component", () => {
+describe("Footer Component", () => {  
   beforeEach(() => {
-    (global.fetch as jest.Mock).mockClear();
+     mockFetch.mockClear();
   });
 
   it("renders contact form elements", () => {
@@ -64,10 +64,13 @@ describe("Footer Component", () => {
   });
 
   it("shows loading state when submitting", async () => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ success: true }),
-    });
+    mockFetch.mockResolvedValueOnce(
+      new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+
 
     render(<Footer />);
 
@@ -90,10 +93,12 @@ describe("Footer Component", () => {
   });
 
   it("shows success message on successful submission", async () => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ success: true }),
-    });
+     mockFetch.mockResolvedValueOnce(
+      new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
 
     render(<Footer />);
 
