@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 
 export default function AdminLayout({
   children,
@@ -15,12 +16,12 @@ export default function AdminLayout({
           </span>
         </div>
         <nav className="flex-1 py-8 px-4 space-y-2">
-          <a
+          <Link
             href="/admin/dashboard"
             className="flex items-center gap-3 px-4 py-3 bg-white/10 text-white rounded-xl font-medium text-sm"
           >
             Dashboard
-          </a>
+          </Link>
           <a
             href="#"
             className="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl font-medium text-sm transition-colors"
