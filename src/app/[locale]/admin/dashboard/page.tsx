@@ -1,14 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/Table"; // We'll create this simple component or use plain HTML first
-import { Badge } from "@/components/ui/Badge"; // We'll create this or use plain HTML
-import { formatDate } from "@/lib/utils"; // We'll check if utils exist, otherwise inline
+import type { Lead } from "@prisma/client";
 
 // Inline components for simplicity in this step to avoid dependency hell
 const StatusBadge = ({ status }: { status: string }) => {
@@ -34,7 +25,7 @@ export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   // Fetch leads directly from DB
-  const leads = await prisma.lead.findMany({
+  const leads: Lead[] = await prisma.lead.findMany({
     orderBy: { createdAt: "desc" },
   });
 
