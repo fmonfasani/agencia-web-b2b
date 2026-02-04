@@ -5,7 +5,6 @@ import { GitCommit } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 const Process = () => {
-  // Hook para acceder a las traducciones del namespace 'Process' (definido en es.json/en.json)
   const t = useTranslations("Process");
 
   return (
@@ -30,9 +29,11 @@ const Process = () => {
             <GitCommit size={14} />
             {t("chip")}
           </motion.div>
+
           <motion.h2 className="text-3xl md:text-5xl font-extrabold text-text-main mb-6 tracking-tight">
             {t("title")}
           </motion.h2>
+
           <motion.p className="text-lg text-text-secondary leading-relaxed font-medium">
             {t("subtitle")}
           </motion.p>
@@ -49,8 +50,9 @@ const Process = () => {
               className="group relative"
             >
               <div className="absolute top-8 left-0 w-full h-px bg-linear-to-r from-transparent via-primary/30 to-transparent lg:hidden" />
+
               {index !== 3 && (
-                <div className="hidden md:block absolute top-[26px] left-[calc(50%+26px)] w-[calc(100%-52px)] h-[1px] bg-slate-200 border-t border-dashed border-slate-300 -z-10 group-hover:border-primary/30 transition-colors" />
+                <div className="hidden md:block absolute top-[26px] left-[calc(50%+26px)] w-[calc(100%-52px)] h-[1px] border-t border-dashed border-slate-300 -z-10 group-hover:border-primary/30 transition-colors" />
               )}
 
               <div className="w-14 h-14 rounded-full bg-white border border-slate-200 flex items-center justify-center font-mono text-xs font-bold text-primary shadow-sm mb-8 transition-all duration-500 group-hover:border-primary group-hover:ring-4 group-hover:ring-primary/5">
@@ -60,11 +62,22 @@ const Process = () => {
               <h3 className="text-lg font-bold text-text-main mb-4 tracking-tight group-hover:text-primary transition-colors">
                 {t(`steps.${index}.title`)}
               </h3>
+
               <p className="text-sm leading-relaxed text-text-secondary font-medium px-2">
                 {t(`steps.${index}.description`)}
               </p>
             </motion.div>
           ))}
+        </div>
+
+        {/* CTA */}
+        <div className="text-center mt-20">
+          <p className="text-xl font-bold text-text-main mb-4">
+            {t("cta.title")}
+          </p>
+          <p className="text-text-secondary font-medium">
+            {t("cta.subtitle")}
+          </p>
         </div>
       </div>
     </section>
