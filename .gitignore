@@ -43,3 +43,9 @@ next-env.d.ts
 /src/generated/prisma
 
 .vercel
+
+# Documentation
+/docs/
+# SQLite databases
+*.db
+/intelligence_engine/data/
