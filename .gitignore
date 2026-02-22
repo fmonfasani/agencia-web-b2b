@@ -49,3 +49,4 @@ next-env.d.ts
 # SQLite databases
 *.db
 /intelligence_engine/data/
+/intelligence_engine/**/data/
