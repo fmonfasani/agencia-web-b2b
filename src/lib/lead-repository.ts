@@ -15,7 +15,6 @@ export interface CreateLeadInput {
 }
 
 export function buildLeadTenantWhere(tenantId?: string): Prisma.LeadWhereInput {
-  // @ts-expect-error - Prisma types stale in assistant
   return { tenantId: requireTenantId(tenantId) };
 }
 
@@ -27,7 +26,6 @@ export async function listLeadsByTenant(
   const activeTenantId = requireTenantId(tenantId);
 
   return prisma.lead.findMany({
-    // @ts-expect-error - Prisma types stale in assistant
     where: { tenantId: activeTenantId },
     orderBy: { createdAt: "desc" },
     take: limit,
@@ -38,7 +36,6 @@ export async function listLeadsByTenant(
 export async function countLeadsByTenant(tenantId?: string) {
   const activeTenantId = requireTenantId(tenantId);
   return prisma.lead.count({
-    // @ts-expect-error - Prisma types stale in assistant
     where: { tenantId: activeTenantId },
   });
 }
@@ -48,7 +45,6 @@ export async function createLeadForTenant(input: CreateLeadInput) {
 
   return prisma.lead.create({
     data: {
-      // @ts-expect-error - Prisma types stale in assistant
       tenantId: activeTenantId,
       name: input.name,
       email: input.email,
