@@ -1,8 +1,15 @@
 import { createHash, randomBytes } from "crypto";
 import { prisma } from "@/lib/prisma";
 
-const SESSION_TTL_HOURS = Number(process.env.SESSION_TTL_HOURS ?? 12);
+export const SESSION_TTL_HOURS = Number(process.env.SESSION_TTL_HOURS ?? 12);
 const ROTATION_WINDOW_MIN = Number(process.env.SESSION_ROTATE_MINUTES ?? 30);
+
+export async function updateSessionTenant(sessionId: string, tenantId: string) {
+  return await prisma.session.update({
+    where: { id: sessionId },
+    data: { tenantId },
+  });
+}
 
 function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");

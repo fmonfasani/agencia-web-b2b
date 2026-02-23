@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { SESSION_COOKIE_NAME, verifySessionToken } from "@/lib/auth/session";
+import { SESSION_COOKIE_NAME } from "@/lib/security/cookies";
+import { validateSession } from "@/lib/auth/session";
 
 export async function getSession() {
   const cookieStore = await cookies();
@@ -10,7 +11,8 @@ export async function getSession() {
     return null;
   }
 
-  return verifySessionToken(rawToken);
+  const validated = await validateSession(rawToken);
+  return validated ? validated.session : null;
 }
 
 export async function requireSession(locale: string) {

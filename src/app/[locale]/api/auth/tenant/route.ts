@@ -2,11 +2,10 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import {
-  createSessionToken,
+  getSessionCookieOptions,
   SESSION_COOKIE_NAME,
-  SESSION_DURATION_SECONDS,
-  verifySessionToken,
-} from "@/lib/auth/session";
+} from "@/lib/security/cookies";
+import { validateSession, updateSessionTenant } from "@/lib/auth/session";
 
 type ChangeTenantRequest = {
   tenantId?: string;
@@ -20,10 +19,12 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const session = verifySessionToken(rawToken);
-  if (!session) {
+  const validated = await validateSession(rawToken);
+  if (!validated) {
     return NextResponse.json({ error: "Invalid session" }, { status: 401 });
   }
+
+  const { session, token } = validated;
 
   const body = (await request.json()) as ChangeTenantRequest;
   const tenantId = body.tenantId?.trim();
@@ -35,37 +36,32 @@ export async function PATCH(request: Request) {
     );
   }
 
+  // Verificar que el usuario pertenece al tenant solicitado
   const membership = await prisma.membership.findFirst({
     where: {
-      userId: session.sub,
+      userId: session.userId,
       tenantId,
       status: "ACTIVE",
     },
-    select: { tenantId: true },
+    select: { id: true },
   });
 
   if (!membership) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const token = createSessionToken({
-    sub: session.sub,
-    email: session.email,
-    memberships: session.memberships,
-    activeTenantId: tenantId,
-  });
+  // Actualizar la sesión en la DB con el nuevo tenant activo
+  await updateSessionTenant(session.id, tenantId);
 
   const response = NextResponse.json({ activeTenantId: tenantId });
 
-  response.cookies.set({
-    name: SESSION_COOKIE_NAME,
-    value: token,
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: SESSION_DURATION_SECONDS,
-    path: "/",
-  });
+  // Actualizar la cookie por si acaso hubo rotación o para extender vida si quisiéramos
+  // Aunque validateSession ya maneja la rotación interna
+  response.cookies.set(
+    SESSION_COOKIE_NAME,
+    token,
+    getSessionCookieOptions(session.expiresAt),
+  );
 
   return response;
 }
