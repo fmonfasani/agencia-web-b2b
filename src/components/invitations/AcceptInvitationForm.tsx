@@ -19,10 +19,8 @@ type Props = {
 
 export default function AcceptInvitationForm({ token }: Props) {
   const [invitation, setInvitation] = useState<InvitationDetails | null>(null);
-  const [mode, setMode] = useState<"password" | "oauth">("password");
+  const [mode] = useState<"password">("password");
   const [password, setPassword] = useState("");
-  const [oauthProvider, setOauthProvider] = useState("google");
-  const [oauthProviderId, setOauthProviderId] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,10 +63,7 @@ export default function AcceptInvitationForm({ token }: Props) {
 
     try {
       setSubmitting(true);
-      const payload =
-        mode === "password"
-          ? { token, mode, password }
-          : { token, mode, oauthProvider, oauthProviderId };
+      const payload = { token, mode, password };
 
       const response = await fetch("/api/invitations/accept", {
         method: "POST",
@@ -141,81 +136,19 @@ export default function AcceptInvitationForm({ token }: Props) {
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-2">
           <label className="block text-sm font-medium text-slate-700">
-            Método de acceso
+            Configura tu contraseña (mínimo 8 caracteres)
           </label>
-          <div className="grid grid-cols-2 gap-4">
-            <button
-              type="button"
-              onClick={() => setMode("password")}
-              className={`px-4 py-2 text-sm font-medium rounded-xl border transition-all ${
-                mode === "password"
-                  ? "bg-slate-900 text-white border-slate-900"
-                  : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-              }`}
-            >
-              Contraseña
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode("oauth")}
-              className={`px-4 py-2 text-sm font-medium rounded-xl border transition-all ${
-                mode === "oauth"
-                  ? "bg-slate-900 text-white border-slate-900"
-                  : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-              }`}
-            >
-              External OAuth
-            </button>
-          </div>
+          <input
+            minLength={8}
+            onChange={(event) => setPassword(event.target.value)}
+            required
+            className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-slate-900/20"
+            type="password"
+            value={password}
+          />
         </div>
-
-        {mode === "password" ? (
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-slate-700">
-              Contraseña (mínimo 8 caracteres)
-            </label>
-            <input
-              minLength={8}
-              onChange={(event) => setPassword(event.target.value)}
-              required
-              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-slate-900/20"
-              type="password"
-              value={password}
-            />
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-slate-700">
-                Proveedor OAuth
-              </label>
-              <select
-                onChange={(event) => setOauthProvider(event.target.value)}
-                className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-slate-900/20 bg-white"
-                value={oauthProvider}
-              >
-                <option value="google">Google</option>
-                <option value="github">GitHub</option>
-                <option value="microsoft">Microsoft</option>
-              </select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-slate-700">
-                ID de cuenta OAuth
-              </label>
-              <input
-                onChange={(event) => setOauthProviderId(event.target.value)}
-                required
-                className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-slate-900/20"
-                type="text"
-                value={oauthProviderId}
-              />
-            </div>
-          </div>
-        )}
 
         {error && (
           <div className="p-3 bg-red-50 text-red-600 text-sm rounded-xl border border-red-100 italic">

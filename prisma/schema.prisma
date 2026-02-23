@@ -18,11 +18,13 @@ model User {
   id                       String            @id @default(cuid())
   email                    String            @unique
   passwordHash             String?
-  oauthProvider            String?
-  oauthProviderId          String?
+  status                   String            @default("ACTIVE") // ACTIVE, INACTIVE, BLOCKED, DELETED
+  lastLoginAt              DateTime?
+  deletedAt                DateTime?
   createdAt                DateTime          @default(now())
   updatedAt                DateTime          @updatedAt
   memberships              Membership[]
+  passwordResetTokens      PasswordResetToken[]
   invitationsSent          Invitation[]      @relation("InvitationInvitedBy")
   invitationsAccepted      Invitation[]      @relation("InvitationAcceptedBy")
   invitationsAcceptedAudit InvitationAudit[] @relation("AuditAcceptedBy")
@@ -74,14 +76,56 @@ model Tenant {
   memberships      Membership[]
   invitations      Invitation[]
   invitationAudits InvitationAudit[]
+  subscription     Subscription?
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Plan {
+  id            String         @id @default(cuid())
+  name          String
+  code          String         @unique // e.g., 'BASIC', 'PRO', 'ENTERPRISE'
+  description   String?
+  price         Decimal
+  limits        Json           // { maxUsers: 10, maxLeads: 1000, ... }
+  features      String[]       // List of enabled tags
+  subscriptions Subscription[]
+  createdAt     DateTime       @default(now())
+}
+
+model Subscription {
+  id                  String    @id @default(cuid())
+  tenantId            String    @unique
+  planId              String
+  status              String    @default("ACTIVE") // ACTIVE, PAST_DUE, CANCELED
+  currentPeriodStart  DateTime  @default(now())
+  currentPeriodEnd    DateTime
+  cancelAtPeriodEnd   Boolean   @default(false)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  tenant              Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  plan                Plan      @relation(fields: [planId], references: [id])
 }
 
 model Membership {
   id         String   @id @default(cuid())
   userId     String
   tenantId   String
-  role       String
-  status     String   @default("ACTIVE")
+  role       String   // Matches the RBAC Role hierarchy
+  department String?  // e.g., 'SALES', 'DEVELOPER'
+  status     String   @default("ACTIVE") // ACTIVE, INACTIVE, BLOCKED
   acceptedAt DateTime @default(now())
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -286,12 +330,10 @@ model UserDailyMetrics {
 }
 
 enum Role {
-  OWNER
+  SUPER_ADMIN
   ADMIN
-  SALES
-  MARKETING
+  OPERATOR
+  MEMBER
   VIEWER
-  DEVELOPER
-  MANAGER
 }
 

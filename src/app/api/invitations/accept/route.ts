@@ -98,10 +98,8 @@ export async function POST(request: Request) {
           mode === "password"
             ? {
                 passwordHash: hashPassword(password),
-                oauthProvider: null,
-                oauthProviderId: null,
               }
-            : { oauthProvider, oauthProviderId },
+            : {},
         create:
           mode === "password"
             ? {
@@ -110,8 +108,6 @@ export async function POST(request: Request) {
               }
             : {
                 email: invitation.email,
-                oauthProvider,
-                oauthProviderId,
               },
       });
 
