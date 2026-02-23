@@ -101,7 +101,6 @@ export default async function DashboardPage({
   }
 
   // Obtener membresía
-  // @ts-expect-error - membership type
   let membership = await prisma.membership.findFirst({
     where: {
       userId: auth.user.id,
@@ -111,7 +110,6 @@ export default async function DashboardPage({
   });
 
   if (!membership) {
-    // @ts-expect-error - membership type
     membership = await prisma.membership.findFirst({
       where: { userId: auth.user.id, status: "ACTIVE" },
     });
