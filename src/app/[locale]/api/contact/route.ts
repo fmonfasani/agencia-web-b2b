@@ -66,7 +66,7 @@ export async function POST(request: Request) {
         name,
         email,
         message,
-        company: company || null,
+        companyName: company || null,
         budget: budget || null,
         source: "contact_form",
         status: "NEW",

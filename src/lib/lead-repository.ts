@@ -5,12 +5,12 @@ import type { Prisma } from "@prisma/client";
 
 export interface CreateLeadInput {
   tenantId?: string;
-  email: string;
+  email: string | null;
   name?: string | null;
-  company?: string | null;
+  companyName?: string | null;
   budget?: string | null;
-  message: string;
-  source: string;
+  message?: string | null;
+  source?: string;
   status?: string;
 }
 
@@ -49,9 +49,9 @@ export async function createLeadForTenant(input: CreateLeadInput) {
       name: input.name,
       email: input.email,
       message: input.message,
-      company: input.company ?? null,
+      companyName: input.companyName ?? null,
       budget: input.budget ?? null,
-      source: input.source,
+      source: input.source || "manual",
       status: input.status ?? "NEW",
     },
   });

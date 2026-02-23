@@ -137,21 +137,72 @@ model InvitationAudit {
 }
 
 // Lead model for contact form submissions
+enum LeadSourceType {
+  SCRAPER
+  MANUAL
+  API
+  ADS
+}
+
+enum BusinessType {
+  SERVICIO
+  INDUSTRIA
+  COMERCIO
+  OFICIO
+}
+
+// Lead model for structured acquisition and intelligent classification
 model Lead {
-  id        String   @id @default(cuid())
-  tenantId  String
-  email     String?
-  name      String?
-  company   String?
-  budget    String?
-  message   String?
-  status    String   @default("NEW") // NEW, CONTACTED, QUALIFIED, CONVERTED, LOST
-  source    String   @default("contact_form") // contact_form, pricing_page, calculator
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id               String         @id @default(cuid())
+  tenantId         String
+  sourceType       LeadSourceType @default(MANUAL)
+  businessType     BusinessType?  // Validated at app level for manual entries
+  
+  // Basic Info (Normalized)
+  email            String?
+  name             String?        // Full name
+  firstName        String?
+  lastName         String?
+  companyName      String?
+  phone            String?
+  whatsapp         String?
+  
+  // Social & Web
+  website          String?
+  instagram        String?
+  linkedin         String?
+  
+  // Scraper / Google Maps Data
+  googlePlaceId    String?        @unique
+  googleMapsUrl    String?
+  category         String?        // Original Maps category
+  rating           Float?
+  reviewsCount     Int?
+  address          String?
+  hasPhysicalLocal Boolean        @default(false)
+  
+  // Enrichment & IA Results
+  description      String?        @db.Text
+  topKeywords      String[]       // Frequency extraction
+  budget           String?
+  message          String?
+  
+  // Scoring & Status
+  status           String         @default("NEW") // NEW, CONTACTED, QUALIFIED, PROPOSAL_SENT, CONVERTED, LOST, DISQUALIFIED
+  source           String         @default("manual") // Legacy compatibility
+  potentialScore   Float          @default(0) // 0-100 calculation
+  completeness     Float          @default(0) // 0-1 percentage
+  priority         String         @default("LOW") // LOW, MEDIUM, HIGH
+  
+  // Metadata for original input traceability
+  rawMetadata      Json?
+  
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 
   @@index([tenantId])
-  @@index([tenantId, createdAt])
+  @@index([tenantId, sourceType, status])
+  @@index([potentialScore])
   @@index([email])
   @@index([status])
   @@index([createdAt])
