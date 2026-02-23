@@ -1,10 +1,10 @@
-import NextAuth from "next-auth";
+import NextAuth, { type NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
 import { redirect } from "next/navigation";
 
-const providers: any[] = [
+const providers: NextAuthConfig["providers"] = [
   Credentials({
     name: "Internal credentials",
     credentials: {
