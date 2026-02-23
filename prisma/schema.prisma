@@ -170,7 +170,12 @@ model Lead {
   // Social & Web
   website          String?
   instagram        String?
+  facebook         String?
   linkedin         String?
+
+  // Flags de Verificación Manual / Auto
+  isEmailCorp      Boolean        @default(false)
+  isWebFunctional  Boolean        @default(true)
   
   // Scraper / Google Maps Data
   googlePlaceId    String?        @unique

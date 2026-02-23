@@ -8,6 +8,7 @@ import {
   normalizePhone,
   cleanText,
   inferCompanyName,
+  isCorporateEmail,
 } from "./normalizer";
 import { classifyBusinessByCategory } from "./classifier";
 import {
@@ -27,7 +28,13 @@ export interface LeadIngestInput {
   phone?: string;
   website?: string;
   instagram?: string;
+  facebook?: string;
+  linkedin?: string;
   whatsapp?: string;
+
+  // Manual Overrides / Quality Flags
+  isEmailCorp?: boolean;
+  isWebFunctional?: boolean;
 
   // Scraper Context
   googlePlaceId?: string;
@@ -102,6 +109,11 @@ export async function ingestLead(input: LeadIngestInput): Promise<Lead> {
 
     website: input.website,
     instagram: input.instagram,
+    facebook: input.facebook,
+    linkedin: input.linkedin,
+
+    isEmailCorp: input.isEmailCorp ?? isCorporateEmail(cleanEmail),
+    isWebFunctional: input.isWebFunctional ?? true,
 
     googlePlaceId: input.googlePlaceId,
     googleMapsUrl: input.googleMapsUrl,

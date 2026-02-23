@@ -61,6 +61,23 @@ export function inferCompanyName(
   return name.charAt(0).toUpperCase() + name.slice(1);
 }
 
+export function isCorporateEmail(email: string | null | undefined): boolean {
+  const domain = extractDomain(email);
+  if (!domain) return false;
+
+  const genericDomains = [
+    "gmail.com",
+    "outlook.com",
+    "hotmail.com",
+    "yahoo.com",
+    "icloud.com",
+    "live.com",
+    "me.com",
+    "msn.com",
+  ];
+  return !genericDomains.includes(domain);
+}
+
 export function cleanText(text: string | null | undefined): string | null {
   if (!text) return null;
   return text.trim().replace(/\s+/g, " ");

@@ -14,28 +14,32 @@ import {
   CheckCircle2,
   Instagram,
   Linkedin,
+  Facebook,
+  MapPin,
+  Check,
+  X,
 } from "lucide-react";
 
 const BUSINESS_TYPES = [
   {
     value: "SERVICIO",
     label: "Servicio",
-    color: "bg-blue-50 text-blue-600 border-blue-200",
+    color: "bg-blue-100 text-blue-700 border-blue-200",
   },
   {
     value: "INDUSTRIA",
     label: "Industria",
-    color: "bg-purple-50 text-purple-600 border-purple-200",
+    color: "bg-purple-100 text-purple-700 border-purple-200",
   },
   {
     value: "COMERCIO",
     label: "Comercio",
-    color: "bg-orange-50 text-orange-600 border-orange-200",
+    color: "bg-orange-100 text-orange-700 border-orange-200",
   },
   {
     value: "OFICIO",
     label: "Oficio",
-    color: "bg-emerald-50 text-emerald-600 border-emerald-200",
+    color: "bg-emerald-100 text-emerald-700 border-emerald-200",
   },
 ];
 
@@ -52,9 +56,13 @@ export default function LeadIngestForm({ locale }: { locale: string }) {
     companyName: "",
     website: "",
     instagram: "",
+    facebook: "",
     linkedin: "",
+    googleMapsUrl: "",
     businessType: "",
     description: "",
+    isEmailCorp: false,
+    isWebFunctional: true,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -94,6 +102,10 @@ export default function LeadIngestForm({ locale }: { locale: string }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const toggleField = (field: "isEmailCorp" | "isWebFunctional") => {
+    setFormData((prev) => ({ ...prev, [field]: !prev[field] }));
   };
 
   if (success) {
@@ -145,130 +157,191 @@ export default function LeadIngestForm({ locale }: { locale: string }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Info Básica */}
-        <div className="space-y-4">
-          <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">
-            Información de Contacto
-          </label>
-
-          <div className="relative group">
-            <User
-              className="absolute left-4 top-3.5 text-slate-400 group-focus-within:text-primary transition-colors"
-              size={18}
-            />
-            <input
-              type="text"
-              placeholder="Nombre Completo"
-              className="w-full bg-slate-50 border-none rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
-            />
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest">
+              Información de Contacto
+            </label>
           </div>
 
-          <div className="relative group">
-            <Mail
-              className="absolute left-4 top-3.5 text-slate-400 group-focus-within:text-primary transition-colors"
-              size={18}
-            />
-            <input
-              type="email"
-              placeholder="Email"
-              className="w-full bg-slate-50 border-none rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
-              value={formData.email}
-              onChange={(e) =>
-                setFormData({ ...formData, email: e.target.value })
-              }
-            />
-          </div>
+          <div className="space-y-4">
+            <div className="relative group">
+              <User
+                className="absolute left-4 top-3.5 text-slate-400 group-focus-within:text-primary transition-colors"
+                size={18}
+              />
+              <input
+                type="text"
+                placeholder="Nombre Completo"
+                className="w-full bg-slate-50 border-none rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+              />
+            </div>
 
-          <div className="relative group">
-            <Phone
-              className="absolute left-4 top-3.5 text-slate-400 group-focus-within:text-primary transition-colors"
-              size={18}
-            />
-            <input
-              type="tel"
-              placeholder="Teléfono / WhatsApp"
-              className="w-full bg-slate-50 border-none rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
-              value={formData.phone}
-              onChange={(e) =>
-                setFormData({ ...formData, phone: e.target.value })
-              }
-            />
+            <div className="flex gap-2">
+              <div className="relative group flex-1">
+                <Mail
+                  className="absolute left-4 top-3.5 text-slate-400 group-focus-within:text-primary transition-colors"
+                  size={18}
+                />
+                <input
+                  type="email"
+                  placeholder="Email"
+                  className="w-full bg-slate-50 border-none rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                  value={formData.email}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => toggleField("isEmailCorp")}
+                className={`px-3 rounded-2xl border text-[10px] font-black uppercase tracking-tighter transition-all flex flex-col items-center justify-center gap-0.5 ${formData.isEmailCorp ? "bg-blue-100 border-blue-200 text-blue-600" : "bg-slate-50 border-slate-100 text-slate-400 opacity-50"}`}
+              >
+                {formData.isEmailCorp ? <Check size={12} /> : <X size={12} />}
+                Corp
+              </button>
+            </div>
+
+            <div className="relative group">
+              <Phone
+                className="absolute left-4 top-3.5 text-slate-400 group-focus-within:text-primary transition-colors"
+                size={18}
+              />
+              <input
+                type="tel"
+                placeholder="Teléfono / WhatsApp"
+                className="w-full bg-slate-50 border-none rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                value={formData.phone}
+                onChange={(e) =>
+                  setFormData({ ...formData, phone: e.target.value })
+                }
+              />
+            </div>
           </div>
         </div>
 
         {/* Info Empresa */}
-        <div className="space-y-4">
-          <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">
+        <div className="space-y-6">
+          <label className="block text-xs font-black text-slate-400 uppercase tracking-widest">
             Empresa & Presencia
           </label>
 
-          <div className="relative group">
-            <Building2
-              className="absolute left-4 top-3.5 text-slate-400 group-focus-within:text-primary transition-colors"
-              size={18}
-            />
-            <input
-              type="text"
-              placeholder="Nombre de la Empresa"
-              className="w-full bg-slate-50 border-none rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
-              value={formData.companyName}
-              onChange={(e) =>
-                setFormData({ ...formData, companyName: e.target.value })
-              }
-            />
-          </div>
-
-          <div className="relative group">
-            <Globe
-              className="absolute left-4 top-3.5 text-slate-400 group-focus-within:text-primary transition-colors"
-              size={18}
-            />
-            <input
-              type="text"
-              placeholder="Sitio Web (url)"
-              className="w-full bg-slate-50 border-none rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
-              value={formData.website}
-              onChange={(e) =>
-                setFormData({ ...formData, website: e.target.value })
-              }
-            />
-          </div>
-
-          <div className="flex gap-4">
-            <div className="relative group flex-1">
-              <Instagram
-                className="absolute left-4 top-3.5 text-slate-400 group-focus-within:text-pink-500 transition-colors"
+          <div className="space-y-4">
+            <div className="relative group">
+              <Building2
+                className="absolute left-4 top-3.5 text-slate-400 group-focus-within:text-primary transition-colors"
                 size={18}
               />
               <input
                 type="text"
-                placeholder="Instagram"
-                className="w-full bg-slate-50 border-none rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
-                value={formData.instagram}
+                placeholder="Nombre de la Empresa"
+                className="w-full bg-slate-50 border-none rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none font-bold"
+                value={formData.companyName}
                 onChange={(e) =>
-                  setFormData({ ...formData, instagram: e.target.value })
+                  setFormData({ ...formData, companyName: e.target.value })
                 }
               />
             </div>
-            <div className="relative group flex-1">
-              <Linkedin
-                className="absolute left-4 top-3.5 text-slate-400 group-focus-within:text-blue-600 transition-colors"
+
+            <div className="flex gap-2">
+              <div className="relative group flex-1">
+                <Globe
+                  className="absolute left-4 top-3.5 text-slate-400 group-focus-within:text-primary transition-colors"
+                  size={18}
+                />
+                <input
+                  type="text"
+                  placeholder="Sitio Web (url)"
+                  className="w-full bg-slate-50 border-none rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                  value={formData.website}
+                  onChange={(e) =>
+                    setFormData({ ...formData, website: e.target.value })
+                  }
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => toggleField("isWebFunctional")}
+                className={`px-3 rounded-2xl border text-[10px] font-black uppercase tracking-tighter transition-all flex flex-col items-center justify-center gap-0.5 ${formData.isWebFunctional ? "bg-emerald-100 border-emerald-200 text-emerald-600" : "bg-rose-100 border-rose-200 text-rose-600"}`}
+              >
+                {formData.isWebFunctional ? (
+                  <Check size={12} />
+                ) : (
+                  <X size={12} />
+                )}
+                Works
+              </button>
+            </div>
+
+            <div className="relative group">
+              <MapPin
+                className="absolute left-4 top-3.5 text-slate-400 group-focus-within:text-orange-500 transition-colors"
                 size={18}
               />
               <input
                 type="text"
-                placeholder="LinkedIn"
+                placeholder="URL de Google Maps"
                 className="w-full bg-slate-50 border-none rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
-                value={formData.linkedin}
+                value={formData.googleMapsUrl}
                 onChange={(e) =>
-                  setFormData({ ...formData, linkedin: e.target.value })
+                  setFormData({ ...formData, googleMapsUrl: e.target.value })
                 }
               />
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              <div className="relative group">
+                <Instagram
+                  className="absolute left-3 top-2.5 text-slate-400 group-focus-within:text-pink-500"
+                  size={14}
+                />
+                <input
+                  type="text"
+                  placeholder="Instagram"
+                  className="w-full bg-slate-50 border-none rounded-xl py-2.5 pl-8 pr-2 text-[10px] focus:ring-1 focus:ring-pink-200 outline-none"
+                  value={formData.instagram}
+                  onChange={(e) =>
+                    setFormData({ ...formData, instagram: e.target.value })
+                  }
+                />
+              </div>
+              <div className="relative group">
+                <Facebook
+                  className="absolute left-3 top-2.5 text-slate-400 group-focus-within:text-blue-600"
+                  size={14}
+                />
+                <input
+                  type="text"
+                  placeholder="Facebook"
+                  className="w-full bg-slate-50 border-none rounded-xl py-2.5 pl-8 pr-2 text-[10px] focus:ring-1 focus:ring-blue-200 outline-none"
+                  value={formData.facebook}
+                  onChange={(e) =>
+                    setFormData({ ...formData, facebook: e.target.value })
+                  }
+                />
+              </div>
+              <div className="relative group">
+                <Linkedin
+                  className="absolute left-3 top-2.5 text-slate-400 group-focus-within:text-blue-700"
+                  size={14}
+                />
+                <input
+                  type="text"
+                  placeholder="LinkedIn"
+                  className="w-full bg-slate-50 border-none rounded-xl py-2.5 pl-8 pr-2 text-[10px] focus:ring-1 focus:ring-blue-200 outline-none"
+                  value={formData.linkedin}
+                  onChange={(e) =>
+                    setFormData({ ...formData, linkedin: e.target.value })
+                  }
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -280,7 +353,7 @@ export default function LeadIngestForm({ locale }: { locale: string }) {
         </label>
         <textarea
           placeholder="Añade detalles sobre el lead..."
-          rows={4}
+          rows={3}
           className="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none resize-none"
           value={formData.description}
           onChange={(e) =>
@@ -292,7 +365,7 @@ export default function LeadIngestForm({ locale }: { locale: string }) {
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-[#0a0a0b] text-white py-4 rounded-2xl font-black text-sm hover:bg-slate-800 transition-all shadow-xl shadow-black/10 flex items-center justify-center gap-2 disabled:opacity-50"
+        className="w-full bg-[#0a0a0b] text-white py-4 rounded-3xl font-black text-sm hover:bg-slate-800 transition-all shadow-2xl shadow-black/10 flex items-center justify-center gap-2 disabled:opacity-50"
       >
         {loading ? (
           <Loader2 className="animate-spin" size={20} />
