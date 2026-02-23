@@ -4,7 +4,7 @@ import Google from "next-auth/providers/google";
 import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
 import { redirect } from "next/navigation";
 
-const providers = [
+const providers: any[] = [
   Credentials({
     name: "Internal credentials",
     credentials: {
