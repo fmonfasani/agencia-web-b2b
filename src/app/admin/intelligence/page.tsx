@@ -35,6 +35,8 @@ interface Lead {
   redes_detectadas?: string;
   tiene_web_propia?: number;
   correo_institucional?: number;
+  whatsapp_number?: string;
+  fuente?: string;
 }
 
 interface Taxonomy {
