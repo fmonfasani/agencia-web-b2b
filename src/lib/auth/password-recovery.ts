@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
-import bcrypt from "bcryptjs";
+import { hashPassword } from "@/lib/auth/password";
 import { IAMService } from "../iam/iam.service";
 
 /**
@@ -64,7 +64,7 @@ export const PasswordRecovery = {
     if (!tokenRecord) throw new Error("Token invalid or expired");
 
     // Update user
-    const passwordHash = await bcrypt.hash(newPassword, 12);
+    const passwordHash = hashPassword(newPassword);
 
     await prisma.$transaction([
       prisma.user.update({
