@@ -101,4 +101,22 @@ npm run dev
 
 ---
 
+## 🛡️ Troubleshooting PRs
+
+Si no podés crear Pull Requests, normalmente es porque tu repo local no tiene configurado el remote `origin`.
+
+Podés revisar y corregir eso automáticamente con:
+
+```bash
+npm run git:fix-pr
+```
+
+Si tu entorno no expone la variable `GITHUB_REPOSITORY`, pasá manualmente la URL del repo:
+
+```bash
+bash scripts/fix-pr-setup.sh git@github.com:<owner>/<repo>.git
+```
+
+---
+
 _Desarrollado para Agencia Leads — Transformando Datos en Revenue._
