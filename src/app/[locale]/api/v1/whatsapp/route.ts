@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateMetaSignature } from "@/lib/meta/signature-validator";
 import { sendWhatsAppMessage } from "@/lib/meta/whatsapp-client";
-import { updateConversationHistory } from "@/lib/bot/redis-context";
+import {
+  updateConversationHistory,
+  getConversationHistory,
+} from "@/lib/bot/redis-context";
 import { generateAIResponse, extractLeadData } from "@/lib/bot/ai-manager";
 import { saveLead } from "@/lib/bot/lead-manager";
 import { notifyQualifiedLead } from "@/lib/bot/notification-manager";
@@ -80,8 +83,8 @@ export async function POST(req: NextRequest) {
       if (!body) return NextResponse.json({ status: "ok" });
 
       try {
-        const history = []; // TODO: Implement tenant-scoped context
-        const aiResponse = await generateAIResponse(body, history);
+        const history = await getConversationHistory(from);
+        const aiResponse = await generateAIResponse(history, body);
 
         const cleanResponse = aiResponse
           .replace(/\[QUALIFIED\]|\[DISQUALIFIED\]/g, "")
