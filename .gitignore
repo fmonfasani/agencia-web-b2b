@@ -50,3 +50,5 @@ next-env.d.ts
 *.db
 /intelligence_engine/data/
 /intelligence_engine/**/data/
+
+

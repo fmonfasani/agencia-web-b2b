@@ -50,8 +50,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       leadId: lead.id,
-      score: lead.potentialScore,
-      priority: lead.priority,
+      score: (lead as any).potentialScore,
+      priority: (lead as any).priority,
       message: "Lead processed and persisted successfully.",
     });
   } catch (error: any) {

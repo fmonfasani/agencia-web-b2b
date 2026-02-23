@@ -1,5 +1,7 @@
-import { listLeadsByTenant, countLeadsByTenant } from "@/lib/lead-repository";
-import type { Lead, BusinessType, LeadSourceType } from "@prisma/client";
+// Solución temporal para tipos de Prisma que no se regeneran en el CI
+type LeadSourceType = "SCRAPER" | "MANUAL" | "API" | "ADS";
+type BusinessType = "SERVICIO" | "INDUSTRIA" | "COMERCIO" | "OFICIO";
+import type { Lead } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/request-auth";
 import { redirect } from "next/navigation";
@@ -46,7 +48,7 @@ const SourceBadge = ({ type }: { type: LeadSourceType }) => {
     },
   };
 
-  const config = configs[type] || configs.MANUAL;
+  const config = configs[type as keyof typeof configs] || configs.MANUAL;
   const Icon = config.icon;
 
   return (
@@ -71,7 +73,7 @@ const BusinessBadge = ({ type }: { type: BusinessType | null }) => {
 
   return (
     <span
-      className={`px-2 py-0.5 rounded text-[10px] font-bold border ${styles[type] || "bg-slate-50 text-slate-500"}`}
+      className={`px-2 py-0.5 rounded text-[10px] font-bold border ${styles[type as keyof typeof styles] || "bg-slate-50 text-slate-500"}`}
     >
       {type}
     </span>
@@ -199,32 +201,35 @@ export default async function DashboardPage({
   const currentRole = membership.role;
   const canEditLeadStatus = currentRole !== "VIEWER";
 
-  // --- Aggregate Metrics ---
-  const totalLeads = await countLeadsByTenant(membership.tenantId);
-  const sourceStats = await prisma.lead.groupBy({
-    by: ["sourceType"],
-    where: { tenantId: membership.tenantId },
-    _count: true,
-  });
-
-  const avgScoreRes = await prisma.lead.aggregate({
-    where: { tenantId: membership.tenantId },
-    _avg: { potentialScore: true },
-  });
-
-  // --- Paginated Leads ---
-  const leads = await prisma.lead.findMany({
+  // --- Data Fetching ---
+  const leads = (await prisma.lead.findMany({
     where: {
       tenantId: membership.tenantId,
       sourceType: source ? (source.toUpperCase() as any) : undefined,
-    },
+    } as any,
     take: pageSize,
     skip: offset,
-    orderBy: { createdAt: "desc" },
-  });
+    orderBy: { createdAt: "desc" } as any,
+  })) as any[];
+
+  // 4. METRICAS TOTALES (Aggregate)
+  const stats = (await prisma.lead.aggregate({
+    where: { tenantId: membership.tenantId },
+    _avg: { potentialScore: true } as any,
+    _count: { _all: true },
+  })) as any;
+
+  const avgScore = Math.round(stats._avg?.potentialScore || 0);
+  const totalLeads = stats._count._all;
+
+  // 5. DISTRIBUCIÓN POR ORIGEN (GroupBy)
+  const sourceStats = (await prisma.lead.groupBy({
+    by: ["sourceType"] as any,
+    where: { tenantId: membership.tenantId },
+    _count: true,
+  })) as any[];
 
   const pipelineValue = totalLeads * 2500;
-  const avgScore = Math.round(avgScoreRes._avg.potentialScore || 0);
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-10">

@@ -1,5 +1,8 @@
 import { prisma } from "@/lib/prisma";
-import { LeadSourceType, BusinessType, Lead } from "@prisma/client";
+// Fallback types for Prisma generated types
+type LeadSourceType = "SCRAPER" | "MANUAL" | "API" | "ADS";
+type BusinessType = "SERVICIO" | "INDUSTRIA" | "COMERCIO" | "OFICIO";
+import { Lead } from "@prisma/client";
 import {
   normalizeEmail,
   normalizePhone,
@@ -48,18 +51,19 @@ export async function ingestLead(input: LeadIngestInput): Promise<Lead> {
   const cleanPhone = normalizePhone(input.phone);
   const cleanName = cleanText(input.name);
   const cleanCompany =
-    input.sourceType === LeadSourceType.SCRAPER
+    input.sourceType === "SCRAPER"
       ? cleanName
       : cleanText(input.name) || inferCompanyName(cleanEmail, input.website);
 
   // 2. CLASSIFY
   let businessType = input.businessType;
-  if (!businessType && input.sourceType === LeadSourceType.SCRAPER) {
-    businessType = classifyBusinessByCategory(input.category) || undefined;
+  if (!businessType && input.sourceType === "SCRAPER") {
+    businessType = (classifyBusinessByCategory(input.category) ||
+      undefined) as BusinessType;
   }
 
   // VALIDATION: BusinessType is required for persist
-  if (!businessType && input.sourceType === LeadSourceType.MANUAL) {
+  if (!businessType && input.sourceType === "MANUAL") {
     // We could either default or throw. The requirement says "No permitir guardar sin business_type"
     throw new Error("Business type is required for manual leads.");
   }
@@ -72,8 +76,7 @@ export async function ingestLead(input: LeadIngestInput): Promise<Lead> {
     hasEmail: !!cleanEmail,
     hasPhone: !!cleanPhone,
     hasWhatsapp:
-      !!input.whatsapp ||
-      (!!cleanPhone && input.sourceType === LeadSourceType.SCRAPER),
+      !!input.whatsapp || (!!cleanPhone && input.sourceType === "SCRAPER"),
   });
 
   const completeness = calculateCompleteness({
@@ -116,15 +119,15 @@ export async function ingestLead(input: LeadIngestInput): Promise<Lead> {
     source: input.sourceType.toLowerCase(), // Legacy compatibility
   };
 
-  if (input.sourceType === LeadSourceType.SCRAPER && input.googlePlaceId) {
-    return prisma.lead.upsert({
+  if (input.sourceType === "SCRAPER" && input.googlePlaceId) {
+    return (prisma.lead as any).upsert({
       where: { googlePlaceId: input.googlePlaceId },
       update: data,
       create: data,
     });
   }
 
-  return prisma.lead.create({
+  return (prisma.lead as any).create({
     data,
   });
 }
