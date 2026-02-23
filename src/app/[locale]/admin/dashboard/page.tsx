@@ -202,20 +202,20 @@ export default async function DashboardPage({
   const canEditLeadStatus = currentRole !== "VIEWER";
 
   // --- Data Fetching ---
-  const leads = (await prisma.lead.findMany({
+  const leads = (await (prisma.lead as any).findMany({
     where: {
       tenantId: membership.tenantId,
       sourceType: source ? (source.toUpperCase() as any) : undefined,
-    } as any,
+    },
     take: pageSize,
     skip: offset,
-    orderBy: { createdAt: "desc" } as any,
+    orderBy: { createdAt: "desc" },
   })) as any[];
 
   // 4. METRICAS TOTALES (Aggregate)
-  const stats = (await prisma.lead.aggregate({
+  const stats = (await (prisma.lead as any).aggregate({
     where: { tenantId: membership.tenantId },
-    _avg: { potentialScore: true } as any,
+    _avg: { potentialScore: true },
     _count: { _all: true },
   })) as any;
 
@@ -223,8 +223,8 @@ export default async function DashboardPage({
   const totalLeads = stats._count._all;
 
   // 5. DISTRIBUCIÓN POR ORIGEN (GroupBy)
-  const sourceStats = (await prisma.lead.groupBy({
-    by: ["sourceType"] as any,
+  const sourceStats = (await (prisma.lead as any).groupBy({
+    by: ["sourceType"],
     where: { tenantId: membership.tenantId },
     _count: true,
   })) as any[];
