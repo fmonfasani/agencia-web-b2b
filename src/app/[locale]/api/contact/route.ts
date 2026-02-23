@@ -1,16 +1,20 @@
 import { NextResponse } from "next/server";
-import { AuthorizationError, requireRoleForRequest } from "@/lib/authz";
+import { AuthorizationError } from "@/lib/authz";
+import { requireAuth } from "@/lib/auth/request-auth";
 import { createLeadForTenant, listLeadsByTenant } from "@/lib/lead-repository";
 import { resolveTenantIdFromHeaders } from "@/lib/tenant-context";
 import { checkRateLimit, getClientIp } from "@/lib/security/rate-limit";
 
 export async function GET(request: Request) {
   try {
-    requireRoleForRequest(request, ["OWNER", "ADMIN", "SALES", "VIEWER"]);
+    const auth = await requireAuth();
+    if (!auth) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
 
     const activeTenantId = resolveTenantIdFromHeaders(
       new Headers(request.headers),
-      process.env.DEFAULT_TENANT_ID,
+      auth.session.tenantId || process.env.DEFAULT_TENANT_ID,
     );
 
     const leads = await listLeadsByTenant(activeTenantId);

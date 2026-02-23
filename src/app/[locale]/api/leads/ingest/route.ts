@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { AuthorizationError, requireRoleForRequest } from "@/lib/authz";
+import { AuthorizationError } from "@/lib/authz";
 import { resolveTenantIdFromHeaders } from "@/lib/tenant-context";
 import { ingestLead, LeadIngestInput } from "@/lib/leads/ingest.service";
+import { requireAuth } from "@/lib/auth/request-auth";
+import { prisma } from "@/lib/prisma";
 
 /**
  * POST /api/leads/ingest
@@ -9,13 +11,32 @@ import { ingestLead, LeadIngestInput } from "@/lib/leads/ingest.service";
  */
 export async function POST(request: NextRequest) {
   try {
-    // 1. Authorization & Tenant Scoping
-    requireRoleForRequest(request, ["OWNER", "ADMIN", "SALES"]);
+    // 1. Session & Role Validation
+    const auth = await requireAuth();
+    if (!auth) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
 
     const activeTenantId = resolveTenantIdFromHeaders(
       request.headers,
-      process.env.DEFAULT_TENANT_ID,
+      auth.session.tenantId || process.env.DEFAULT_TENANT_ID,
     );
+
+    // Check membership role for this tenant
+    const membership = await prisma.membership.findFirst({
+      where: {
+        userId: auth.user.id,
+        tenantId: activeTenantId,
+        status: "ACTIVE",
+      },
+    });
+
+    if (!membership || !["OWNER", "ADMIN", "SALES"].includes(membership.role)) {
+      return NextResponse.json(
+        { error: "Permisos insuficientes" },
+        { status: 403 },
+      );
+    }
 
     // 2. Body Parsing
     const body = await request.json();
