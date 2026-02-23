@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/request-auth";
 import { redirect } from "next/navigation";
 import LeadStatusControl from "@/components/admin/LeadStatusControl";
+import LeadContactButton from "@/components/admin/LeadContactButton";
 import {
   Users,
   DollarSign,
@@ -23,6 +24,16 @@ import {
   Monitor,
   Plus,
   BarChart3,
+  Filter,
+  LayoutDashboard,
+  Building2,
+  Mail,
+  Phone,
+  Instagram,
+  Facebook,
+  Linkedin,
+  MessageCircle,
+  ExternalLink,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -411,9 +422,38 @@ export default async function DashboardPage({
                           {lead.website && (
                             <Globe size={12} className="text-slate-400" />
                           )}
+                          {lead.instagram && (
+                            <Instagram size={12} className="text-slate-400" />
+                          )}
+                          {lead.facebook && (
+                            <Facebook size={12} className="text-slate-400" />
+                          )}
+                          {lead.linkedin && (
+                            <Linkedin size={12} className="text-slate-400" />
+                          )}
+                          {lead.tiktok && (
+                            <div className="text-slate-400">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
+                              </svg>
+                            </div>
+                          )}
                         </div>
                         <span className="text-[10px] text-slate-500 transition-all group-hover:text-slate-900">
-                          {lead.email || lead.phone || "No contacts"}
+                          {lead.email ||
+                            lead.phone ||
+                            lead.instagram ||
+                            "No contacts"}
                         </span>
                       </td>
                       <td className="px-6 py-5">
@@ -423,12 +463,15 @@ export default async function DashboardPage({
                         <StatusBadge status={lead.status} />
                       </td>
                       <td className="px-6 py-5 text-right">
-                        <LeadStatusControl
-                          leadId={lead.id}
-                          initialStatus={lead.status}
-                          locale={locale}
-                          canEdit={canEditLeadStatus}
-                        />
+                        <div className="flex items-center justify-end gap-2">
+                          <LeadContactButton lead={lead} />
+                          <LeadStatusControl
+                            leadId={lead.id}
+                            initialStatus={lead.status}
+                            locale={locale}
+                            canEdit={canEditLeadStatus}
+                          />
+                        </div>
                       </td>
                     </tr>
                   ))

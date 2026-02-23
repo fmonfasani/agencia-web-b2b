@@ -30,6 +30,7 @@ export interface LeadIngestInput {
   instagram?: string;
   facebook?: string;
   linkedin?: string;
+  tiktok?: string;
   whatsapp?: string;
 
   // Manual Overrides / Quality Flags
@@ -111,6 +112,7 @@ export async function ingestLead(input: LeadIngestInput): Promise<Lead> {
     instagram: input.instagram,
     facebook: input.facebook,
     linkedin: input.linkedin,
+    tiktok: input.tiktok,
 
     isEmailCorp: input.isEmailCorp ?? isCorporateEmail(cleanEmail),
     isWebFunctional: input.isWebFunctional ?? true,

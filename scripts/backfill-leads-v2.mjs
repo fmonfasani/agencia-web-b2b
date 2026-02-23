@@ -3,39 +3,29 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function backfill() {
-  console.log("Starting backfill for Leads V2 architecture...");
+  console.log("🚀 Starting Optimized Backfill for Leads V2...");
 
-  const leads = await prisma.lead.findMany({
+  const oldSources = ["intelligence_engine", "google_maps", "scraper"];
+
+  // Update sourceType for all old leads in one go
+  const result = await prisma.lead.updateMany({
     where: {
-      sourceType: {
-        notIn: ["SCRAPER", "MANUAL", "API", "ADS"],
-      },
+      OR: oldSources.map((s) => ({ source: s })),
+    },
+    data: {
+      sourceType: "SCRAPER",
+      potentialScore: 15,
+      priority: "LOW",
+      completeness: 0.1,
     },
   });
 
-  console.log(`Found ${leads.length} leads to migrate.`);
-
-  for (const lead of leads) {
-    // Basic migration logic
-    const updateData = {
-      sourceType: "MANUAL",
-      potentialScore: lead.budget ? 50 : 20, // Simple heuristic for old data
-      completeness: lead.email && lead.name ? 0.5 : 0.2,
-      priority: lead.budget ? "MEDIUM" : "LOW",
-    };
-
-    await prisma.lead.update({
-      where: { id: lead.id },
-      data: updateData,
-    });
-  }
-
-  console.log("Backfill complete.");
+  console.log(`✨ Success! Updated ${result.count} leads to SCRAPER category.`);
 }
 
 backfill()
   .catch((e) => {
-    console.error(e);
+    console.error("❌ Error:", e);
     process.exit(1);
   })
   .finally(async () => {

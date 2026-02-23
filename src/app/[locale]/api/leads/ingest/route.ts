@@ -52,6 +52,9 @@ export async function POST(request: NextRequest) {
       phone: body.phone,
       website: body.website,
       instagram: body.instagram,
+      facebook: body.facebook,
+      linkedin: body.linkedin,
+      tiktok: body.tiktok,
       whatsapp: body.whatsapp,
 
       googlePlaceId: body.googlePlaceId,

@@ -58,6 +58,7 @@ export default function LeadIngestForm({ locale }: { locale: string }) {
     instagram: "",
     facebook: "",
     linkedin: "",
+    tiktok: "", // Added TikTok to state
     googleMapsUrl: "",
     businessType: "",
     description: "",
@@ -295,54 +296,86 @@ export default function LeadIngestForm({ locale }: { locale: string }) {
                 }
               />
             </div>
+          </div>
+        </div>
+      </div>
 
-            <div className="grid grid-cols-3 gap-3">
-              <div className="relative group">
-                <Instagram
-                  className="absolute left-3 top-2.5 text-slate-400 group-focus-within:text-pink-500"
-                  size={14}
-                />
-                <input
-                  type="text"
-                  placeholder="Instagram"
-                  className="w-full bg-slate-50 border-none rounded-xl py-2.5 pl-8 pr-2 text-[10px] focus:ring-1 focus:ring-pink-200 outline-none"
-                  value={formData.instagram}
-                  onChange={(e) =>
-                    setFormData({ ...formData, instagram: e.target.value })
-                  }
-                />
-              </div>
-              <div className="relative group">
-                <Facebook
-                  className="absolute left-3 top-2.5 text-slate-400 group-focus-within:text-blue-600"
-                  size={14}
-                />
-                <input
-                  type="text"
-                  placeholder="Facebook"
-                  className="w-full bg-slate-50 border-none rounded-xl py-2.5 pl-8 pr-2 text-[10px] focus:ring-1 focus:ring-blue-200 outline-none"
-                  value={formData.facebook}
-                  onChange={(e) =>
-                    setFormData({ ...formData, facebook: e.target.value })
-                  }
-                />
-              </div>
-              <div className="relative group">
-                <Linkedin
-                  className="absolute left-3 top-2.5 text-slate-400 group-focus-within:text-blue-700"
-                  size={14}
-                />
-                <input
-                  type="text"
-                  placeholder="LinkedIn"
-                  className="w-full bg-slate-50 border-none rounded-xl py-2.5 pl-8 pr-2 text-[10px] focus:ring-1 focus:ring-blue-200 outline-none"
-                  value={formData.linkedin}
-                  onChange={(e) =>
-                    setFormData({ ...formData, linkedin: e.target.value })
-                  }
-                />
-              </div>
+      {/* Social Media - FULL WIDTH */}
+      <div className="space-y-4">
+        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">
+          Redes Sociales
+        </label>
+        <div className="grid grid-cols-1 gap-4">
+          <div className="relative group">
+            <Instagram
+              className="absolute left-4 top-3.5 text-slate-400 group-focus-within:text-pink-500 transition-colors"
+              size={18}
+            />
+            <input
+              type="text"
+              placeholder="Instagram URL o @usuario"
+              className="w-full bg-slate-50 border-none rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+              value={formData.instagram}
+              onChange={(e) =>
+                setFormData({ ...formData, instagram: e.target.value })
+              }
+            />
+          </div>
+          <div className="relative group">
+            <Facebook
+              className="absolute left-4 top-3.5 text-slate-400 group-focus-within:text-blue-600 transition-colors"
+              size={18}
+            />
+            <input
+              type="text"
+              placeholder="Facebook URL"
+              className="w-full bg-slate-50 border-none rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+              value={formData.facebook}
+              onChange={(e) =>
+                setFormData({ ...formData, facebook: e.target.value })
+              }
+            />
+          </div>
+          <div className="relative group">
+            <Linkedin
+              className="absolute left-4 top-3.5 text-slate-400 group-focus-within:text-blue-700 transition-colors"
+              size={18}
+            />
+            <input
+              type="text"
+              placeholder="LinkedIn URL"
+              className="w-full bg-slate-50 border-none rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+              value={formData.linkedin}
+              onChange={(e) =>
+                setFormData({ ...formData, linkedin: e.target.value })
+              }
+            />
+          </div>
+          <div className="relative group">
+            <div className="absolute left-4 top-3.5 text-slate-400 group-focus-within:text-slate-900 transition-colors">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
+              </svg>
             </div>
+            <input
+              type="text"
+              placeholder="TikTok URL"
+              className="w-full bg-slate-50 border-none rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+              value={formData.tiktok}
+              onChange={(e) =>
+                setFormData({ ...formData, tiktok: e.target.value })
+              }
+            />
           </div>
         </div>
       </div>
