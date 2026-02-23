@@ -106,7 +106,7 @@ export const trackPricingPlanClick = (planName: string, planPrice: string) => {
   });
 };
 
-export default {
+const analytics = {
   trackEvent,
   trackPageView,
   trackFormSubmit,
@@ -116,3 +116,5 @@ export default {
   trackWhatsAppClick,
   trackPricingPlanClick,
 };
+
+export default analytics;

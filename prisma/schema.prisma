@@ -14,19 +14,144 @@ datasource db {
   directUrl = env("POSTGRES_URL_NON_POOLING")
 }
 
+model User {
+  id                       String            @id @default(cuid())
+  email                    String            @unique
+  passwordHash             String?
+  oauthProvider            String?
+  oauthProviderId          String?
+  createdAt                DateTime          @default(now())
+  updatedAt                DateTime          @updatedAt
+  memberships              Membership[]
+  invitationsSent          Invitation[]      @relation("InvitationInvitedBy")
+  invitationsAccepted      Invitation[]      @relation("InvitationAcceptedBy")
+  invitationsAcceptedAudit InvitationAudit[] @relation("AuditAcceptedBy")
+  invitationsSentAudit     InvitationAudit[] @relation("AuditInvitedBy")
+  sessions                 Session[]
+  auditEvents              AuditEvent[]
+  activities               Activity[]
+  tasks                    Task[]
+  dailyMetrics             UserDailyMetrics[]
+
+  @@index([email])
+}
+
+model Session {
+  id                  String    @id @default(cuid())
+  userId              String
+  tokenHash           String    @unique
+  tenantId            String?
+  expiresAt           DateTime
+  revokedAt           DateTime?
+  createdAt           DateTime  @default(now())
+  rotatedFromSessionId String?
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+  @@index([expiresAt])
+}
+
+model AuditEvent {
+  id        String   @id @default(cuid())
+  eventType String
+  userId    String?
+  tenantId  String?
+  ipAddress String?
+  metadata  Json
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([eventType])
+  @@index([createdAt])
+  @@index([tenantId])
+}
+
+model Tenant {
+  id               String            @id @default(cuid())
+  name             String
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  memberships      Membership[]
+  invitations      Invitation[]
+  invitationAudits InvitationAudit[]
+}
+
+model Membership {
+  id         String   @id @default(cuid())
+  userId     String
+  tenantId   String
+  role       String
+  status     String   @default("ACTIVE")
+  acceptedAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tenantId])
+  @@index([tenantId])
+  @@index([role])
+}
+
+model Invitation {
+  id           String            @id @default(cuid())
+  email        String
+  tenantId     String
+  role         String
+  tokenHash    String            @unique
+  expiresAt    DateTime
+  invitedById  String
+  acceptedById String?
+  invitedAt    DateTime          @default(now())
+  acceptedAt   DateTime?
+  status       String            @default("PENDING")
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  tenant       Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  invitedBy    User              @relation("InvitationInvitedBy", fields: [invitedById], references: [id], onDelete: Cascade)
+  acceptedBy   User?             @relation("InvitationAcceptedBy", fields: [acceptedById], references: [id], onDelete: SetNull)
+  auditLogs    InvitationAudit[]
+
+  @@index([email, tenantId])
+  @@index([status])
+  @@index([expiresAt])
+}
+
+model InvitationAudit {
+  id           String     @id @default(cuid())
+  invitationId String
+  tenantId     String
+  invitedById  String
+  acceptedById String?
+  invitedEmail String
+  role         String
+  invitedAt    DateTime
+  acceptedAt   DateTime?
+  createdAt    DateTime   @default(now())
+  invitation   Invitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+  tenant       Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  invitedBy    User       @relation("AuditInvitedBy", fields: [invitedById], references: [id], onDelete: Cascade)
+  acceptedBy   User?      @relation("AuditAcceptedBy", fields: [acceptedById], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, invitedAt])
+}
+
 // Lead model for contact form submissions
 model Lead {
   id        String   @id @default(cuid())
-  email     String
+  tenantId  String
+  email     String?
   name      String?
   company   String?
   budget    String?
-  message   String
+  message   String?
   status    String   @default("NEW") // NEW, CONTACTED, QUALIFIED, CONVERTED, LOST
   source    String   @default("contact_form") // contact_form, pricing_page, calculator
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([tenantId])
+  @@index([tenantId, createdAt])
   @@index([email])
   @@index([status])
   @@index([createdAt])
@@ -34,12 +159,82 @@ model Lead {
 
 // Newsletter subscription model
 model Newsletter {
-  id          String   @id @default(cuid())
-  email       String   @unique
-  status      String   @default("ACTIVE") // ACTIVE, UNSUBSCRIBED
-  subscribedAt DateTime @default(now())
+  id             String    @id @default(cuid())
+  email          String    @unique
+  status         String    @default("ACTIVE") // ACTIVE, UNSUBSCRIBED
+  subscribedAt   DateTime  @default(now())
   unsubscribedAt DateTime?
 
   @@index([email])
   @@index([status])
 }
+
+// --- REVENUE OS: TEAM PERFORMANCE EXTENSION ---
+
+model Activity {
+  id        String   @id @default(cuid())
+  tenantId  String
+  userId    String
+  type      String   // CALL, LEAD_CONTACT, CODE_COMMIT, TICKET_RESOLVED
+  impact    Float?   // Puntuación de impacto estimada
+  metadata  Json?    // Detalles específicos (ej: duración de llamada)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Task {
+  id          String    @id @default(cuid())
+  tenantId    String
+  userId      String?
+  projectId   String?
+  title       String
+  status      String    // TODO, IN_PROGRESS, DONE, BLOCKED
+  priority    String    // LOW, MEDIUM, HIGH, CRITICAL
+  estimatedHours Float?
+  actualHours   Float?
+  dueAt       DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user        User?     @relation(fields: [userId], references: [id])
+  project     Project?  @relation(fields: [projectId], references: [id])
+}
+
+model Project {
+  id        String    @id @default(cuid())
+  tenantId  String
+  name      String
+  status    String
+  value     Decimal?  // Valor del proyecto para el revenue
+  tasks     Task[]
+  createdAt DateTime  @default(now())
+}
+
+model UserDailyMetrics {
+  id              String   @id @default(cuid())
+  tenantId        String
+  userId          String
+  date            DateTime @default(now())
+  callsCount      Int      @default(0)
+  tasksCompleted  Int      @default(0)
+  revenueGenerated Decimal  @default(0)
+  workloadPercent Float    @default(0)
+  impactScore     Float    @default(0)
+
+  user            User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, tenantId, date])
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  SALES
+  MARKETING
+  VIEWER
+  DEVELOPER
+  MANAGER
+}
+

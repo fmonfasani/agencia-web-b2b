@@ -1,7 +1,47 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { AuthorizationError, requireRoleForRequest } from "@/lib/authz";
+import { createLeadForTenant, listLeadsByTenant } from "@/lib/lead-repository";
+import { resolveTenantIdFromHeaders } from "@/lib/tenant-context";
+import { checkRateLimit, getClientIp } from "@/lib/security/rate-limit";
+
+export async function GET(request: Request) {
+  try {
+    requireRoleForRequest(request, ["OWNER", "ADMIN", "SALES", "VIEWER"]);
+
+    const activeTenantId = resolveTenantIdFromHeaders(
+      new Headers(request.headers),
+      process.env.DEFAULT_TENANT_ID,
+    );
+
+    const leads = await listLeadsByTenant(activeTenantId);
+
+    return NextResponse.json({ leads });
+  } catch (error) {
+    if (error instanceof AuthorizationError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status },
+      );
+    }
+
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
+  }
+}
 
 export async function POST(request: Request) {
+  const ip = getClientIp(request);
+  const rate = await checkRateLimit(`contact:${ip}`, 8, 60);
+
+  if (!rate.allowed) {
+    return NextResponse.json(
+      { error: "Demasiadas solicitudes. Intenta nuevamente en un minuto." },
+      { status: 429, headers: { "Retry-After": String(rate.retryAfterSec) } },
+    );
+  }
+
   try {
     const body = await request.json();
     const { name, email, message, company, budget } = body;
@@ -16,22 +56,23 @@ export async function POST(request: Request) {
 
     try {
       // Guardar en Base de Datos
-      const lead = await prisma.lead.create({
-        data: {
-          name,
-          email,
-          message,
-          company: company || null,
-          budget: budget || null,
-          source: "contact_form",
-          status: "NEW", // Explicit default, though schema has it too
-        },
+      const activeTenantId = resolveTenantIdFromHeaders(
+        new Headers(request.headers),
+        process.env.DEFAULT_TENANT_ID,
+      );
+
+      const lead = await createLeadForTenant({
+        tenantId: activeTenantId,
+        name,
+        email,
+        message,
+        company: company || null,
+        budget: budget || null,
+        source: "contact_form",
+        status: "NEW",
       });
 
       console.log("Nuevo lead creado:", lead.id);
-
-      // Aquí iría el envío de email (Resend/NodeMailer)
-      // await sendNotificationEmail(lead);
 
       return NextResponse.json(
         {

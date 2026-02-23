@@ -115,6 +115,12 @@ const Header = () => {
             >
               {t("nav.cta")}
             </a>
+            <Link
+              className="hidden md:block text-[13px] font-bold uppercase tracking-widest text-text-secondary hover:text-primary transition-colors"
+              href="/auth/sign-in"
+            >
+              {t("nav.login")}
+            </Link>
             <button
               className="md:hidden p-2 text-text-main"
               onClick={() => setIsOpen(!isOpen)}
@@ -159,6 +165,13 @@ const Header = () => {
               >
                 {t("nav.cta")}
               </a>
+              <Link
+                className="block w-full text-center text-text-secondary py-2 font-bold text-sm uppercase tracking-widest"
+                href="/auth/sign-in"
+                onClick={() => setIsOpen(false)}
+              >
+                {t("nav.login")}
+              </Link>
             </div>
           </motion.div>
         )}

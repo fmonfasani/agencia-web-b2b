@@ -5,9 +5,6 @@ const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
-  typescript: {
-    ignoreBuildErrors: true,
-  },
 };
 
 export default withNextIntl(nextConfig);

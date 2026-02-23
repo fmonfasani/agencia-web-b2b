@@ -4,7 +4,8 @@
       "services": "Services",
       "process": "Process",
       "pricing": "Pricing",
-      "cta": "Book a Call"
+      "cta": "Book a Call",
+      "login": "Login"
     }
   },
   "HomePage": {
@@ -116,6 +117,10 @@
         "title": "Launch & QA",
         "description": "Controlled deployment with metric monitoring and team training."
       }
+    },
+    "cta": {
+      "title": "Ready to transform your digital infrastructure?",
+      "subtitle": "Join the companies that already scale with our B2B technical methodology."
     }
   },
   "Qualification": {

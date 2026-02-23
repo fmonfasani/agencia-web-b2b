@@ -1,36 +1,104 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ⚡ Revenue OS — Agencia Leads Management System
 
-## Getting Started
+![Revenue OS Banner](https://img.shields.io/badge/Status-Live%20MVP-emerald?style=for-the-badge&logo=rocket)
+![Stack](https://img.shields.io/badge/Stack-Next.js%2016%20%7C%20Tailwind%204%20%7C%20Prisma%20%7C%20Supabase-blue?style=for-the-badge)
 
-First, run the development server:
+**Revenue OS** es un ecosistema operativo diseñado para agencias B2B y startups que buscan transformar la gestión técnica en impacto financiero real. Basado en la arquitectura de **8 Unidades de Negocio**, permite una visión ejecutiva 360° del rendimiento de equipo y seguridad.
+
+---
+
+## 🏛️ Arquitectura: Las 8 Unidades de Negocio
+
+El sistema está organizado por objetivos de negocio, no solo por herramientas:
+
+1.  **Executive**: Forecast, Margen y KPIs de Alto Nivel.
+2.  **Comercial**: Gestión de Pipeline e Ingresos.
+3.  **Clientes**: CRM y Satisfacción (CSAT).
+4.  **Marketing**: Campañas, Leads y Atribución.
+5.  **Operaciones**: (ACTIVO) Gestión de Equipo y Performance Center.
+6.  **Data**: Estado de ETLs y Modelado de Datos.
+7.  **Seguridad**: (ACTIVO) Centro IAM (Identity & Access Management).
+8.  **Settings**: Configuración de Tenant y Suscripción.
+
+---
+
+## 🚀 Módulos Clave Implementados
+
+### 📈 Operational Performance Center
+
+Ubicado en `Operaciones -> Gestión de Equipo`.
+
+- **Ranking de Impacto**: Clasificación de colaboradores por Revenue generado y cumplimiento de objetivos.
+- **Live Activity Feed**: Registro en tiempo real de actividades críticas (llamadas, deals, deploys) consumidas desde **Supabase**.
+- **Métricas de Impacto**: Cálculo dinámico de Workload y contribución al margen por usuario.
+
+### 🛡️ IAM Security Center (Identity & Access Management)
+
+Ubicado en `Seguridad -> Centros IAM`.
+
+- **Invitaciones Autónomas**: Generación de links de seguridad únicos con validez de 7 días.
+- **Email Onboarding**: Integración con **Resend** para envío automatizado de credenciales prioritarias.
+- **Herencia de Roles**: Los nuevos miembros heredan permisos granulares (Sales, Developer, Manager) definidos por el admin.
+- **Acceptance Gateway**: Landing page dedicada para validación de identidad y configuración de contraseña.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Framework**: [Next.js 16 (App Router)](https://nextjs.org/)
+- **Estilos**: [Tailwind CSS 4](https://tailwindcss.com/) (Premium Dark Aesthetic)
+- **ORM**: [Prisma 6](https://www.prisma.io/)
+- **Base de Datos**: [Supabase (PostgreSQL)](https://supabase.com/)
+- **Emails**: [Resend](https://resend.com/)
+- **Iconografía**: [Lucide React](https://lucide.dev/)
+
+---
+
+## 📦 Estructura de Documentación (FCM Standard)
+
+El proyecto sigue una metodología de documentación profesional ubicada en `/docs`:
+
+- [**PRD (Product Requirement)**](./docs/product/2026-02-22_revenue-os-prd.md): Visión de negocio y casos de uso.
+- [**Design Doc**](./docs/design/2026-02-22_revenue-os-design.md): User Journey, Arquitectura Funcional y UI.
+- [**Tech Stack Doc**](./docs/design/2026-02-22_revenue-os-techstack.md): Justificación técnica y modelos de datos.
+- [**Tasks (FCM Standard)**](./docs/tasks/2026-02-22_revenue-os-implementation.md): Registro histórico de implementación técnica.
+
+---
+
+## ⚙️ Configuración del Entorno (.env)
+
+Para habilitar todas las funcionalidades, asegúrate de configurar:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# DB Sync
+POSTGRES_PRISMA_URL="postgresql://...:6543/..." # Pooling (App)
+POSTGRES_URL_NON_POOLING="postgresql://...:5432/..." # Direct (Migrations)
+
+# Email Service
+RESEND_API_KEY="re_..."
+
+# App URL (Para links de invitación)
+NEXT_PUBLIC_APP_URL="http://localhost:3001"
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🛠️ Comandos Útiles
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+# Sincronizar esquema con Supabase
+npx prisma db push
 
-## Learn More
+# Regenerar cliente Prisma
+npx prisma generate
 
-To learn more about Next.js, take a look at the following resources:
+# Inyectar datos reales de simulación de impacto
+node scripts/seed-revenue-os.mjs
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Levantar entorno de desarrollo
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+_Desarrollado para Agencia Leads — Transformando Datos en Revenue._

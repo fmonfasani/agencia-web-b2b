@@ -1,14 +1,54 @@
-import createMiddleware from 'next-intl/middleware';
+import createMiddleware from "next-intl/middleware";
+import { NextRequest, NextResponse } from "next/server";
+import { SESSION_COOKIE_NAME } from "@/lib/security/cookies";
 
-export default createMiddleware({
-  // A list of all locales that are supported
-  locales: ['en', 'es'],
-
-  // Used when no locale matches
-  defaultLocale: 'es'
+const intlMiddleware = createMiddleware({
+  locales: ["en", "es"],
+  defaultLocale: "es",
 });
 
+const ADMIN_ROUTE_REGEX = /^\/(es|en)\/admin(?:\/.*)?$/;
+const SIGN_IN_ROUTE_REGEX = /^\/(es|en)\/auth\/sign-in\/?$/;
+const PUBLIC_FILE_REGEX = /\.[^/]+$/;
+const PUBLIC_PREFIXES = ["/_next", "/api", "/assets", "/images"];
+const PUBLIC_EXACT = ["/favicon.ico", "/robots.txt", "/sitemap.xml"];
+
+function isPublicPath(pathname: string): boolean {
+  if (PUBLIC_FILE_REGEX.test(pathname)) {
+    return true;
+  }
+
+  if (PUBLIC_EXACT.includes(pathname)) {
+    return true;
+  }
+
+  if (PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
+    return true;
+  }
+
+  return SIGN_IN_ROUTE_REGEX.test(pathname);
+}
+
+export default async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  if (isPublicPath(pathname)) {
+    return intlMiddleware(request);
+  }
+
+  if (ADMIN_ROUTE_REGEX.test(pathname)) {
+    const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
+
+    if (!token) {
+      const locale = pathname.split("/")[1] || "es";
+      const signInUrl = new URL(`/${locale}/auth/sign-in`, request.url);
+      return NextResponse.redirect(signInUrl);
+    }
+  }
+
+  return intlMiddleware(request);
+}
+
 export const config = {
-  // Match only internationalized pathnames
-  matcher: ['/', '/(es|en)/:path*']
+  matcher: ["/", "/(es|en)/:path*", "/((?!_next|api|.*\\..*).*)"],
 };

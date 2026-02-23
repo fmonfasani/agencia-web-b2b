@@ -4,7 +4,8 @@
       "services": "Servicios",
       "process": "Proceso",
       "pricing": "Precios",
-      "cta": "Agendar llamada"
+      "cta": "Agendar llamada",
+      "login": "Ingresar"
     }
   },
   "HomePage": {
@@ -116,6 +117,10 @@
         "title": "Lanzamiento & QA",
         "description": "Despliegue controlado con monitoreo de métricas y capacitación de equipo."
       }
+    },
+    "cta": {
+      "title": "¿Listo para transformar tu infraestructura digital?",
+      "subtitle": "Sumate a las empresas que ya escalan con nuestra metodología técnica B2B."
     }
   },
   "Qualification": {
