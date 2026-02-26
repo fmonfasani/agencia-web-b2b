@@ -4,24 +4,22 @@ import { routing } from "./i18n/routing";
 
 const intlMiddleware = createMiddleware(routing);
 
-export default async function middleware(request: NextRequest) {
+export default function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 1. PRIORIDAD: Rutas de API y Auth.js deben pasar sin interferencia
-  // Esto incluye /api/auth, /es/api/auth, etc.
+  // 1. Evitar que el middleware de idiomas maneje archivos internos de Next.js u otros activos
   if (
-    pathname.includes("/api/auth") ||
     pathname.startsWith("/_next") ||
+    pathname.startsWith("/api") ||
     pathname.includes(".")
   ) {
     return NextResponse.next();
   }
 
-  // 2. Aplicar el middleware de idiomas para el resto de las rutas
   return intlMiddleware(request);
 }
 
 export const config = {
-  // Ajustamos el matcher para ser más específicos
-  matcher: ["/((?!api/auth|_next/static|_next/image|favicon.ico|.*\\..*).*)"],
+  // Ajuste fino del matcher para capturar solo lo que necesitamos traducir
+  matcher: ["/", "/(es|en)/:path*", "/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };
