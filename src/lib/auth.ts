@@ -68,6 +68,7 @@ if (
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
+  basePath: "/api/auth",
   session: {
     strategy: "jwt",
   },
