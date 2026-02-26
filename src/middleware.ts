@@ -5,44 +5,31 @@ import { SESSION_COOKIE_NAME } from "@/lib/security/cookies";
 const intlMiddleware = createMiddleware({
   locales: ["en", "es"],
   defaultLocale: "es",
+  localePrefix: "always",
 });
-
-const ADMIN_ROUTE_REGEX = /^\/(es|en)\/admin(?:\/.*)?$/;
-const SIGN_IN_ROUTE_REGEX = /^\/(es|en)\/auth\/sign-in\/?$/;
-const PUBLIC_FILE_REGEX = /\.[^/]+$/;
-const PUBLIC_PREFIXES = ["/_next", "/api", "/assets", "/images"];
-const PUBLIC_EXACT = ["/favicon.ico", "/robots.txt", "/sitemap.xml"];
-
-function isPublicPath(pathname: string): boolean {
-  if (PUBLIC_FILE_REGEX.test(pathname)) {
-    return true;
-  }
-
-  if (PUBLIC_EXACT.includes(pathname)) {
-    return true;
-  }
-
-  if (PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
-    return true;
-  }
-
-  return SIGN_IN_ROUTE_REGEX.test(pathname);
-}
 
 export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 1. Run intlMiddleware first for all matching routes
+  // 1. Skip if it's an internal Next.js request or an API
+  if (
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/_next") ||
+    pathname.includes(".")
+  ) {
+    return NextResponse.next();
+  }
+
+  // 2. Apply Internationalization
   const response = intlMiddleware(request);
 
-  // 2. Auth Protection Logic
+  // 3. Admin Protection
+  const ADMIN_ROUTE_REGEX = /^\/(es|en)\/admin(?:\/.*)?$/;
   if (ADMIN_ROUTE_REGEX.test(pathname)) {
     const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
-
     if (!token) {
       const locale = pathname.split("/")[1] || "es";
-      const signInUrl = new URL(`/${locale}/auth/sign-in`, request.url);
-      return NextResponse.redirect(signInUrl);
+      return NextResponse.redirect(new URL(`/${locale}/auth/sign-in`, request.url));
     }
   }
 
@@ -50,8 +37,5 @@ export default async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Match all pathnames except for
-  // - API routes (/api)
-  // - Static files (_next/static, _next/image, favicon.ico, etc.)
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)"],
+  matcher: ["/((?!api|_next|.*\\..*).*)"],
 };
