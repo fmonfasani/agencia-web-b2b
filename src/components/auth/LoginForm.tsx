@@ -13,6 +13,22 @@ interface LoginFormProps {
 export default function LoginForm({ darkMode = false, locale: localeProp }: LoginFormProps) {
   const localeFromHook = useLocale();
   const locale = localeProp ?? localeFromHook;
+  const en = locale === "en";
+
+  const t = {
+    emailLabel: en ? "Email" : "Email Corporativo",
+    emailPlaceholder: en ? "name@company.com" : "admin@empresa.com",
+    passwordLabel: en ? "Password" : "Contraseña",
+    passwordPlaceholder: "••••••••",
+    forgotPassword: en ? "Forgot password?" : "¿Olvidaste tu contraseña?",
+    rememberMe: en ? "Remember me" : "Recordarme",
+    signInBtn: en ? "Sign in to your account" : "Ingresar a Revenue OS →",
+    signingIn: en ? "Signing in..." : "Verificando...",
+    noAccount: en ? "Don't have an account?" : "¿No tenés cuenta?",
+    signUp: en ? "Create your company →" : "Registrá tu empresa gratis →",
+    networkError: en ? "Network error. Please try again." : "Error de red. Intenta nuevamente.",
+    invalidCreds: en ? "Invalid credentials" : "Credenciales inválidas",
+  };
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,14 +52,14 @@ export default function LoginForm({ darkMode = false, locale: localeProp }: Logi
       const data = (await response.json()) as { error?: string; success?: boolean };
 
       if (!response.ok) {
-        setError(data.error || "Credenciales inválidas");
+        setError(data.error || t.invalidCreds);
         setLoading(false);
         return;
       }
 
       window.location.href = `/${locale}/admin/dashboard`;
     } catch {
-      setError("Error de red. Intenta nuevamente.");
+      setError(t.networkError);
       setLoading(false);
     }
   }
@@ -56,7 +72,7 @@ export default function LoginForm({ darkMode = false, locale: localeProp }: Logi
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-[#8b92a5] uppercase tracking-widest">
-              Email
+              {t.emailLabel}
             </label>
             <div className="relative">
               <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#4a5168]" size={15} />
@@ -68,7 +84,7 @@ export default function LoginForm({ darkMode = false, locale: localeProp }: Logi
                 required
                 autoComplete="email"
                 className="w-full rounded-xl border border-[#2a2f3e] bg-[#161923] pl-10 pr-4 py-3 text-sm text-white placeholder-[#4a5168] outline-none focus:ring-2 focus:ring-[#135bec]/50 focus:border-[#135bec]/50 transition-all"
-                placeholder="name@company.com"
+                placeholder={t.emailPlaceholder}
               />
             </div>
           </div>
@@ -76,7 +92,7 @@ export default function LoginForm({ darkMode = false, locale: localeProp }: Logi
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <label className="text-xs font-semibold text-[#8b92a5] uppercase tracking-widest">
-                Password
+                {t.passwordLabel}
               </label>
             </div>
             <div className="relative">
@@ -121,14 +137,14 @@ export default function LoginForm({ darkMode = false, locale: localeProp }: Logi
                 )}
               </div>
             </div>
-            <span className="text-sm text-[#8b92a5]">Remember me</span>
+            <span className="text-sm text-[#8b92a5]">{t.rememberMe}</span>
           </label>
 
           <Link
             href={`/${locale}/auth/forgot-password`}
             className="text-sm text-[#135bec] hover:text-blue-400 transition-colors font-medium"
           >
-            Forgot password?
+            {t.forgotPassword}
           </Link>
         </div>
 
@@ -145,7 +161,7 @@ export default function LoginForm({ darkMode = false, locale: localeProp }: Logi
           disabled={loading}
           className="w-full rounded-xl bg-[#135bec] hover:bg-[#0e45b5] text-white py-3.5 font-bold text-sm disabled:opacity-50 transition-all shadow-lg shadow-[#135bec]/25 mt-1"
         >
-          {loading ? "Verificando..." : "Sign in to your account"}
+          {loading ? t.signingIn : t.signInBtn}
         </button>
       </form>
     );

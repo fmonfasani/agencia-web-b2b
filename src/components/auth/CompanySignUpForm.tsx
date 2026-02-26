@@ -16,6 +16,34 @@ interface CompanySignUpFormProps {
 }
 
 export default function CompanySignUpForm({ darkMode = false, locale = "es" }: CompanySignUpFormProps) {
+    const en = locale === "en";
+
+    const t = {
+        firstName: en ? "First name" : "Nombre",
+        lastName: en ? "Last name" : "Apellido",
+        email: en ? "Corporate email" : "Email Corporativo",
+        emailPh: en ? "john@company.com" : "juan@empresa.com",
+        whatsapp: "WhatsApp",
+        company: en ? "Company name" : "Empresa",
+        companyPh: en ? "My Agency LLC" : "Mi Agencia SRL",
+        whatsappPh: en ? "+1 555 123 4567" : "+54 9 11...",
+        plan: en ? "Plan" : "Plan",
+        website: en ? "Do you have a website?" : "¿Tenés página web?",
+        websitePh: "https://my-agency.com",
+        password: en ? "Password" : "Contraseña",
+        passwordPh: en ? "Min. 8 chars" : "Mín. 8 chars",
+        confirm: en ? "Confirm" : "Confirmar",
+        confirmPh: en ? "Repeat" : "Repetir",
+        submit: en ? "Register Company" : "Registrar Empresa",
+        submitting: en ? "Deploying Revenue OS..." : "Desplegando Revenue OS...",
+        signIn: en ? "Already have an account?" : "¿Ya tenés cuenta?",
+        signInLink: en ? "Sign in →" : "Iniciá sesión →",
+        errorPassMismatch: en ? "Passwords don't match" : "Las contraseñas no coinciden",
+        errorPassLength: en ? "Password must be at least 8 characters" : "La contraseña debe tener al menos 8 caracteres",
+        errorNetwork: en ? "Network error. Please try again." : "Error de red. Intenta nuevamente.",
+        errorGeneric: en ? "Error completing registration" : "Error al completar el registro",
+    };
+
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
     const [email, setEmail] = useState("");
@@ -49,7 +77,7 @@ export default function CompanySignUpForm({ darkMode = false, locale = "es" }: C
 
             window.location.href = `/${locale}/admin/dashboard`;
         } catch {
-            setError("Error de red. Intenta nuevamente.");
+            setError(t.errorNetwork);
             setLoading(false);
         }
     }
@@ -66,35 +94,35 @@ export default function CompanySignUpForm({ darkMode = false, locale = "es" }: C
                 {/* Name row */}
                 <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                        <label className={label}>Nombre</label>
+                        <label className={label}>{t.firstName}</label>
                         <div className="relative"><User className={icon} size={15} />
-                            <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} required className={field} placeholder="Juan" /></div>
+                            <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} required className={field} placeholder={en ? "John" : "Juan"} /></div>
                     </div>
                     <div className="space-y-1.5">
-                        <label className={label}>Apellido</label>
+                        <label className={label}>{t.lastName}</label>
                         <div className="relative"><User className={icon} size={15} />
-                            <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} required className={field} placeholder="García" /></div>
+                            <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} required className={field} placeholder={en ? "Smith" : "García"} /></div>
                     </div>
                 </div>
 
                 {/* Email */}
                 <div className="space-y-1.5">
-                    <label className={label}>Email Corporativo</label>
+                    <label className={label}>{t.email}</label>
                     <div className="relative"><Mail className={icon} size={15} />
-                        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" className={field} placeholder="juan@empresa.com" /></div>
+                        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" className={field} placeholder={t.emailPh} /></div>
                 </div>
 
                 {/* WhatsApp + Company row */}
                 <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                        <label className={label}>WhatsApp</label>
+                        <label className={label}>{t.whatsapp}</label>
                         <div className="relative"><Phone className={icon} size={15} />
-                            <input type="tel" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} className={field} placeholder="+54 9 11..." /></div>
+                            <input type="tel" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} className={field} placeholder={t.whatsappPh} /></div>
                     </div>
                     <div className="space-y-1.5">
-                        <label className={label}>Empresa</label>
+                        <label className={label}>{t.company}</label>
                         <div className="relative"><Building2 className={icon} size={15} />
-                            <input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} required className={field} placeholder="Mi Agencia SRL" /></div>
+                            <input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} required className={field} placeholder={t.companyPh} /></div>
                     </div>
                 </div>
 
@@ -121,24 +149,24 @@ export default function CompanySignUpForm({ darkMode = false, locale = "es" }: C
                             {hasWebsite && <svg viewBox="0 0 12 12" fill="none" className="w-2.5 h-2.5"><path d="M2 6l3 3 5-5" stroke="white" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" /></svg>}
                         </div>
                     </div>
-                    <span className="text-sm text-[#8b92a5]">¿Tenés página web?</span>
+                    <span className="text-sm text-[#8b92a5]">{t.website}</span>
                 </label>
                 {hasWebsite && (
                     <div className="relative"><Globe className={icon} size={15} />
-                        <input type="url" value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)} className={field} placeholder="https://mi-agencia.com" /></div>
+                        <input type="url" value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)} className={field} placeholder={t.websitePh} /></div>
                 )}
 
                 {/* Password row */}
                 <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                        <label className={label}>Contraseña</label>
+                        <label className={label}>{t.password}</label>
                         <div className="relative"><Lock className={icon} size={15} />
-                            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className={field} placeholder="Min. 8 chars" /></div>
+                            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className={field} placeholder={t.passwordPh} /></div>
                     </div>
                     <div className="space-y-1.5">
-                        <label className={label}>Confirmar</label>
+                        <label className={label}>{t.confirm}</label>
                         <div className="relative"><Lock className={icon} size={15} />
-                            <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required className={field} placeholder="Repetir" /></div>
+                            <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required className={field} placeholder={t.confirmPh} /></div>
                     </div>
                 </div>
 
@@ -152,7 +180,7 @@ export default function CompanySignUpForm({ darkMode = false, locale = "es" }: C
                 {/* Submit — blue, matches sign-in */}
                 <button type="submit" disabled={loading}
                     className="w-full rounded-xl bg-[#135bec] hover:bg-[#0e45b5] text-white py-3.5 font-bold text-sm disabled:opacity-50 transition-all shadow-lg shadow-[#135bec]/25 flex items-center justify-center gap-2">
-                    {loading ? "Desplegando Revenue OS..." : "Registrar Empresa"}
+                    {loading ? t.submitting : t.submit}
                     <ShieldCheck size={15} />
                 </button>
 
