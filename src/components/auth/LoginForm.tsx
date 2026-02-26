@@ -140,12 +140,9 @@ export default function LoginForm({ darkMode = false, locale: localeProp }: Logi
             <span className="text-sm text-[#8b92a5]">{t.rememberMe}</span>
           </label>
 
-          <Link
-            href={`/${locale}/auth/forgot-password`}
-            className="text-sm text-[#135bec] hover:text-blue-400 transition-colors font-medium"
-          >
+          <span className="text-sm text-[#4a5168] cursor-not-allowed">
             {t.forgotPassword}
-          </Link>
+          </span>
         </div>
 
         {/* Error */}
