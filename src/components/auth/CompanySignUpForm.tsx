@@ -22,7 +22,7 @@ const PLANS = [
     },
 ];
 
-export default function CompanySignUpForm() {
+export default function CompanySignUpForm({ darkMode = false }: { darkMode?: boolean }) {
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
     const [email, setEmail] = useState("");
@@ -83,12 +83,17 @@ export default function CompanySignUpForm() {
         }
     }
 
-    const inputClass =
-        "w-full rounded-2xl border border-slate-200 pl-12 pr-4 py-4 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all font-medium";
-    const labelClass =
-        "text-xs font-black text-slate-400 uppercase tracking-widest";
-    const iconClass =
-        "absolute left-4 top-1/2 -translate-y-1/2 text-slate-300";
+    const inputClass = darkMode
+        ? "w-full rounded-xl border border-white/10 bg-white/5 pl-12 pr-4 py-3.5 text-sm text-white placeholder-white/30 outline-none focus:ring-2 focus:ring-[#f5e642]/50 focus:border-[#f5e642]/50 transition-all font-medium"
+        : "w-full rounded-2xl border border-slate-200 pl-12 pr-4 py-4 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all font-medium";
+
+    const labelClass = darkMode
+        ? "text-xs font-bold text-white/40 uppercase tracking-widest"
+        : "text-xs font-black text-slate-400 uppercase tracking-widest";
+
+    const iconClass = darkMode
+        ? "absolute left-4 top-1/2 -translate-y-1/2 text-white/30"
+        : "absolute left-4 top-1/2 -translate-y-1/2 text-slate-300";
 
     return (
         <form onSubmit={onSubmit} className="space-y-5">
@@ -160,14 +165,17 @@ export default function CompanySignUpForm() {
             <div className="space-y-2">
                 <label className={labelClass}>Plan</label>
                 <div className="relative">
-                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                    <ChevronDown className={`absolute right-4 top-1/2 -translate-y-1/2 ${darkMode ? "text-white/30" : "text-slate-300"}`} size={18} />
                     <select
                         value={plan}
                         onChange={(e) => setPlan(e.target.value)}
-                        className="w-full rounded-2xl border border-slate-200 px-4 py-4 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all font-medium appearance-none bg-white"
+                        className={darkMode
+                            ? "w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-sm text-white outline-none focus:ring-2 focus:ring-[#f5e642]/50 transition-all font-medium appearance-none"
+                            : "w-full rounded-2xl border border-slate-200 px-4 py-4 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all font-medium appearance-none bg-white"
+                        }
                     >
                         {PLANS.map((p) => (
-                            <option key={p.code} value={p.code}>
+                            <option key={p.code} value={p.code} className={darkMode ? "bg-[#1a1d27] text-white" : ""}>
                                 {p.label} — {p.description}
                             </option>
                         ))}
@@ -194,7 +202,10 @@ export default function CompanySignUpForm() {
             </div>
 
             {error && (
-                <div className="p-4 bg-red-50 rounded-2xl border border-red-100 text-red-600 text-xs font-bold italic flex items-center gap-2">
+                <div className={`p-4 rounded-xl border text-xs font-bold italic flex items-center gap-2 ${darkMode
+                        ? "bg-red-500/10 border-red-500/20 text-red-400"
+                        : "bg-red-50 border-red-100 text-red-600"
+                    }`}>
                     <Zap size={14} />
                     {error}
                 </div>
@@ -203,7 +214,10 @@ export default function CompanySignUpForm() {
             <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-2xl bg-[#0a0a0b] px-4 py-5 text-white font-black text-xs uppercase tracking-[2px] hover:bg-slate-800 disabled:opacity-50 transition-all shadow-xl shadow-black/10 group flex items-center justify-center gap-2"
+                className={`w-full rounded-xl px-4 py-4 font-black text-xs uppercase tracking-[2px] disabled:opacity-50 transition-all group flex items-center justify-center gap-2 ${darkMode
+                        ? "bg-[#f5e642] text-[#0f1117] hover:bg-[#ffe900] shadow-lg shadow-[#f5e642]/20"
+                        : "bg-[#0a0a0b] text-white hover:bg-slate-800 shadow-xl shadow-black/10"
+                    }`}
             >
                 {loading ? "Desplegando Revenue OS..." : "Registrar Empresa →"}
                 <ShieldCheck size={16} className="group-hover:scale-110 transition-transform" />
