@@ -17,6 +17,7 @@ datasource db {
 model User {
   id                       String            @id @default(cuid())
   email                    String            @unique
+  name                     String?
   firstName                String?
   lastName                 String?
   image                    String?
@@ -65,18 +66,16 @@ model Account {
 }
 
 model Session {
-  id                  String    @id @default(cuid())
-  userId              String
-  tokenHash           String    @unique
-  tenantId            String?
-  expiresAt           DateTime
-  revokedAt           DateTime?
-  createdAt           DateTime  @default(now())
-  rotatedFromSessionId String?
-  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId, revokedAt])
-  @@index([expiresAt])
+  // Custom fields kept for app logic
+  tenantId     String?
+  revokedAt    DateTime?
+  createdAt    DateTime  @default(now())
 }
 
 model AuditEvent {

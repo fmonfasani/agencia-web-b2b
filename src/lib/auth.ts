@@ -69,31 +69,17 @@ if (
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   trustHost: true,
-  session: {
-    strategy: "jwt",
-  },
   providers,
   pages: {
     signIn: "/es/auth/sign-in",
   },
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.userId = user.id;
-        token.tenantId = user.tenantId ?? token.tenantId ?? "internal";
-        token.role = user.role ?? token.role ?? "member";
+    async session({ session, user }) {
+      if (session.user && user) {
+        session.user.id = user.id;
+        session.user.tenantId = (user as any).tenantId ?? "internal";
+        session.user.role = (user as any).role ?? "member";
       }
-
-      return token;
-    },
-    async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.userId as string;
-        session.user.tenantId =
-          (token.tenantId as string | undefined) ?? "internal";
-        session.user.role = (token.role as string | undefined) ?? "member";
-      }
-
       return session;
     },
   },
