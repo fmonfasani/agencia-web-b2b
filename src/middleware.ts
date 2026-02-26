@@ -7,19 +7,22 @@ const intlMiddleware = createMiddleware(routing);
 export default function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 1. Evitar que el middleware de idiomas maneje archivos internos de Next.js u otros activos
+  // 1. IGNORAR ABSOLUTAMENTE rutas de API, Auth y archivos internos del sistema
   if (
+    pathname.includes("/api/") ||
+    pathname.includes("/auth/") ||
     pathname.startsWith("/_next") ||
-    pathname.startsWith("/api") ||
-    pathname.includes(".")
+    pathname.includes(".") ||
+    pathname === "/favicon.ico"
   ) {
     return NextResponse.next();
   }
 
+  // 2. Ejecutar el middleware de idiomas solo para páginas de contenido
   return intlMiddleware(request);
 }
 
 export const config = {
-  // Ajuste fino del matcher para capturar solo lo que necesitamos traducir
-  matcher: ["/", "/(es|en)/:path*", "/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  // Matcher simplificado y seguro
+  matcher: ["/((?!api|_next|.*\\..*).*)"],
 };
