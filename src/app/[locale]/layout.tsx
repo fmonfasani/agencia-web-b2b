@@ -9,6 +9,7 @@ import StructuredData from "@/components/StructuredData";
 import GoogleTagManager from "@/components/GoogleTagManager";
 import Analytics from "@/components/Analytics";
 import CookieConsent from "@/components/CookieConsent";
+import SalesChatWidget from "@/components/SalesChatWidget";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -88,6 +89,7 @@ export default async function RootLayout({
           <Analytics />
           {children}
           <CookieConsent />
+          <SalesChatWidget />
         </NextIntlClientProvider>
       </body>
     </html>
