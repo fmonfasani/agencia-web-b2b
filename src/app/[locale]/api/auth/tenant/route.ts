@@ -60,7 +60,7 @@ export async function PATCH(request: Request) {
   response.cookies.set(
     SESSION_COOKIE_NAME,
     token,
-    getSessionCookieOptions(session.expiresAt),
+    getSessionCookieOptions(session.expires),
   );
 
   return response;

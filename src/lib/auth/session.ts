@@ -17,14 +17,14 @@ function hashToken(token: string): string {
 
 export async function createSession(userId: string, tenantId?: string) {
   const token = randomBytes(32).toString("hex");
-  const tokenHash = hashToken(token);
-  const expiresAt = new Date(Date.now() + SESSION_TTL_HOURS * 60 * 60 * 1000);
+  const sessionToken = hashToken(token);
+  const expires = new Date(Date.now() + SESSION_TTL_HOURS * 60 * 60 * 1000);
 
   const session = await prisma.session.create({
     data: {
       userId,
-      tokenHash,
-      expiresAt,
+      sessionToken,
+      expires,
       tenantId,
     },
   });
@@ -33,15 +33,15 @@ export async function createSession(userId: string, tenantId?: string) {
 }
 
 export async function validateSession(rawToken: string) {
-  const tokenHash = hashToken(rawToken);
-  const session = await prisma.session.findUnique({ where: { tokenHash } });
+  const sessionToken = hashToken(rawToken);
+  const session = await prisma.session.findUnique({ where: { sessionToken } });
 
-  if (!session || session.revokedAt || session.expiresAt < new Date()) {
+  if (!session || session.revokedAt || session.expires < new Date()) {
     return null;
   }
 
   const shouldRotate =
-    session.expiresAt.getTime() - Date.now() < ROTATION_WINDOW_MIN * 60 * 1000;
+    session.expires.getTime() - Date.now() < ROTATION_WINDOW_MIN * 60 * 1000;
 
   if (!shouldRotate) {
     return { session, token: rawToken, rotated: false };
@@ -49,7 +49,7 @@ export async function validateSession(rawToken: string) {
 
   const nextToken = randomBytes(32).toString("hex");
   const nextTokenHash = hashToken(nextToken);
-  const newExpiresAt = new Date(
+  const newExpires = new Date(
     Date.now() + SESSION_TTL_HOURS * 60 * 60 * 1000,
   );
 
@@ -62,9 +62,8 @@ export async function validateSession(rawToken: string) {
     return tx.session.create({
       data: {
         userId: session.userId,
-        tokenHash: nextTokenHash,
-        expiresAt: newExpiresAt,
-        rotatedFromSessionId: session.id,
+        sessionToken: nextTokenHash,
+        expires: newExpires,
         tenantId: session.tenantId,
       },
     });
@@ -74,9 +73,9 @@ export async function validateSession(rawToken: string) {
 }
 
 export async function revokeSession(rawToken: string) {
-  const tokenHash = hashToken(rawToken);
+  const sessionToken = hashToken(rawToken);
   await prisma.session.updateMany({
-    where: { tokenHash, revokedAt: null },
+    where: { sessionToken, revokedAt: null },
     data: { revokedAt: new Date() },
   });
 }
