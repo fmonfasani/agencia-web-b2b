@@ -17,6 +17,10 @@ datasource db {
 model User {
   id                       String            @id @default(cuid())
   email                    String            @unique
+  firstName                String?
+  lastName                 String?
+  whatsapp                 String?
+  emailVerified            Boolean           @default(false)
   passwordHash             String?
   status                   String            @default("ACTIVE") // ACTIVE, INACTIVE, BLOCKED, DELETED
   lastLoginAt              DateTime?
@@ -34,6 +38,7 @@ model User {
   activities               Activity[]
   tasks                    Task[]
   dailyMetrics             UserDailyMetrics[]
+  deals                    Deal[]
 
   @@index([email])
 }
@@ -71,12 +76,24 @@ model AuditEvent {
 model Tenant {
   id               String            @id @default(cuid())
   name             String
+  slug             String?           @unique
+  website          String?
+  whatsapp         String?
+  status           String            @default("ACTIVE") // ACTIVE, SUSPENDED, CANCELLED
+  onboardingDone   Boolean           @default(false)
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
   memberships      Membership[]
   invitations      Invitation[]
   invitationAudits InvitationAudit[]
   subscription     Subscription?
+  agents           Agent[]
+  products         Product[]
+  services         Service[]
+  pipelines        Pipeline[]
+  customers        Customer[]
+  deals            Deal[]
+  businessEvents   BusinessEvent[]
 }
 
 model PasswordResetToken {
@@ -337,3 +354,156 @@ enum Role {
   VIEWER
 }
 
+// ============================================================
+// SAAS B2B MULTI-TENANT EXTENSION
+// ============================================================
+
+enum AgentType {
+  INFORMATIVO
+  COMERCIAL
+  SOPORTE
+}
+
+enum AgentChannel {
+  WHATSAPP
+  WEB
+  EMAIL
+}
+
+enum DealStage {
+  PROSPECTING
+  QUALIFIED
+  PROPOSAL
+  NEGOTIATION
+  CLOSED_WON
+  CLOSED_LOST
+}
+
+// AI or Automated Seller Agent (no human login)
+model Agent {
+  id           String       @id @default(cuid())
+  tenantId     String
+  name         String
+  type         AgentType    @default(COMERCIAL)
+  channel      AgentChannel @default(WEB)
+  assistantId  String?      // OpenAI Assistant ID
+  promptConfig String?      @db.Text
+  knowledgeBase String?     @db.Text
+  isActive     Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  tenant       Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  deals        Deal[]
+
+  @@index([tenantId])
+  @@index([tenantId, isActive])
+}
+
+// Multi-product support per tenant
+model Product {
+  id          String   @id @default(cuid())
+  tenantId    String
+  name        String
+  description String?  @db.Text
+  price       Decimal?
+  currency    String   @default("ARS")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  deals       Deal[]
+
+  @@index([tenantId])
+}
+
+// Multi-service support per tenant
+model Service {
+  id          String   @id @default(cuid())
+  tenantId    String
+  name        String
+  description String?  @db.Text
+  price       Decimal?
+  currency    String   @default("ARS")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+}
+
+// Sales pipeline configuration per tenant
+model Pipeline {
+  id        String   @id @default(cuid())
+  tenantId  String
+  name      String
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  deals     Deal[]
+
+  @@index([tenantId])
+}
+
+// Individual sales opportunity
+model Deal {
+  id                 String    @id @default(cuid())
+  tenantId           String
+  leadId             String?
+  pipelineId         String?
+  productId          String?
+  assignedToUserId   String?   // Human seller
+  assignedToAgentId  String?   // AI agent
+  stage              DealStage @default(PROSPECTING)
+  value              Decimal?
+  currency           String    @default("ARS")
+  notes              String?   @db.Text
+  closedAt           DateTime?
+  expectedCloseDate  DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  tenant             Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  assignedToUser     User?     @relation(fields: [assignedToUserId], references: [id])
+  assignedToAgent    Agent?    @relation(fields: [assignedToAgentId], references: [id])
+  pipeline           Pipeline? @relation(fields: [pipelineId], references: [id])
+  product            Product?  @relation(fields: [productId], references: [id])
+
+  @@index([tenantId])
+  @@index([tenantId, stage])
+  @@index([assignedToUserId])
+  @@index([assignedToAgentId])
+}
+
+// Converted customers (from leads)
+model Customer {
+  id          String   @id @default(cuid())
+  tenantId    String
+  email       String?
+  name        String?
+  company     String?
+  phone       String?
+  whatsapp    String?
+  leadId      String?  // Original lead reference
+  mrr         Decimal  @default(0) // Monthly recurring revenue from this customer
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([tenantId, email])
+}
+
+// Event Bus log for event-driven architecture
+model BusinessEvent {
+  id        String   @id @default(cuid())
+  tenantId  String?
+  type      String   // TENANT_CREATED, LEAD_CREATED, DEAL_CLOSED, AGENT_MESSAGE_SENT, etc.
+  payload   Json     @default("{}")
+  source    String?  // "api", "agent", "human", "system"
+  createdAt DateTime @default(now())
+  tenant    Tenant?  @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([type])
+  @@index([createdAt])
+}

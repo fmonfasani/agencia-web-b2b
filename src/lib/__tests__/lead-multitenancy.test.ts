@@ -59,6 +59,8 @@ describe("Lead multi-tenant protections", () => {
     expect(findManyMock).toHaveBeenCalledWith({
       where: { tenantId: "tenant-a" },
       orderBy: { createdAt: "desc" },
+      take: 50,
+      skip: 0,
     });
   });
 

@@ -8,7 +8,8 @@ export type AuditEventType =
   | "ADMIN_ACTION"
   | "PASSWORD_CHANGED"
   | "INVITATION_SENT"
-  | "INVITATION_ACCEPTED";
+  | "INVITATION_ACCEPTED"
+  | "COMPANY_REGISTERED";
 
 export async function logAuditEvent(params: {
   eventType: AuditEventType;
