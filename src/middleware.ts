@@ -32,10 +32,10 @@ function isPublicPath(pathname: string): boolean {
 export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (isPublicPath(pathname)) {
-    return intlMiddleware(request);
-  }
+  // 1. Run intlMiddleware first for all matching routes
+  const response = intlMiddleware(request);
 
+  // 2. Auth Protection Logic
   if (ADMIN_ROUTE_REGEX.test(pathname)) {
     const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
 
@@ -46,7 +46,7 @@ export default async function middleware(request: NextRequest) {
     }
   }
 
-  return intlMiddleware(request);
+  return response;
 }
 
 export const config = {
