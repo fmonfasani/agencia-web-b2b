@@ -87,16 +87,19 @@ export default async function SignInPage({
         {/* Subtle glow */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#135bec]/8 rounded-full blur-[140px] pointer-events-none" />
 
-        {/* Illustration — wrapper bg matches page so PNG edges are clean */}
-        <div className="relative z-10 w-full max-w-lg px-8 bg-[#0a0d13] rounded-3xl overflow-hidden">
+        {/* Illustration — full bleed, covers the entire right panel edge-to-edge */}
+        <div className="absolute inset-0 z-0">
           <Image
             src="/signin-hero.png"
             alt="Revenue OS AI Agent"
-            width={600}
-            height={600}
-            className="object-contain w-full"
+            fill
+            className="object-cover object-center"
             priority
           />
+          {/* Gradient overlay — keeps bottom content readable */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0d13] via-[#0a0d13]/40 to-transparent" />
+          {/* Left-side fade — blends into the form column */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0a0d13] via-transparent to-transparent" style={{ width: '30%' }} />
         </div>
 
         {/* Tagline */}
