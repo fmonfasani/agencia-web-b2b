@@ -87,11 +87,11 @@ export default async function SignInPage({
         {/* Subtle glow */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#135bec]/8 rounded-full blur-[140px] pointer-events-none" />
 
-        {/* Illustration */}
-        <div className="relative z-10 w-full max-w-lg px-8">
+        {/* Illustration — wrapper bg matches page so PNG edges are clean */}
+        <div className="relative z-10 w-full max-w-lg px-8 bg-[#0a0d13] rounded-3xl overflow-hidden">
           <Image
             src="/signin-hero.png"
-            alt="Revenue OS Dashboard"
+            alt="Revenue OS AI Agent"
             width={600}
             height={600}
             className="object-contain w-full"
