@@ -50,5 +50,8 @@ export default async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/(es|en)/:path*", "/((?!_next|api|.*\\..*).*)"],
+  // Match all pathnames except for
+  // - API routes (/api)
+  // - Static files (_next/static, _next/image, favicon.ico, etc.)
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)"],
 };
