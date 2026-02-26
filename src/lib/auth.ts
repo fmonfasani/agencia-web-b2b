@@ -108,7 +108,7 @@ export async function requireAuth(locale = "es") {
   const session = await auth();
 
   if (!session?.user) {
-    redirect(`/${locale}/sign-in`);
+    redirect(`/${locale}/auth/sign-in`);
   }
 
   return session.user;
