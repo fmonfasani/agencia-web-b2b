@@ -70,8 +70,5 @@
     "prettier": "^3.8.1",
     "tailwindcss": "^4",
     "typescript": "^5"
-  },
-  "prisma": {
-    "seed": "node prisma/seed.mjs"
   }
 }

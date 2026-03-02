@@ -3,7 +3,7 @@ import { AuthorizationError } from "@/lib/authz";
 import { resolveTenantIdFromHeaders } from "@/lib/tenant-context";
 import { ingestLead, LeadIngestInput } from "@/lib/leads/ingest.service";
 import { requireAuth } from "@/lib/auth/request-auth";
-import { prisma } from "@/lib/prisma";
+import { prisma, getTenantPrisma } from "@/lib/prisma";
 
 /**
  * POST /api/leads/ingest
@@ -22,11 +22,12 @@ export async function POST(request: NextRequest) {
       auth.session.tenantId || process.env.DEFAULT_TENANT_ID,
     );
 
+    const tPrisma = getTenantPrisma(activeTenantId);
+
     // Check membership role for this tenant
-    const membership = await prisma.membership.findFirst({
+    const membership = await tPrisma.membership.findFirst({
       where: {
         userId: auth.user.id,
-        tenantId: activeTenantId,
         status: "ACTIVE",
       },
     });

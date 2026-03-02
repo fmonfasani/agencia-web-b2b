@@ -2,12 +2,26 @@ import OpenAI from "openai";
 import { MessageContext } from "./redis-context";
 import type { LeadInfo } from "./lead-manager";
 
+// Configuración de Proveedores de IA (OpenAI vs Ollama Local)
+const DEFAULT_OLLAMA_URL = "http://localhost:11434/v1";
+const DEFAULT_OLLAMA_MODEL = "qwen2.5-coder:7b";
 
-const openai = process.env.OPENAI_API_KEY
+const isOllamaEnabled = !!(process.env.OLLAMA_BASE_URL || !process.env.OPENAI_API_KEY);
+
+const openai = isOllamaEnabled
   ? new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    })
-  : null;
+    baseURL: process.env.OLLAMA_BASE_URL || DEFAULT_OLLAMA_URL,
+    apiKey: "ollama", // Required but ignored by Ollama
+  })
+  : (process.env.OPENAI_API_KEY
+    ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+    : null);
+
+const MODEL_NAME = isOllamaEnabled
+  ? (process.env.OLLAMA_MODEL || DEFAULT_OLLAMA_MODEL)
+  : "gpt-4o-mini";
+
+console.log(`[AI Manager] Using ${isOllamaEnabled ? "Ollama Local" : "OpenAI"} with model: ${MODEL_NAME}`);
 
 const SYSTEM_PROMPT = `
 Eres el asistente inteligente de Agencia Web B2B (AgenciaWebB2B.com). 
@@ -54,7 +68,7 @@ export async function generateAIResponse(
     ];
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini", // Efficient for chat
+      model: MODEL_NAME,
       messages: messages,
       temperature: 0.7,
       max_tokens: 500,
@@ -93,7 +107,7 @@ export async function extractLeadData(
     if (!openai) return null;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: MODEL_NAME,
       messages: [{ role: "user", content: prompt }],
       response_format: { type: "json_object" },
       temperature: 0,

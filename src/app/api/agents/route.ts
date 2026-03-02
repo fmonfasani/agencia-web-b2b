@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma, getTenantPrisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/auth";
 import { assertPlanLimit } from "@/lib/plan-guard";
 import { PlanLimitError } from "@/lib/plan-guard";
@@ -23,8 +23,8 @@ export async function GET() {
             return NextResponse.json({ error: "No tenant found" }, { status: 403 });
         }
 
-        const agents = await prisma.agent.findMany({
-            where: { tenantId: membership.tenantId },
+        const tPrisma = getTenantPrisma(membership.tenantId);
+        const agents = await tPrisma.agent.findMany({
             orderBy: { createdAt: "desc" },
         });
 
@@ -53,10 +53,11 @@ export async function POST(req: Request) {
         }
 
         const tenantId = membership.tenantId;
+        const tPrisma = getTenantPrisma(tenantId);
 
         // Enforce plan limit
-        const currentAgentCount = await prisma.agent.count({
-            where: { tenantId, isActive: true },
+        const currentAgentCount = await tPrisma.agent.count({
+            where: { isActive: true },
         });
         await assertPlanLimit(tenantId, "maxAgents", currentAgentCount);
 
@@ -70,9 +71,9 @@ export async function POST(req: Request) {
             );
         }
 
-        const agent = await prisma.agent.create({
+        const agent = await tPrisma.agent.create({
             data: {
-                tenantId,
+                tenantId, // Keeping for type safety / explicit data
                 name,
                 type: type || "COMERCIAL",
                 channel: channel || "WEB",
@@ -84,7 +85,7 @@ export async function POST(req: Request) {
         });
 
         // Emit business event
-        await prisma.businessEvent.create({
+        await tPrisma.businessEvent.create({
             data: {
                 tenantId,
                 type: "AGENT_CREATED",

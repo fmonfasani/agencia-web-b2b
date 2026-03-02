@@ -1,7 +1,6 @@
-import { prisma } from "@/lib/prisma";
+import { getTenantPrisma } from "@/lib/prisma";
 import { requireTenantId } from "@/lib/tenant-context";
 import type { Prisma } from "@prisma/client";
-// Updated schema: Lead now has tenantId correctly.
 
 export interface CreateLeadInput {
   tenantId?: string;
@@ -24,9 +23,9 @@ export async function listLeadsByTenant(
   offset: number = 0,
 ) {
   const activeTenantId = requireTenantId(tenantId);
+  const tPrisma = getTenantPrisma(activeTenantId);
 
-  return prisma.lead.findMany({
-    where: { tenantId: activeTenantId },
+  return tPrisma.lead.findMany({
     orderBy: { createdAt: "desc" },
     take: limit,
     skip: offset,
@@ -35,15 +34,14 @@ export async function listLeadsByTenant(
 
 export async function countLeadsByTenant(tenantId?: string) {
   const activeTenantId = requireTenantId(tenantId);
-  return prisma.lead.count({
-    where: { tenantId: activeTenantId },
-  });
+  const tPrisma = getTenantPrisma(activeTenantId);
+  return tPrisma.lead.count();
 }
 
 export async function createLeadForTenant(input: CreateLeadInput) {
   const activeTenantId = requireTenantId(input.tenantId);
-
-  return prisma.lead.create({
+  const tPrisma = getTenantPrisma(activeTenantId);
+  return tPrisma.lead.create({
     data: {
       tenantId: activeTenantId,
       name: input.name,

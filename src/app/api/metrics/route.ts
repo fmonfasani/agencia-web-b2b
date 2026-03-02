@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma, getTenantPrisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -21,6 +21,7 @@ export async function GET() {
         }
 
         const tenantId = membership.tenantId;
+        const tPrisma = getTenantPrisma(tenantId);
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
@@ -31,44 +32,61 @@ export async function GET() {
             closedWonDeals,
             agentCount,
             userCount,
-            customerCount,
+            customerData,
             recentEvents,
+            revenueHistory,
         ] = await Promise.all([
             // Active leads count
-            prisma.lead.count({
-                where: { tenantId, status: { notIn: ["CONVERTED", "LOST", "DISQUALIFIED"] } },
+            tPrisma.lead.count({
+                where: { status: { notIn: ["CONVERTED", "LOST", "DISQUALIFIED"] } },
             }),
             // All deals this month
-            prisma.deal.findMany({
-                where: { tenantId, createdAt: { gte: startOfMonth } },
+            tPrisma.deal.findMany({
+                where: { createdAt: { gte: startOfMonth } },
                 select: { stage: true, value: true, assignedToUserId: true, assignedToAgentId: true, closedAt: true, createdAt: true },
             }),
             // Deals closed won
-            prisma.deal.findMany({
-                where: { tenantId, stage: "CLOSED_WON", closedAt: { gte: startOfMonth } },
+            tPrisma.deal.findMany({
+                where: { stage: "CLOSED_WON", closedAt: { gte: startOfMonth } },
                 select: { value: true, assignedToUserId: true, assignedToAgentId: true, createdAt: true, closedAt: true },
             }),
             // Active agents
-            prisma.agent.count({ where: { tenantId, isActive: true } }),
+            tPrisma.agent.count({ where: { isActive: true } }),
             // Active memberships
-            prisma.membership.count({ where: { tenantId, status: "ACTIVE" } }),
+            tPrisma.membership.count({ where: { status: "ACTIVE" } }),
             // Customers MRR
-            prisma.customer.findMany({
-                where: { tenantId },
+            tPrisma.customer.findMany({
                 select: { mrr: true },
             }),
             // Recent business events (last 10)
-            prisma.businessEvent.findMany({
-                where: { tenantId },
+            tPrisma.businessEvent.findMany({
                 orderBy: { createdAt: "desc" },
                 take: 10,
                 select: { type: true, createdAt: true, source: true },
             }),
+            // Revenue history (last 30 days)
+            tPrisma.userDailyMetrics.findMany({
+                where: { date: { gte: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000) } },
+                orderBy: { date: "asc" },
+                select: { date: true, revenueGenerated: true },
+            }),
         ]);
 
+        // Aggregate revenue history by date
+        const revenueByDate = revenueHistory.reduce((acc: Record<string, number>, curr) => {
+            const dateStr = curr.date.toISOString().split("T")[0];
+            acc[dateStr] = (acc[dateStr] || 0) + Number(curr.revenueGenerated);
+            return acc;
+        }, {});
+
+        const formattedHistory = Object.entries(revenueByDate).map(([date, revenue]) => ({
+            date,
+            revenue,
+        }));
+
         // Calculate MRR from customers
-        const totalMrr = customerCount.reduce(
-            (sum: number, c: { mrr: { toString(): string } }) => sum + Number(c.mrr),
+        const totalMrr = customerData.reduce(
+            (sum: number, c: any) => sum + Number(c.mrr),
             0,
         );
 
@@ -80,20 +98,20 @@ export async function GET() {
 
         // MRR from closed deals this month (deals value sum)
         const mrrFromDeals = closedWonDeals.reduce(
-            (sum: number, d: { value?: { toString(): string } | null }) => sum + Number(d.value || 0),
+            (sum: number, d: any) => sum + Number(d.value || 0),
             0,
         );
 
         // Deals by channel: human vs agent
-        const dealsByHuman = totalDeals.filter((d) => d.assignedToUserId).length;
-        const dealsByAgent = totalDeals.filter((d) => d.assignedToAgentId).length;
+        const dealsByHuman = totalDeals.filter((d: any) => d.assignedToUserId).length;
+        const dealsByAgent = totalDeals.filter((d: any) => d.assignedToAgentId).length;
 
         // Average time to close (in days)
-        const closedWithDates = closedWonDeals.filter((d) => d.closedAt);
+        const closedWithDates = closedWonDeals.filter((d: any) => d.closedAt);
         const avgDaysToClose =
             closedWithDates.length > 0
                 ? Math.round(
-                    closedWithDates.reduce((sum: number, d) => {
+                    closedWithDates.reduce((sum: number, d: any) => {
                         return (
                             sum +
                             (d.closedAt!.getTime() - d.createdAt.getTime()) /
@@ -112,11 +130,12 @@ export async function GET() {
             totalMrr,
             agentCount,
             userCount,
-            customerCount: customerCount.length,
+            customerCount: customerData.length,
             dealsByHuman,
             dealsByAgent,
             avgDaysToClose,
             recentEvents,
+            revenueHistory: formattedHistory,
         });
     } catch (error: unknown) {
         const msg = error instanceof Error ? error.message : "Server Error";

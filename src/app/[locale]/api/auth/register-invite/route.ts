@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma, getTenantPrisma } from "@/lib/prisma";
 import { createSession } from "@/lib/auth/session";
 import { hashPassword } from "@/lib/auth/password";
 import {
@@ -39,6 +39,8 @@ export async function POST(request: Request) {
       );
     }
 
+    const tPrisma = getTenantPrisma(invitation.tenantId);
+
     // 2. Hash password
     const passwordHash = hashPassword(password);
 
@@ -53,7 +55,7 @@ export async function POST(request: Request) {
     });
 
     // 4. Crear membresía en el tenant invitado
-    await prisma.membership.upsert({
+    await tPrisma.membership.upsert({
       where: {
         userId_tenantId: {
           userId: user.id,
@@ -73,7 +75,7 @@ export async function POST(request: Request) {
     });
 
     // 5. Marcar invitación como aceptada
-    await prisma.invitation.update({
+    await tPrisma.invitation.update({
       where: { id: invitation.id },
       data: {
         status: "ACCEPTED",

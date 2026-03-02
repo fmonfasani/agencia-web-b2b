@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { prisma } from "@/lib/prisma";
+import { prisma, getTenantPrisma } from "@/lib/prisma";
 import {
   getSessionCookieOptions,
   SESSION_COOKIE_NAME,
@@ -36,11 +36,10 @@ export async function PATCH(request: Request) {
     );
   }
 
-  // Verificar que el usuario pertenece al tenant solicitado
-  const membership = await prisma.membership.findFirst({
+  const tPrisma = getTenantPrisma(tenantId);
+  const membership = await tPrisma.membership.findFirst({
     where: {
       userId: session.userId,
-      tenantId,
       status: "ACTIVE",
     },
     select: { id: true },

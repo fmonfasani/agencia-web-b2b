@@ -71,10 +71,9 @@ export default async function AdminLayout({
               isLocked
             />
             <SidebarNavItem
-              href="#"
+              href={`/${locale}/admin/revenue`}
               iconName="DollarSign"
               label="Revenue (MRR/ARR)"
-              isLocked
             />
             <SidebarNavItem
               href="#"

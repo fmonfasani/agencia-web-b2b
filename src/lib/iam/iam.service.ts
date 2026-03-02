@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { prisma, getTenantPrisma } from "@/lib/prisma";
 import { Role } from "@prisma/client";
 import { canModifyRole } from "./rbac";
 
@@ -15,18 +15,19 @@ export const IAMService = {
     tenantId: string,
     membershipId: string,
   ) {
+    const tPrisma = getTenantPrisma(tenantId);
     const actor = await this.getMembership(actorId, tenantId);
-    const target = await prisma.membership.findUnique({
+    const target = await tPrisma.membership.findUnique({
       where: { id: membershipId },
     });
 
-    if (!target || target.tenantId !== tenantId)
+    if (!target)
       throw new Error("Membership not found");
     if (!canModifyRole(actor.role as Role, target.role as Role)) {
       throw new Error("Insufficient privileges to delete this user");
     }
 
-    return await prisma.membership.update({
+    return await tPrisma.membership.update({
       where: { id: membershipId },
       data: {
         status: "DELETED",
@@ -44,8 +45,9 @@ export const IAMService = {
     membershipId: string,
     newStatus: "ACTIVE" | "INACTIVE" | "BLOCKED",
   ) {
+    const tPrisma = getTenantPrisma(tenantId);
     const actor = await this.getMembership(actorId, tenantId);
-    const target = await prisma.membership.findUnique({
+    const target = await tPrisma.membership.findUnique({
       where: { id: membershipId },
     });
 
@@ -54,7 +56,7 @@ export const IAMService = {
       throw new Error("Cannot modify status of higher or equal role");
     }
 
-    const result = await prisma.membership.update({
+    const result = await tPrisma.membership.update({
       where: { id: membershipId },
       data: { status: newStatus },
     });
@@ -80,11 +82,12 @@ export const IAMService = {
     action: string,
     metadata: Record<string, unknown> = {},
   ) {
-    return await prisma.auditEvent.create({
+    const tPrisma = getTenantPrisma(tenantId);
+    return await tPrisma.auditEvent.create({
       data: {
         eventType: action,
         userId: actorId, // Who did it
-        tenantId,
+        tenantId, // Explicitly included for schema compliance
         metadata: {
           targetUserId: targetId,
           ...metadata,
@@ -97,7 +100,8 @@ export const IAMService = {
    * Helper to get validated actor membership
    */
   async getMembership(userId: string, tenantId: string) {
-    const m = await prisma.membership.findUnique({
+    const tPrisma = getTenantPrisma(tenantId);
+    const m = await tPrisma.membership.findUnique({
       where: { userId_tenantId: { userId, tenantId } },
     });
     if (!m) throw new Error("Unauthorized: No membership in this tenant");

@@ -1,0 +1,13 @@
+[mcp_servers.filesystem]
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-filesystem", "c:/Users/fmonf/Desktop/Software Enginnering LAPTOP/Agencia B2B/agencia-web-b2b"]
+startup_timeout_sec = 30
+
+[mcp_servers.git]
+command = "python"
+args = ["-m", "mcp_server_git", "--repository", "c:/Users/fmonf/Desktop/Software Enginnering LAPTOP/Agencia B2B/agencia-web-b2b"]
+startup_timeout_sec = 30
+
+[context]
+max_files_limit = 50
+ignore_patterns = ["node_modules/**", ".next/**", "dist/**", ".swc/**", "coverage/**"]
