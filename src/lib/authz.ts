@@ -59,33 +59,59 @@ export function getRoleFromRequest(request: Request): AppRole | null {
 import { auth } from "./auth";
 import { getActiveTenantId } from "./tenant-context";
 
-export async function requireTenantMembership(allowedRoles?: AppRole[]) {
-  const session = await auth();
-  const activeTenantId = await getActiveTenantId();
+import { requireAuth as requireCustomAuth } from "./auth/request-auth";
 
-  if (!session?.user) {
+export async function requireTenantMembership(allowedRoles?: AppRole[]) {
+  // 1. Try NextAuth (Google/OAuth)
+  const session = await auth();
+
+  // 2. Fallback to Custom Session (Registration/Internal Login)
+  let user: any = session?.user;
+  let tenantId: string | null = null;
+
+  if (!user) {
+    const custom = await requireCustomAuth();
+    if (custom) {
+      user = {
+        ...(custom.user as any),
+        userId: custom.user.id,
+        tenantId: custom.session.tenantId,
+        role: (custom.user as any).role || "MEMBER"
+      };
+      tenantId = custom.session.tenantId;
+    }
+  } else {
+    tenantId = user.tenantId;
+  }
+
+  if (!user) {
     throw new AuthorizationError("Authentication required", 401);
   }
 
+  const activeTenantId = tenantId || await getActiveTenantId();
+
   // Verify if the user belongs to the active tenant
-  if (session.user.tenantId !== activeTenantId && session.user.role !== "SUPER_ADMIN") {
+  if ((user as any).tenantId !== activeTenantId && (user as any).role !== "SUPER_ADMIN") {
     throw new AuthorizationError("Access denied to this tenant", 403);
   }
 
   // Verify roles if specified
-  if (allowedRoles && !allowedRoles.includes(session.user.role as AppRole)) {
+  if (allowedRoles && !allowedRoles.includes((user as any).role as AppRole)) {
     throw new AuthorizationError("Insufficient permissions for this action", 403);
   }
 
   return {
-    user: session.user,
+    user: user as any,
     tenantId: activeTenantId,
   };
 }
 
 export async function getCurrentRole(): Promise<AppRole | null> {
   const session = await auth();
-  return (session?.user?.role as AppRole) || null;
+  if (session?.user?.role) return session.user.role as AppRole;
+
+  const custom = await requireCustomAuth();
+  return (custom?.user?.role as AppRole) || null;
 }
 
 export async function requireRole(allowedRoles: AppRole[]): Promise<AppRole> {

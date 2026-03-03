@@ -1,6 +1,6 @@
-import { getActiveTenantId } from "./tenant-context";
 import { getTenantPrisma, prisma } from "./prisma";
 import { auth } from "./auth";
+import { requireAuth as requireCustomAuth } from "./auth/request-auth";
 
 /**
  * Returns a Prisma client scoped to the current active tenant.
@@ -12,21 +12,21 @@ import { auth } from "./auth";
  */
 export async function getScopedPrisma() {
     try {
-        // 1. Try to get it from headers (standard way in our middleware)
-        const tenantId = await getActiveTenantId();
-        return getTenantPrisma(tenantId);
-    } catch (error) {
-        // 2. Fallback to auth session if headers are not available 
-        // (e.g. during some direct server-side calls)
+        // 1. Try NextAuth session
         const session = await auth();
-        const sessionTenantId = session?.user?.tenantId;
-
-        if (sessionTenantId) {
-            return getTenantPrisma(sessionTenantId);
+        if (session?.user?.tenantId) {
+            return getTenantPrisma(session.user.tenantId);
         }
 
-        // 3. Last fallback: return global prisma (use with caution!)
-        // For SUPER_ADMIN or public parts of the app
+        // 2. Try Custom Session
+        const custom = await requireCustomAuth();
+        if (custom?.session?.tenantId) {
+            return getTenantPrisma(custom.session.tenantId);
+        }
+
+        // 3. Last fallback: return global prisma
+        return prisma;
+    } catch (error) {
         return prisma;
     }
 }

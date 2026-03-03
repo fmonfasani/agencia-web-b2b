@@ -171,8 +171,13 @@ export default async function AdminLayout({
               isLocked
             />
             <SidebarNavItem
-              href="#"
+              href={`/${locale}/admin/agents`}
               iconName="Bot"
+              label="AI Factory"
+            />
+            <SidebarNavItem
+              href="#"
+              iconName="Zap"
               label="Automatización RPA"
               isLocked
             />

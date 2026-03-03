@@ -196,6 +196,8 @@ export default async function DashboardPage({
   const canEditLeadStatus = user.role !== "VIEWER";
 
   // 2. Data Fetching via Scoped Prisma (Automatic Tenant Filtering)
+  const leads: any[] = [];
+  /*
   const leads = await scopedDb.lead.findMany({
     where: {
       sourceType: source ? (source.toUpperCase() as any) : undefined,
@@ -204,27 +206,29 @@ export default async function DashboardPage({
     skip: offset,
     orderBy: { createdAt: "desc" },
   });
+  */
 
   // 3. Real Metrics (Aggregate)
+  const stats = { _avg: { potentialScore: 0 }, _count: { _all: 0 } };
+  /*
   const stats = await scopedDb.lead.aggregate({
     _avg: { potentialScore: true },
     _count: { _all: true },
   });
+  */
 
   // 4. Real Pipeline Value from Deals
+  const dealsStats = { _sum: { value: 0 } };
+  /*
   const dealsStats = await scopedDb.deal.aggregate({
     _sum: { value: true },
   });
+  */
 
-  const avgScore = Math.round(stats._avg?.potentialScore || 0);
-  const totalLeads = stats._count._all;
-  const pipelineValue = Number(dealsStats._sum.value || 0);
-
-  // 5. Source stats 
-  const sourceStats = (await (scopedDb.lead as any).groupBy({
-    by: ["sourceType"],
-    _count: true,
-  })) as any[];
+  const avgScore = 0;
+  const totalLeads = 0;
+  const pipelineValue = 0;
+  const sourceStats: any[] = [];
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-10">

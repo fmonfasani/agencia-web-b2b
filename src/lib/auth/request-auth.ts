@@ -22,8 +22,20 @@ export async function requireAuth() {
   });
   if (!user) return null;
 
+  // Fetch the role from the Membership table
+  const membership = await prisma.membership.findFirst({
+    where: {
+      userId: user.id,
+      tenantId: validated.session.tenantId || undefined,
+      status: "ACTIVE",
+    },
+  });
+
   return {
-    user,
+    user: {
+      ...user,
+      role: membership?.role || "MEMBER",
+    },
     session: validated.session,
     token: validated.token,
     rotated: validated.rotated,
