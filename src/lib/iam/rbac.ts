@@ -33,6 +33,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "MANAGE_SETTINGS",
   ],
   OPERATOR: ["VIEW_LEADS", "EDIT_LEADS", "DELETE_LEADS", "VIEW_AUDIT_LOGS"],
+  SALES_REP: ["VIEW_LEADS", "EDIT_LEADS", "DELETE_LEADS"],
   MEMBER: ["VIEW_LEADS", "EDIT_LEADS"],
   VIEWER: ["VIEW_LEADS"],
 };
@@ -52,6 +53,7 @@ const ROLE_RANK: Record<Role, number> = {
   SUPER_ADMIN: 100,
   ADMIN: 80,
   OPERATOR: 60,
+  SALES_REP: 50,
   MEMBER: 40,
   VIEWER: 20,
 };
