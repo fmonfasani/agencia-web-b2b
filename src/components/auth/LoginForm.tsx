@@ -49,10 +49,11 @@ export default function LoginForm({ darkMode = false, locale: localeProp }: Logi
         body: JSON.stringify({ email, password, rememberMe }),
       });
 
-      const data = (await response.json()) as { error?: string; success?: boolean };
+      const data = (await response.json()) as { error?: string; message?: string; success?: boolean };
 
       if (!response.ok) {
-        setError(data.error || t.invalidCreds);
+        const errorMsg = data.message || data.error || t.invalidCreds;
+        setError(errorMsg);
         setLoading(false);
         return;
       }

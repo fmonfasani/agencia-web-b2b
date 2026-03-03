@@ -16,20 +16,27 @@ function hashToken(token: string): string {
 }
 
 export async function createSession(userId: string, tenantId?: string) {
-  const token = randomBytes(32).toString("hex");
-  const sessionToken = hashToken(token);
-  const expires = new Date(Date.now() + SESSION_TTL_HOURS * 60 * 60 * 1000);
+  try {
+    const token = randomBytes(32).toString("hex");
+    const sessionToken = hashToken(token);
+    const expires = new Date(Date.now() + SESSION_TTL_HOURS * 60 * 60 * 1000);
 
-  const session = await prisma.session.create({
-    data: {
-      userId,
-      sessionToken,
-      expires,
-      tenantId,
-    },
-  });
+    const session = await prisma.session.create({
+      data: {
+        userId,
+        sessionToken,
+        expires,
+        tenantId,
+      },
+    });
 
-  return { token, session };
+    console.log(`SESSION_DEBUG: Created session for user ${userId} with token ${sessionToken.substring(0, 10)}...`);
+
+    return { token, session };
+  } catch (error: any) {
+    console.error("SESSION_ERROR: Failed to create session:", error);
+    throw error;
+  }
 }
 
 export async function validateSession(rawToken: string) {
