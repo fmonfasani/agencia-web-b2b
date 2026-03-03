@@ -13,16 +13,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async session(params: any) {
       const { session, token, user } = params;
 
-      // Llamar al callback base de authConfig
-      const updatedSession = await authConfig.callbacks.session({ session, token });
-
-      if (user && updatedSession.user) {
-        updatedSession.user.id = user.id;
-        (updatedSession.user as any).tenantId = user.tenantId ?? "internal";
-        (updatedSession.user as any).role = user.role ?? "member";
+      if (token && session.user) {
+        session.user.id = token.sub;
+        session.user.tenantId = token.tenantId ?? "internal";
+        session.user.role = token.role ?? "member";
       }
 
-      return updatedSession;
+      if (user && session.user) {
+        session.user.id = user.id;
+        session.user.tenantId = user.tenantId ?? "internal";
+        session.user.role = user.role ?? "member";
+      }
+
+      return session;
     },
   },
 });
