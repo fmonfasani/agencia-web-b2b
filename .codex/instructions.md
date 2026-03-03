@@ -1,34 +1,35 @@
-# 🧠 Agencia B2B Project: Codex Instructions
+# 🧠 Agencia B2B Project: Codex Instructions (v1.1)
 
 ## 🏗️ Architecture & Stack
 
 - **Framework**: Next.js 16 (App Router) with React 19.
-- **Database / ORM**: Prisma (PostgreSQL).
-- **Authentication**: Auth.js v5 (NextAuth) with Prisma adapter.
-- **Styling**: Tailwind CSS 4, Framer Motion for premium animations.
-- **Multi-tenancy**: Based on `Tenant` model. All business data (Leads, Deals, agents, etc.) MUST be scoped by `tenantId`.
-- **RBAC**: Handled through `Membership.role`. Roles: `SUPER_ADMIN, ADMIN, OPERATOR, MEMBER, VIEWER`.
+- **Database / ORM**: Prisma (Postgres 16 en DigitalOcean).
+- **Authentication**: Auth.js v5 (NextAuth) con adaptador de Prisma.
+- **Multitenancy**: Todas las operaciones DEBEN estar filtradas por `tenantId`.
+- **Modelo Mixto (Híbrido)**: La plataforma permite que Agentes Humanos (`SALES_REP`) y Agentes IA (`Agent`) colaboren en tiempo real.
 
-## 🚀 Key Patterns for LLMs
+## 🚀 Patrones Clave para el Desarrollo
 
-1. **Server Components & Actions**: Prefer Server Components for data fetching and Server Actions for mutations.
-2. **Tenant Isolation**: Always verify the `tenantId` of the current session before querying or mutating data. Use middleware or utility guards to ensure a user belongs to the tenant.
-3. **Internalization**: Project uses `next-intl`. Use translation keys from `messages/`.
-4. **Prisma Client**: Use the singleton client (likely in `src/lib/prisma.ts` or similar).
-5. **AI Integration**: The project includes an `Intelligence Engine`. All AI-related logic should follow the patterns in `intelligence_engine/`.
+1. **Aislamiento Automático**: Se debe usar (o preparar) una extensión de Prisma para filtrar por `tenantId` automáticamente en todas las queries.
+2. **Lógica de Handoff**: Los agentes de IA deben ser capaces de detectar hitos de venta o necesidad humana y traspasar el chat a un agente real.
+3. **Roles Dinámicos (RBAC)**:
+   - `SUPER_ADMIN`: Gestión global de la plataforma.
+   - `ADMIN`: Dueño de la agencia cliente.
+   - `OPERATOR`: Configuración de Agentes IA y Knowledge Base.
+   - `SALES_REP`: Vendedor humano, gestión de CRM Kanban.
+   - `VIEWER`: Analista de métricas del Módulo de Revenues.
+4. **Módulo de Revenues**: Todas las métricas de ingresos, leads y deals deben actualizarse en tiempo real tras cada interacción (IA o Humana).
 
-## 🛡️ Security & Validation
+## 🛡️ Seguridad y Validación
 
-- **Middleware**: Used for route protection and session management.
-- **Validation**: Use `zod` for validating action inputs and API requests.
-- **RLS (Database level)**: While Prisma is the main ORM, ensure the PostgreSQL DB has appropriate policies if direct access is used.
+- **Privacidad de Tenants**: Un usuario de un Tenant A nunca debe poder acceder a recursos de un Tenant B (Validación rigurosa de `tenantId`).
+- **Secretos**: Las API Keys de OpenAI y Assistant IDs se manejan exclusivamente en el ServerSide.
 
-## 🧪 Testing & Quality
+## 🧪 Calidad y Pruebas
 
-- **Unit/Integration**: Jest. Run `npm run test` after core logic changes.
-- **E2E**: Playwright. Run `npm run test:e2e` for critical flows.
-- **Linting**: Strict ESLint rules. Always fix errors to keep AI context clean.
+- **Prisma**: Tras cambios en el esquema, ejecutar `npx prisma db push` y verificar integridad en DigitalOcean.
+- **Test de Aislamiento**: Probar siempre las nuevas funciones con al menos dos cuentas de diferentes agencias.
 
 ---
 
-_Follow these instructions to maintain architectural consistency and high code quality in the Agencia B2B ecosystem._
+_Sigue estas instrucciones para mantener la consistencia arquitectónica en el ecosistema de la Agencia B2B._

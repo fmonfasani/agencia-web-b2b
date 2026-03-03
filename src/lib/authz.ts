@@ -1,8 +1,15 @@
-import { cookies, headers } from "next/headers";
+import { Role } from "@prisma/client";
 
-export const APP_ROLES = ["OWNER", "ADMIN", "SALES", "VIEWER"] as const;
+export const APP_ROLES = [
+  "SUPER_ADMIN",
+  "ADMIN",
+  "OPERATOR",
+  "SALES_REP",
+  "MEMBER",
+  "VIEWER",
+] as const;
 
-export type AppRole = (typeof APP_ROLES)[number];
+export type AppRole = Role;
 
 export class AuthorizationError extends Error {
   status: number;
@@ -15,14 +22,14 @@ export class AuthorizationError extends Error {
 }
 
 function isAppRole(value: string | null | undefined): value is AppRole {
-  return APP_ROLES.includes((value || "").toUpperCase() as AppRole);
+  return (APP_ROLES as unknown as string[]).includes((value || "").toUpperCase());
 }
 
 function parseRole(value: string | null | undefined): AppRole | null {
   if (!value) return null;
 
   const normalized = value.toUpperCase();
-  return isAppRole(normalized) ? normalized : null;
+  return isAppRole(normalized) ? (normalized as AppRole) : null;
 }
 
 function parseRoleFromCookie(rawCookieHeader: string | null): AppRole | null {
@@ -49,47 +56,48 @@ export function getRoleFromRequest(request: Request): AppRole | null {
   return parseRole(process.env.DEFAULT_APP_ROLE);
 }
 
+import { auth } from "./auth";
+import { getActiveTenantId } from "./tenant-context";
+
+export async function requireTenantMembership(allowedRoles?: AppRole[]) {
+  const session = await auth();
+  const activeTenantId = await getActiveTenantId();
+
+  if (!session?.user) {
+    throw new AuthorizationError("Authentication required", 401);
+  }
+
+  // Verify if the user belongs to the active tenant
+  if (session.user.tenantId !== activeTenantId && session.user.role !== "SUPER_ADMIN") {
+    throw new AuthorizationError("Access denied to this tenant", 403);
+  }
+
+  // Verify roles if specified
+  if (allowedRoles && !allowedRoles.includes(session.user.role as AppRole)) {
+    throw new AuthorizationError("Insufficient permissions for this action", 403);
+  }
+
+  return {
+    user: session.user,
+    tenantId: activeTenantId,
+  };
+}
+
 export async function getCurrentRole(): Promise<AppRole | null> {
-  const requestHeaders = await headers();
-  const roleFromHeader = parseRole(requestHeaders.get("x-user-role"));
-
-  if (roleFromHeader) return roleFromHeader;
-
-  const cookieStore = await cookies();
-  const roleFromCookie = parseRole(cookieStore.get("user_role")?.value);
-
-  if (roleFromCookie) return roleFromCookie;
-
-  return parseRole(process.env.DEFAULT_APP_ROLE);
+  const session = await auth();
+  return (session?.user?.role as AppRole) || null;
 }
 
 export async function requireRole(allowedRoles: AppRole[]): Promise<AppRole> {
-  const currentRole = await getCurrentRole();
+  const role = await getCurrentRole();
 
-  if (!currentRole) {
+  if (!role) {
     throw new AuthorizationError("Authentication required", 401);
   }
 
-  if (!allowedRoles.includes(currentRole)) {
+  if (!allowedRoles.includes(role)) {
     throw new AuthorizationError("Insufficient role", 403);
   }
 
-  return currentRole;
-}
-
-export function requireRoleForRequest(
-  request: Request,
-  allowedRoles: AppRole[],
-): AppRole {
-  const currentRole = getRoleFromRequest(request);
-
-  if (!currentRole) {
-    throw new AuthorizationError("Authentication required", 401);
-  }
-
-  if (!allowedRoles.includes(currentRole)) {
-    throw new AuthorizationError("Insufficient role", 403);
-  }
-
-  return currentRole;
+  return role;
 }

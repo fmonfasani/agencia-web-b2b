@@ -1,0 +1,27 @@
+"use server";
+
+import { db } from "@/lib/scoped-prisma";
+import { revalidatePath } from "next/cache";
+import { DealStage } from "@prisma/client";
+
+/**
+ * Updates a deal's stage.
+ */
+export async function updateDealStageAction(dealId: string, newStage: DealStage) {
+    const scopedDb = await db();
+
+    try {
+        const updated = await scopedDb.deal.update({
+            where: { id: dealId },
+            data: { stage: newStage },
+        });
+
+        revalidatePath("/[locale]/admin/deals", "page");
+        revalidatePath("/[locale]/admin/dashboard", "page");
+
+        return { success: true, deal: updated };
+    } catch (error) {
+        console.error("DB_ERROR: Failed to update deal stage", error);
+        return { success: false, error: "Failed to update deal stage" };
+    }
+}

@@ -114,6 +114,10 @@ model Tenant {
   customers        Customer[]
   deals            Deal[]
   businessEvents   BusinessEvent[]
+  activities       Activity[]
+  tasks            Task[]
+  projects         Project[]
+  userDailyMetrics UserDailyMetrics[]
 }
 
 model PasswordResetToken {
@@ -160,7 +164,7 @@ model Membership {
   id         String   @id @default(cuid())
   userId     String
   tenantId   String
-  role       String   // Matches the RBAC Role hierarchy
+  role       Role     @default(MEMBER)
   department String?  // e.g., 'SALES', 'DEVELOPER'
   status     String   @default("ACTIVE") // ACTIVE, INACTIVE, BLOCKED
   acceptedAt DateTime @default(now())
@@ -254,6 +258,7 @@ model Lead {
   facebook         String?
   tiktok           String?
   linkedin         String?
+  deals            Deal[]
 
   // Flags de Verificación Manual / Auto
   isEmailCorp      Boolean        @default(false)
@@ -319,6 +324,7 @@ model Activity {
   createdAt DateTime @default(now())
 
   user      User     @relation(fields: [userId], references: [id])
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 }
 
 model Task {
@@ -338,6 +344,7 @@ model Task {
 
   user        User?     @relation(fields: [userId], references: [id])
   project     Project?  @relation(fields: [projectId], references: [id])
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 }
 
 model Project {
@@ -348,6 +355,7 @@ model Project {
   value     Decimal?  // Valor del proyecto para el revenue
   tasks     Task[]
   createdAt DateTime  @default(now())
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 }
 
 model UserDailyMetrics {
@@ -362,6 +370,7 @@ model UserDailyMetrics {
   impactScore     Float    @default(0)
 
   user            User     @relation(fields: [userId], references: [id])
+  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([userId, tenantId, date])
 }
@@ -370,6 +379,7 @@ enum Role {
   SUPER_ADMIN
   ADMIN
   OPERATOR
+  SALES_REP
   MEMBER
   VIEWER
 }
@@ -487,6 +497,7 @@ model Deal {
   assignedToAgent    Agent?    @relation(fields: [assignedToAgentId], references: [id])
   pipeline           Pipeline? @relation(fields: [pipelineId], references: [id])
   product            Product?  @relation(fields: [productId], references: [id])
+  lead               Lead?     @relation(fields: [leadId], references: [id])
 
   @@index([tenantId])
   @@index([tenantId, stage])

@@ -1,12 +1,12 @@
-// Solución temporal para tipos de Prisma que no se regeneran en el CI
-type LeadSourceType = "SCRAPER" | "MANUAL" | "API" | "ADS";
-type BusinessType = "SERVICIO" | "INDUSTRIA" | "COMERCIO" | "OFICIO";
-import type { Lead } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
-import { requireAuth } from "@/lib/auth/request-auth";
+import { db } from "@/lib/scoped-prisma";
+import { requireTenantMembership } from "@/lib/authz";
 import { redirect } from "next/navigation";
 import LeadStatusControl from "@/components/admin/LeadStatusControl";
 import LeadContactButton from "@/components/admin/LeadContactButton";
+
+// Tipos reflejados del esquema de Prisma
+type LeadSourceType = "SCRAPER" | "MANUAL" | "API" | "ADS";
+type BusinessType = "SERVICIO" | "INDUSTRIA" | "COMERCIO" | "OFICIO";
 import {
   Users,
   DollarSign,
@@ -190,57 +190,41 @@ export default async function DashboardPage({
   const pageSize = 50;
   const offset = (currentPage - 1) * pageSize;
 
-  const auth = await requireAuth();
-  if (!auth) redirect(`/${locale}/auth/sign-in`);
+  // 1. Unified Auth & Tenant Security (Phase 1)
+  const { user, tenantId } = await requireTenantMembership();
+  const scopedDb = await db();
+  const canEditLeadStatus = user.role !== "VIEWER";
 
-  let membership = await prisma.membership.findFirst({
+  // 2. Data Fetching via Scoped Prisma (Automatic Tenant Filtering)
+  const leads = await scopedDb.lead.findMany({
     where: {
-      userId: auth.user.id,
-      tenantId: auth.session.tenantId || undefined,
-      status: "ACTIVE",
-    },
-  });
-
-  if (!membership) {
-    membership = await prisma.membership.findFirst({
-      where: { userId: auth.user.id, status: "ACTIVE" },
-    });
-  }
-
-  if (!membership) redirect(`/${locale}/auth/sign-in?error=no_membership`);
-
-  const currentRole = membership.role;
-  const canEditLeadStatus = currentRole !== "VIEWER";
-
-  // --- Data Fetching ---
-  const leads = (await (prisma.lead as any).findMany({
-    where: {
-      tenantId: membership.tenantId,
       sourceType: source ? (source.toUpperCase() as any) : undefined,
     },
     take: pageSize,
     skip: offset,
     orderBy: { createdAt: "desc" },
-  })) as any[];
+  });
 
-  // 4. METRICAS TOTALES (Aggregate)
-  const stats = (await (prisma.lead as any).aggregate({
-    where: { tenantId: membership.tenantId },
+  // 3. Real Metrics (Aggregate)
+  const stats = await scopedDb.lead.aggregate({
     _avg: { potentialScore: true },
     _count: { _all: true },
-  })) as any;
+  });
+
+  // 4. Real Pipeline Value from Deals
+  const dealsStats = await scopedDb.deal.aggregate({
+    _sum: { value: true },
+  });
 
   const avgScore = Math.round(stats._avg?.potentialScore || 0);
   const totalLeads = stats._count._all;
+  const pipelineValue = Number(dealsStats._sum.value || 0);
 
-  // 5. DISTRIBUCIÓN POR ORIGEN (GroupBy)
-  const sourceStats = (await (prisma.lead as any).groupBy({
+  // 5. Source stats 
+  const sourceStats = (await (scopedDb.lead as any).groupBy({
     by: ["sourceType"],
-    where: { tenantId: membership.tenantId },
     _count: true,
   })) as any[];
-
-  const pipelineValue = totalLeads * 2500;
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-10">
@@ -297,7 +281,7 @@ export default async function DashboardPage({
         <MetricCard
           title="Scraper Coverage"
           value={
-            sourceStats.find((s) => s.sourceType === "SCRAPER")?._count || 0
+            sourceStats.find((s: any) => s.sourceType === "SCRAPER")?._count || 0
           }
           icon={Database}
         />

@@ -95,10 +95,9 @@ export default async function AdminLayout({
               label="Leads Hub"
             />
             <SidebarNavItem
-              href="#"
+              href={`/${locale}/admin/deals`}
               iconName="Layers"
               label="Pipeline Kanban"
-              isLocked
             />
             <SidebarNavItem
               href="#"
