@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Role } from "@prisma/client";
 import { hashPassword, sha256 } from "@/lib/auth/hash";
 
 export async function GET(request: Request) {
@@ -97,18 +98,18 @@ export async function POST(request: Request) {
         update:
           mode === "password"
             ? {
-                passwordHash: hashPassword(password),
-              }
+              passwordHash: hashPassword(password),
+            }
             : {},
         create:
           mode === "password"
             ? {
-                email: invitation.email,
-                passwordHash: hashPassword(password),
-              }
+              email: invitation.email,
+              passwordHash: hashPassword(password),
+            }
             : {
-                email: invitation.email,
-              },
+              email: invitation.email,
+            },
       });
 
       const membership = await tx.membership.upsert({
@@ -119,14 +120,14 @@ export async function POST(request: Request) {
           },
         },
         update: {
-          role: invitation.role,
+          role: invitation.role as Role,
           status: "ACTIVE",
           acceptedAt,
         },
         create: {
           userId: user.id,
           tenantId: invitation.tenantId,
-          role: invitation.role,
+          role: invitation.role as Role,
           status: "ACTIVE",
           acceptedAt,
         },

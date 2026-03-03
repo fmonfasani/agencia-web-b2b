@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { Role } from "@prisma/client";
 import { requireAuth } from "@/lib/auth/request-auth";
 import { redirect } from "next/navigation";
 import {
@@ -34,7 +35,7 @@ async function createInvitation(formData: FormData) {
   const invite = await prisma.invitation.create({
     data: {
       email,
-      role,
+      role: role as Role,
       tokenHash: token,
       tenantId: auth.session.tenantId,
       invitedById: auth.user.id,

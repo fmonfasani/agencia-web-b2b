@@ -182,7 +182,7 @@ model Invitation {
   id           String            @id @default(cuid())
   email        String
   tenantId     String
-  role         String
+  role         Role
   tokenHash    String            @unique
   expiresAt    DateTime
   invitedById  String
@@ -209,7 +209,7 @@ model InvitationAudit {
   invitedById  String
   acceptedById String?
   invitedEmail String
-  role         String
+  role         Role
   invitedAt    DateTime
   acceptedAt   DateTime?
   createdAt    DateTime   @default(now())

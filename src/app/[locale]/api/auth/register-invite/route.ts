@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma, getTenantPrisma } from "@/lib/prisma";
+import { Role } from "@prisma/client";
 import { createSession } from "@/lib/auth/session";
 import { hashPassword } from "@/lib/auth/password";
 import {
@@ -63,13 +64,13 @@ export async function POST(request: Request) {
         },
       },
       update: {
-        role: invitation.role,
+        role: invitation.role as Role,
         status: "ACTIVE",
       },
       create: {
         userId: user.id,
         tenantId: invitation.tenantId,
-        role: invitation.role,
+        role: invitation.role as Role,
         status: "ACTIVE",
       },
     });
