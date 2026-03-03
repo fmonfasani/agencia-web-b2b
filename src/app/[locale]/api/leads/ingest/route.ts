@@ -4,6 +4,7 @@ import { resolveTenantIdFromHeaders } from "@/lib/tenant-context";
 import { ingestLead, LeadIngestInput } from "@/lib/leads/ingest.service";
 import { requireAuth } from "@/lib/auth/request-auth";
 import { prisma, getTenantPrisma } from "@/lib/prisma";
+import { Role } from "@prisma/client";
 
 /**
  * POST /api/leads/ingest
@@ -32,7 +33,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    if (!membership || !["OWNER", "ADMIN", "SALES"].includes(membership.role)) {
+    if (!membership || !["ADMIN", "SUPER_ADMIN", "SALES_REP"].includes(membership.role)) {
       return NextResponse.json(
         { error: "Permisos insuficientes" },
         { status: 403 },

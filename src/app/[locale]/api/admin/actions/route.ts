@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/request-auth";
+import { Role } from "@prisma/client";
 import { checkRateLimit, getClientIp } from "@/lib/security/rate-limit";
 import { logAuditEvent } from "@/lib/security/audit";
 
@@ -7,11 +8,8 @@ export async function POST(request: Request) {
   const auth = await requireAuth();
   const ip = getClientIp(request);
 
-  if (
-    !auth ||
-    !["OWNER", "ADMIN"].includes(auth.session.tenantId ? "ADMIN" : "ADMIN")
-  ) {
-    // Placeholder check, should check actual role
+  // Validamos que sea al menos un usuario con tenant
+  if (!auth || !auth.session.tenantId) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

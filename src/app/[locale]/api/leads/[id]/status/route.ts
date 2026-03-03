@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getTenantPrisma } from "@/lib/prisma";
+import { Role } from "@prisma/client";
 import { AuthorizationError, requireRole } from "@/lib/authz";
 import { getSessionUser } from "@/lib/auth";
 import { LeadConversionService } from "@/lib/leads/conversion-service";
@@ -23,7 +24,7 @@ export async function PATCH(
     }
 
     // Role check
-    await requireRole(["OWNER", "ADMIN", "SALES"]);
+    await requireRole(["ADMIN", "SUPER_ADMIN", "SALES_REP"] as Role[]);
 
     const body = await request.json();
     const status = String(body?.status || "").toUpperCase();
