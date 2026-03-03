@@ -1,86 +1,28 @@
-import NextAuth, { type NextAuthConfig } from "next-auth";
+import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
-import Credentials from "next-auth/providers/credentials";
-import Google from "next-auth/providers/google";
-import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
+import { authConfig } from "@/auth.config";
 import { redirect } from "next/navigation";
-
-const providers: NextAuthConfig["providers"] = [
-  Credentials({
-    name: "Internal credentials",
-    credentials: {
-      email: { label: "Email", type: "email" },
-      password: { label: "Password", type: "password" },
-    },
-    async authorize(credentials) {
-      const email = credentials?.email?.toString().trim().toLowerCase();
-      const password = credentials?.password?.toString();
-
-      const internalEmail =
-        process.env.AUTH_INTERNAL_EMAIL?.trim().toLowerCase();
-      const internalPassword = process.env.AUTH_INTERNAL_PASSWORD;
-      const tenantId = process.env.AUTH_INTERNAL_TENANT_ID ?? "internal";
-      const role = process.env.AUTH_INTERNAL_ROLE ?? "admin";
-
-      if (!email || !password || !internalEmail || !internalPassword) {
-        return null;
-      }
-
-      if (email !== internalEmail || password !== internalPassword) {
-        return null;
-      }
-
-      return {
-        id: `internal:${email}`,
-        email,
-        name: "Internal Admin",
-        tenantId,
-        role,
-      };
-    },
-  }),
-];
-
-if (process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET) {
-  providers.push(
-    Google({
-      clientId: process.env.AUTH_GOOGLE_ID,
-      clientSecret: process.env.AUTH_GOOGLE_SECRET,
-      allowDangerousEmailAccountLinking: true,
-    }),
-  );
-}
-
-if (
-  process.env.AUTH_MICROSOFT_ENTRA_ID_ID &&
-  process.env.AUTH_MICROSOFT_ENTRA_ID_SECRET
-) {
-  providers.push(
-    MicrosoftEntraID({
-      clientId: process.env.AUTH_MICROSOFT_ENTRA_ID_ID,
-      clientSecret: process.env.AUTH_MICROSOFT_ENTRA_ID_SECRET,
-      issuer: process.env.AUTH_MICROSOFT_ENTRA_ID_ISSUER,
-      allowDangerousEmailAccountLinking: true,
-    }),
-  );
-}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
-  trustHost: true,
-  providers,
-  pages: {
-    signIn: "/es/auth/sign-in",
-  },
+  session: { strategy: "jwt" }, // Usar JWT para que el middleware sea ligero
+  ...authConfig,
   callbacks: {
-    async session({ session, user }) {
-      if (session.user && user) {
-        session.user.id = user.id;
-        session.user.tenantId = (user as any).tenantId ?? "internal";
-        session.user.role = (user as any).role ?? "member";
+    ...authConfig.callbacks,
+    async session(params: any) {
+      const { session, token, user } = params;
+
+      // Llamar al callback base de authConfig
+      const updatedSession = await authConfig.callbacks.session({ session, token });
+
+      if (user && updatedSession.user) {
+        updatedSession.user.id = user.id;
+        (updatedSession.user as any).tenantId = user.tenantId ?? "internal";
+        (updatedSession.user as any).role = user.role ?? "member";
       }
-      return session;
+
+      return updatedSession;
     },
   },
 });
