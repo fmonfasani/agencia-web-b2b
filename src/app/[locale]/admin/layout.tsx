@@ -95,6 +95,11 @@ export default async function AdminLayout({
               label="Leads Hub"
             />
             <SidebarNavItem
+              href={`/${locale}/admin/leads`}
+              iconName="Database"
+              label="Base de Leads"
+            />
+            <SidebarNavItem
               href={`/${locale}/admin/deals`}
               iconName="Layers"
               label="Pipeline Kanban"
