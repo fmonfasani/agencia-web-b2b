@@ -1,24 +1,38 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { generateInvitationToken, sha256 } from "@/lib/auth/hash";
+import { z } from "zod";
+import { ratelimit } from "@/lib/ratelimit";
+
+const invitationSchema = z.object({
+  email: z.string().email(),
+  tenantId: z.string().cuid(),
+  role: z.enum(["ADMIN", "MEMBER", "VIEWER"]), // SALES_REP removed
+  invitedByEmail: z.string().email(),
+  tenantName: z.string().optional(),
+  expiresInDays: z.number().int().min(1).max(30).default(7),
+});
 
 const DEFAULT_EXPIRATION_DAYS = 7;
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { email, tenantId, role, invitedByEmail, tenantName, expiresInDays } =
-      body;
-
-    if (!email || !tenantId || !role || !invitedByEmail) {
-      return NextResponse.json(
-        {
-          error:
-            "email, tenantId, role y invitedByEmail son campos obligatorios.",
-        },
-        { status: 400 },
-      );
+    // 0. Rate Limiting
+    const ip = request.headers.get("x-forwarded-for") ?? "anonymous";
+    const { success: limitOk } = await ratelimit.limit(`invitation:create:${ip}`);
+    if (!limitOk) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }
+
+    const body = await request.json();
+    const result = invitationSchema.safeParse(body);
+
+    if (!result.success) {
+      return NextResponse.json({ error: result.error.flatten() }, { status: 400 });
+    }
+
+    const { email, tenantId, role, invitedByEmail, tenantName, expiresInDays } =
+      result.data;
 
     const normalizedEmail = String(email).toLowerCase().trim();
     const normalizedInvitedByEmail = String(invitedByEmail)
@@ -27,10 +41,7 @@ export async function POST(request: Request) {
     const invitationToken = generateInvitationToken();
     const tokenHash = sha256(invitationToken);
 
-    const validDays =
-      Number(expiresInDays) > 0
-        ? Number(expiresInDays)
-        : DEFAULT_EXPIRATION_DAYS;
+    const validDays = expiresInDays || DEFAULT_EXPIRATION_DAYS;
 
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + validDays);

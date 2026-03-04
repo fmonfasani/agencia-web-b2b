@@ -3,8 +3,6 @@ import { Role } from "@prisma/client";
 export const APP_ROLES = [
   "SUPER_ADMIN",
   "ADMIN",
-  "OPERATOR",
-  "SALES_REP",
   "MEMBER",
   "VIEWER",
 ] as const;
@@ -32,27 +30,9 @@ function parseRole(value: string | null | undefined): AppRole | null {
   return isAppRole(normalized) ? (normalized as AppRole) : null;
 }
 
-function parseRoleFromCookie(rawCookieHeader: string | null): AppRole | null {
-  if (!rawCookieHeader) return null;
-
-  const roleCookie = rawCookieHeader
-    .split(";")
-    .map((entry) => entry.trim())
-    .find((entry) => entry.startsWith("user_role="));
-
-  if (!roleCookie) return null;
-
-  const [, roleValue] = roleCookie.split("=");
-  return parseRole(decodeURIComponent(roleValue || ""));
-}
 
 export function getRoleFromRequest(request: Request): AppRole | null {
-  const roleFromHeader = parseRole(request.headers.get("x-user-role"));
-  if (roleFromHeader) return roleFromHeader;
-
-  const roleFromCookie = parseRoleFromCookie(request.headers.get("cookie"));
-  if (roleFromCookie) return roleFromCookie;
-
+  // Rely exclusively on process.env for default or skip if managed by session
   return parseRole(process.env.DEFAULT_APP_ROLE);
 }
 

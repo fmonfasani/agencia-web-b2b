@@ -5,6 +5,30 @@ import { ingestLead, LeadIngestInput } from "@/lib/leads/ingest.service";
 import { requireAuth } from "@/lib/auth/request-auth";
 import { prisma, getTenantPrisma } from "@/lib/prisma";
 import { Role } from "@prisma/client";
+import { z } from "zod";
+import { ratelimit } from "@/lib/ratelimit";
+
+const leadSchema = z.object({
+  sourceType: z.enum(["SCRAPER", "MANUAL", "API", "ADS"]).default("MANUAL"),
+  businessType: z.string().optional(),
+  name: z.string().min(1).max(255).optional(),
+  email: z.string().email().optional().or(z.literal("")),
+  phone: z.string().optional(),
+  website: z.string().url().optional().or(z.literal("")),
+  instagram: z.string().optional(),
+  facebook: z.string().optional(),
+  linkedin: z.string().optional(),
+  tiktok: z.string().optional(),
+  whatsapp: z.string().optional(),
+  googlePlaceId: z.string().optional(),
+  googleMapsUrl: z.string().optional(),
+  category: z.string().optional(),
+  rating: z.number().optional(),
+  reviewsCount: z.number().int().optional(),
+  address: z.string().optional(),
+  description: z.string().optional(),
+  rawMetadata: z.any().optional(),
+});
 
 /**
  * POST /api/leads/ingest
@@ -12,6 +36,13 @@ import { Role } from "@prisma/client";
  */
 export async function POST(request: NextRequest) {
   try {
+    // 0. Rate Limiting
+    const ip = request.headers.get("x-forwarded-for") ?? "anonymous";
+    const { success: limitOk } = await ratelimit.limit(`leads:ingest:${ip}`);
+    if (!limitOk) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
     // 1. Session & Role Validation
     const auth = await requireAuth();
     if (!auth) {
@@ -33,41 +64,47 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    if (!membership || !["ADMIN", "SUPER_ADMIN", "SALES_REP"].includes(membership.role)) {
+    if (!membership || !["ADMIN", "SUPER_ADMIN"].includes(membership.role)) {
       return NextResponse.json(
         { error: "Permisos insuficientes" },
         { status: 403 },
       );
     }
 
-    // 2. Body Parsing
+    // 2. Body Parsing & Validation
     const body = await request.json();
+    const result = leadSchema.safeParse(body);
 
-    // We expect the body to match LeadIngestInput mostly
+    if (!result.success) {
+      return NextResponse.json({ error: result.error.flatten() }, { status: 400 });
+    }
+
+    const data = result.data;
+
     const ingestInput: LeadIngestInput = {
       tenantId: activeTenantId,
-      sourceType: body.sourceType || "MANUAL",
-      businessType: body.businessType,
+      sourceType: data.sourceType as any,
+      businessType: data.businessType as any,
 
-      name: body.name,
-      email: body.email,
-      phone: body.phone,
-      website: body.website,
-      instagram: body.instagram,
-      facebook: body.facebook,
-      linkedin: body.linkedin,
-      tiktok: body.tiktok,
-      whatsapp: body.whatsapp,
+      name: data.name,
+      email: data.email || undefined,
+      phone: data.phone,
+      website: data.website || undefined,
+      instagram: data.instagram,
+      facebook: data.facebook,
+      linkedin: data.linkedin,
+      tiktok: data.tiktok,
+      whatsapp: data.whatsapp,
 
-      googlePlaceId: body.googlePlaceId,
-      googleMapsUrl: body.googleMapsUrl,
-      category: body.category,
-      rating: body.rating,
-      reviewsCount: body.reviewsCount,
-      address: body.address,
-      description: body.description,
+      googlePlaceId: data.googlePlaceId,
+      googleMapsUrl: data.googleMapsUrl,
+      category: data.category,
+      rating: data.rating,
+      reviewsCount: data.reviewsCount,
+      address: data.address,
+      description: data.description,
 
-      rawMetadata: body.rawMetadata || body, // Save the whole body if no metadata provided
+      rawMetadata: data.rawMetadata || body,
     };
 
     // 3. Process & Persist
@@ -88,10 +125,6 @@ export async function POST(request: NextRequest) {
         { error: error.message },
         { status: error.status },
       );
-    }
-
-    if (error.message === "Business type is required for manual leads.") {
-      return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
     return NextResponse.json(

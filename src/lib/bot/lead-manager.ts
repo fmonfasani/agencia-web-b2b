@@ -9,6 +9,7 @@ const redis = new Redis({
 export interface LeadInfo {
   phone: string;
   name?: string;
+  email?: string;
   company?: string;
   need?: string;
   budget?: string;

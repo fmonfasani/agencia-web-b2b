@@ -1,16 +1,10 @@
-import { Redis } from "@upstash/redis";
 import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
 
-// Crear cliente de Redis
-export const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-});
-
-// Crear limitador de tasa: 10 mensajes cada 1 minuto por IP/Usuario
-export const salesChatRateLimit = new Ratelimit({
-  redis: redis,
-  limiter: Ratelimit.slidingWindow(10, "1 m"),
+// Configuración de Rate Limit con Upstash Redis
+export const ratelimit = new Ratelimit({
+  redis: Redis.fromEnv(),
+  limiter: Ratelimit.slidingWindow(5, "1 m"), // 5 intentos por minuto
   analytics: true,
-  prefix: "ratelimit:sales-chat",
+  prefix: "@upstash/ratelimit/auth",
 });

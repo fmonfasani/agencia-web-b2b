@@ -2,6 +2,22 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Role } from "@prisma/client";
 import { hashPassword, sha256 } from "@/lib/auth/hash";
+import { z } from "zod";
+import { ratelimit } from "@/lib/ratelimit";
+
+const acceptSchema = z.object({
+  token: z.string().min(1),
+  mode: z.enum(["password", "oauth"]),
+  password: z.string().min(8).optional(),
+  oauthProvider: z.string().optional(),
+  oauthProviderId: z.string().optional(),
+}).refine(data => {
+  if (data.mode === "password" && !data.password) return false;
+  if (data.mode === "oauth" && (!data.oauthProvider || !data.oauthProviderId)) return false;
+  return true;
+}, {
+  message: "Faltan credenciales para el modo seleccionado",
+});
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -48,33 +64,25 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    // 0. Rate Limiting
+    const ip = request.headers.get("x-forwarded-for") ?? "anonymous";
+    const { success: limitOk } = await ratelimit.limit(`invitation:accept:${ip}`);
+    if (!limitOk) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
     const body = await request.json();
-    const { token, mode, password, oauthProvider, oauthProviderId } = body;
+    const result = acceptSchema.safeParse(body);
 
-    if (!token || !mode) {
-      return NextResponse.json(
-        { error: "token y mode son obligatorios" },
-        { status: 400 },
-      );
+    if (!result.success) {
+      return NextResponse.json({ error: result.error.flatten() }, { status: 400 });
     }
 
-    if (mode === "password" && (!password || String(password).length < 8)) {
-      return NextResponse.json(
-        { error: "La contraseña debe tener al menos 8 caracteres." },
-        { status: 400 },
-      );
-    }
-
-    if (mode === "oauth" && (!oauthProvider || !oauthProviderId)) {
-      return NextResponse.json(
-        { error: "oauthProvider y oauthProviderId son obligatorios." },
-        { status: 400 },
-      );
-    }
+    const { token, mode, password, oauthProvider, oauthProviderId } = result.data;
 
     const tokenHash = sha256(token);
 
-    const result = await prisma.$transaction(async (tx) => {
+    const txResult = await prisma.$transaction(async (tx) => {
       const invitation = await tx.invitation.findFirst({
         where: {
           tokenHash,
@@ -96,13 +104,13 @@ export async function POST(request: Request) {
           email: invitation.email,
         },
         update:
-          mode === "password"
+          mode === "password" && password
             ? {
               passwordHash: hashPassword(password),
             }
             : {},
         create:
-          mode === "password"
+          mode === "password" && password
             ? {
               email: invitation.email,
               passwordHash: hashPassword(password),
@@ -157,7 +165,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      membershipId: result.membership.id,
+      membershipId: txResult.membership.id,
     });
   } catch (error) {
     if (error instanceof Error && error.message === "INVITATION_NOT_FOUND") {

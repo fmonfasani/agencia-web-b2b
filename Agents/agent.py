@@ -7,11 +7,11 @@ from openai import OpenAI
 load_dotenv()
 
 # Configurar el cliente de OpenAI
-# Usamos OPEN_IA_API_KEY del .env del usuario, o la estándar OPENAI_API_KEY
-api_key = os.getenv("OPEN_IA_API_KEY") or os.getenv("OPENAI_API_KEY")
+# Usamos OPENAI_API_KEY del .env del usuario
+api_key = os.getenv("OPENAI_API_KEY")
 
 if not api_key:
-    print("Error: No se encontró la API Key de OpenAI. Asegúrate de que OPEN_IA_API_KEY esté en el archivo .env")
+    print("Error: No se encontró la API Key de OpenAI. Asegúrate de que OPENAI_API_KEY esté en el archivo .env")
     exit(1)
 
 client = OpenAI(api_key=api_key)

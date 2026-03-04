@@ -1,27 +1,14 @@
-import OpenAI from "openai";
 import { MessageContext } from "./redis-context";
 import type { LeadInfo } from "./lead-manager";
-
-// Configuración de Proveedores de IA (OpenAI vs Ollama Local)
-const DEFAULT_OLLAMA_URL = "http://localhost:11434/v1";
-const DEFAULT_OLLAMA_MODEL = "qwen2.5-coder:7b";
+import { aiEngine } from "../ai/engine";
 
 const isOllamaEnabled = !!(process.env.OLLAMA_BASE_URL || !process.env.OPENAI_API_KEY);
 
-const openai = isOllamaEnabled
-  ? new OpenAI({
-    baseURL: process.env.OLLAMA_BASE_URL || DEFAULT_OLLAMA_URL,
-    apiKey: "ollama", // Required but ignored by Ollama
-  })
-  : (process.env.OPENAI_API_KEY
-    ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-    : null);
-
 const MODEL_NAME = isOllamaEnabled
-  ? (process.env.OLLAMA_MODEL || DEFAULT_OLLAMA_MODEL)
+  ? (process.env.OLLAMA_MODEL || "qwen2.5-coder:7b")
   : "gpt-4o-mini";
 
-console.log(`[AI Manager] Using ${isOllamaEnabled ? "Ollama Local" : "OpenAI"} with model: ${MODEL_NAME}`);
+console.log(`[AI Manager] Using Fallback Engine (Strategy) initialized.`);
 
 const SYSTEM_PROMPT = `
 Eres el asistente inteligente de Agencia Web B2B (AgenciaWebB2B.com). 
@@ -43,41 +30,38 @@ Al final de tu respuesta, si crees que tienes suficiente información para calif
 Si el usuario no es un fit para la agencia (ej. busca algo que no hacemos), incluye [DISQUALIFIED].
 `;
 
+import { getAgentKnowledge } from "../ai/knowledge";
+
 /**
  * Generates an AI response based on conversation history.
  */
 export async function generateAIResponse(
   history: MessageContext[],
   userMessage: string,
+  tenantId?: string
 ): Promise<string> {
   try {
-    if (!openai) {
-      console.warn(
-        "[AI Manager] OpenAI API Key missing. Returning dummy response.",
-      );
-      return "⚠️ [MODO DESARROLLO] La IA no está configurada. Por favor agrega OPENAI_API_KEY en .env.local para recibir respuestas inteligentes.";
-    }
+    const knowledge = tenantId ? await getAgentKnowledge(tenantId) : null;
 
-    const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
-      { role: "system", content: SYSTEM_PROMPT },
+    const messages = [
+      {
+        role: "system",
+        content: `
+          ${SYSTEM_PROMPT}
+
+          ${knowledge ? `\n--- CONTEXTO ESPECÍFICO DEL AGENTE ---\n${knowledge}` : ""}
+        `
+      },
       ...history.map((msg) => ({
-        role: msg.role as "user" | "assistant" | "system",
+        role: msg.role,
         content: msg.content,
       })),
       { role: "user", content: userMessage },
     ];
 
-    const response = await openai.chat.completions.create({
-      model: MODEL_NAME,
-      messages: messages,
-      temperature: 0.7,
-      max_tokens: 500,
-    });
+    const response = await aiEngine.generateWithFallback(messages);
 
-    return (
-      response.choices[0].message.content ||
-      "Lo siento, tuve un problema procesando tu mensaje. ¿Podrías repetirlo?"
-    );
+    return response || "Lo siento, tuve un problema procesando tu mensaje. ¿Podrías repetirlo?";
   } catch (error) {
     console.error("[AI Manager] Error generating response:", error);
     return "Lo siento, estoy experimentando dificultades técnicas. Por favor, intenta más tarde.";
@@ -104,16 +88,12 @@ export async function extractLeadData(
       Responde SOLO el JSON purificado.
     `;
 
-    if (!openai) return null;
-
-    const response = await openai.chat.completions.create({
-      model: MODEL_NAME,
-      messages: [{ role: "user", content: prompt }],
+    const response = await aiEngine.generateWithFallback([{ role: "user", content: prompt }], {
       response_format: { type: "json_object" },
       temperature: 0,
     });
 
-    const data = JSON.parse(response.choices[0].message.content || "{}");
+    const data = JSON.parse(response || "{}");
     return {
       ...data,
       phone,

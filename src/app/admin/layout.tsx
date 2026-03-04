@@ -9,7 +9,7 @@ export default async function IntelligenceAdminLayout({
   children: ReactNode;
 }) {
   try {
-    await requireRole(["SUPER_ADMIN", "ADMIN", "SALES_REP", "VIEWER"] as Role[]);
+    await requireRole(["SUPER_ADMIN", "ADMIN", "VIEWER"] as Role[]);
   } catch (error) {
     if (error instanceof AuthorizationError) {
       notFound();

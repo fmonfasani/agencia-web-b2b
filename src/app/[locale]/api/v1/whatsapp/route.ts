@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
 
       try {
         const history = await getConversationHistory(from);
-        const aiResponse = await generateAIResponse(history, body);
+        const aiResponse = await generateAIResponse(history, body, activeTenantId);
 
         const cleanResponse = aiResponse
           .replace(/\[QUALIFIED\]|\[DISQUALIFIED\]/g, "")
@@ -109,6 +109,61 @@ export async function POST(req: NextRequest) {
           if (leadData) {
             const tenantLeadData = { ...leadData, tenantId: activeTenantId };
             await saveLead(tenantLeadData, activeTenantId);
+
+            // BRIDGE: Bot (Redis) -> Main App (Prisma)
+            try {
+              const { getTenantPrisma } = await import("@/lib/prisma");
+              const tPrisma = getTenantPrisma(activeTenantId);
+
+              let existingLead = await tPrisma.lead.findFirst({
+                where: {
+                  OR: [
+                    { email: leadData.email || "---" },
+                    { whatsapp: from }
+                  ]
+                }
+              });
+
+              if (existingLead) {
+                existingLead = await tPrisma.lead.update({
+                  where: { id: (existingLead as any).id },
+                  data: {
+                    status: "QUALIFIED",
+                    potentialScore: 90, // AI qualified is high score
+                  }
+                });
+              } else {
+                existingLead = await tPrisma.lead.create({
+                  data: {
+                    tenantId: activeTenantId,
+                    name: leadData.name || "WhatsApp Lead",
+                    companyName: leadData.company || "Unknown",
+                    email: leadData.email || `whatsapp:${from}`,
+                    description: leadData.need,
+                    status: "QUALIFIED",
+                    whatsapp: from,
+                    sourceType: "API",
+                    potentialScore: 85,
+                  },
+                });
+              }
+
+              // Create Deal automatically
+              await tPrisma.deal.create({
+                data: {
+                  tenantId: activeTenantId,
+                  leadId: (existingLead as any).id,
+                  stage: "PROSPECTING",
+                  value: leadData.budget ? parseFloat(leadData.budget.replace(/[^0-9.]/g, '')) || 0 : 0,
+                  notes: `Auto-generated from WhatsApp qualification. Need: ${leadData.need}`,
+                },
+              });
+
+              console.log(`[Automation] Deal created for qualified lead: ${existingLead.id}`);
+            } catch (pError) {
+              console.error("[Automation] Prisma sync error:", pError);
+            }
+
             await notifyQualifiedLead(tenantLeadData);
           }
         }
