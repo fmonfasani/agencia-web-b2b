@@ -42,6 +42,7 @@ export async function POST(request: Request) {
         const agent = await prisma.agent.create({
             data: {
                 name,
+                systemPrompt: promptConfig || "",
                 type: type || "COMERCIAL",
                 channel: channel || "WEB",
                 promptConfig,
