@@ -1,6 +1,7 @@
 import { db } from "@/lib/scoped-prisma";
 import { requireTenantMembership } from "@/lib/authz";
 import { redirect } from "next/navigation";
+import { EconomicsService } from "@/lib/economics/tracker";
 import LeadStatusControl from "@/components/admin/LeadStatusControl";
 import LeadContactButton from "@/components/admin/LeadContactButton";
 
@@ -196,8 +197,6 @@ export default async function DashboardPage({
   const canEditLeadStatus = user.role !== "VIEWER";
 
   // 2. Data Fetching via Scoped Prisma (Automatic Tenant Filtering)
-  const leads: any[] = [];
-  /*
   const leads = await scopedDb.lead.findMany({
     where: {
       sourceType: source ? (source.toUpperCase() as any) : undefined,
@@ -206,29 +205,29 @@ export default async function DashboardPage({
     skip: offset,
     orderBy: { createdAt: "desc" },
   });
-  */
 
   // 3. Real Metrics (Aggregate)
-  const stats = { _avg: { potentialScore: 0 }, _count: { _all: 0 } };
-  /*
   const stats = await scopedDb.lead.aggregate({
     _avg: { potentialScore: true },
     _count: { _all: true },
   });
-  */
 
   // 4. Real Pipeline Value from Deals
-  const dealsStats = { _sum: { value: 0 } };
-  /*
   const dealsStats = await scopedDb.deal.aggregate({
     _sum: { value: true },
   });
-  */
 
-  const avgScore = 0;
-  const totalLeads = 0;
-  const pipelineValue = 0;
-  const sourceStats: any[] = [];
+  const avgScore = Math.round(stats._avg.potentialScore || 0);
+  const totalLeads = stats._count._all;
+  const pipelineValue = Number(dealsStats._sum.value || 0);
+
+  const sourceStats = [
+    { sourceType: "SCRAPER", _count: await scopedDb.lead.count({ where: { sourceType: "SCRAPER" } }) },
+    { sourceType: "MANUAL", _count: await scopedDb.lead.count({ where: { sourceType: "MANUAL" } }) },
+  ];
+
+  // 5. Unit Economics
+  const economics = await EconomicsService.getTenantROI(tenantId);
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-10">
@@ -288,6 +287,23 @@ export default async function DashboardPage({
             sourceStats.find((s: any) => s.sourceType === "SCRAPER")?._count || 0
           }
           icon={Database}
+        />
+        <MetricCard
+          title="Efficiency Score"
+          value={`${economics.efficiencyScore.toFixed(1)}x`}
+          trend={economics.roi > 0 ? 15 : -5}
+          icon={Zap}
+        />
+        <MetricCard
+          title="OpEx (IA + Scraper)"
+          value={`$${economics.totalOpEx.toFixed(2)}`}
+          icon={Clock}
+        />
+        <MetricCard
+          title="Net Profit"
+          value={`$${economics.netProfit.toFixed(2)}`}
+          trend={economics.netProfit > 0 ? 8 : 0}
+          icon={TrendingUp}
         />
       </div>
 

@@ -88,10 +88,10 @@ export async function requireTenantMembership(allowedRoles?: AppRole[]) {
     throw new AuthorizationError("Authentication required", 401);
   }
 
-  const activeTenantId = tenantId || await getActiveTenantId();
+  const activeTenantId = await getActiveTenantId();
 
   // Verify if the user belongs to the active tenant
-  if ((user as any).tenantId !== activeTenantId && (user as any).role !== "SUPER_ADMIN") {
+  if (activeTenantId && (user as any).tenantId !== activeTenantId && (user as any).role !== "SUPER_ADMIN") {
     throw new AuthorizationError("Access denied to this tenant", 403);
   }
 

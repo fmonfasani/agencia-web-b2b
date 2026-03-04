@@ -1,0 +1,13 @@
+services:
+  twenty-server:
+    image: twentycrm/twenty:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PG_DATABASE_URL=postgresql://postgres:TU_PASSWORD@host.docker.internal:5432/twenty_crm
+      - SIGN_IN_PREFILLED=true
+      - APP_SECRET=cambia-esto-por-algo-seguro
+    restart: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

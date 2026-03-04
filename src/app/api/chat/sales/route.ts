@@ -1,105 +1,60 @@
-import OpenAI from "openai";
 import { NextResponse } from "next/server";
 import { salesChatRateLimit } from "@/lib/ratelimit";
-import { getSessionUser } from "@/lib/auth";
+import { chatWithAgent } from "@/lib/agent-service/client";
+import { cookies } from "next/headers";
 
-// Forzamos que la ruta sea dinámica para evitar errores durante el build
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
-    const openai = new OpenAI({
-        apiKey: process.env.OPEN_IA_API_KEY || process.env.OPENAI_API_KEY,
-    });
-
-    const ASSISTANT_ID = process.env.ASSISTANT_ID!;
-
     try {
-        // 1. Rate Limit con Upstash (Opcional en local)
-        if (
-            process.env.UPSTASH_REDIS_REST_URL &&
-            process.env.UPSTASH_REDIS_REST_TOKEN
-        ) {
+        // 1. Rate Limit
+        if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
             const ip = req.headers.get("x-forwarded-for") || "anonymous";
-            const { success, limit, reset, remaining } =
-                await salesChatRateLimit.limit(ip);
-
+            const { success, limit, reset, remaining } = await salesChatRateLimit.limit(ip);
             if (!success) {
                 return NextResponse.json(
-                    {
-                        error:
-                            "Has alcanzado el límite de mensajes. Inténtalo de nuevo en unos minutos.",
-                    },
-                    {
-                        status: 429,
-                        headers: {
-                            "X-RateLimit-Limit": limit.toString(),
-                            "X-RateLimit-Remaining": remaining.toString(),
-                            "X-RateLimit-Reset": reset.toString(),
-                        },
-                    },
+                    { error: "Has alcanzado el límite de mensajes." },
+                    { status: 429 }
                 );
             }
         }
 
-        const { message, threadId: existingThreadId } = await req.json();
+        const { messages, message } = await req.json();
 
-        if (!message)
-            return NextResponse.json(
-                { error: "Message is required" },
-                { status: 400 },
-            );
-        if (!process.env.ASSISTANT_ID)
-            return NextResponse.json(
-                { error: "ASSISTANT_ID missing" },
-                { status: 500 },
-            );
+        // Soporte para ambos formatos (array de mensajes o mensaje único)
+        const chatMessages = messages || [{ role: "user", content: message }];
 
-        // 2. Verificar si el usuario está logueado
-        const user = await getSessionUser();
-        const isLogged = !!user;
-
-        // 3. Thread
-        const threadId =
-            existingThreadId && existingThreadId !== "undefined"
-                ? existingThreadId
-                : (await openai.beta.threads.create()).id;
-
-        // 4. Message con contexto adicional si NO está logueado
-        let promptContent = message;
-        if (!isLogged) {
-            promptContent = `[CONTEXTO: El usuario NO está logueado. Recuerda persuadirlo para que se registre gratis en /es/auth/sign-up] ${message}`;
+        if (!chatMessages || chatMessages.length === 0) {
+            return NextResponse.json({ error: "Messages are required" }, { status: 400 });
         }
 
-        await openai.beta.threads.messages.create(threadId, {
-            role: "user",
-            content: promptContent,
-        });
+        // 2. Gestionar Session ID vía Cookies
+        const cookieStore = await cookies();
+        let sessionId = cookieStore.get("_agt_sid")?.value;
+        if (!sessionId) sessionId = crypto.randomUUID();
 
-        // 5. Run & Wait
-        const run = await openai.beta.threads.runs.createAndPoll(threadId, {
-            assistant_id: ASSISTANT_ID,
-        });
-
-        if (run.status === "completed") {
-            const messages = await openai.beta.threads.messages.list(threadId);
-            const lastMessage = messages.data.find((m) => m.role === "assistant");
-
-            const responseText =
-                lastMessage?.content[0]?.type === "text"
-                    ? lastMessage.content[0].text.value
-                    : "No pude obtener respuesta.";
-
-            return NextResponse.json({ response: responseText, threadId });
-        } else {
-            return NextResponse.json(
-                { error: `Run status: ${run.status}` },
-                { status: 500 },
-            );
+        const agentId = process.env.SALES_AGENT_ID;
+        if (!agentId) {
+            return NextResponse.json({ error: "SALES_AGENT_ID missing" }, { status: 500 });
         }
-    } catch (error: unknown) {
+
+        // 3. Llamar al Agent Service
+        const result = await chatWithAgent(agentId, chatMessages, sessionId);
+
+        const response = NextResponse.json({
+            response: result.response,
+            threadId: result.session_id
+        });
+
+        // Persistir sesión
+        response.headers.set("Set-Cookie",
+            `_agt_sid=${sessionId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400`
+        );
+
+        return response;
+
+    } catch (error: any) {
         console.error("Chat API Error:", error);
-        const errorMessage =
-            error instanceof Error ? error.message : "Internal Server Error";
-        return NextResponse.json({ error: errorMessage }, { status: 500 });
+        return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
     }
 }

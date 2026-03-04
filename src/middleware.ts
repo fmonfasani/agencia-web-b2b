@@ -22,9 +22,13 @@ export default auth(async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 2. Inyectar contexto de Tenant en las cabeceras de la petición
-  const session = (request as any).auth;
+  // 2. Request Correlation (SRE Trace ID)
+  const traceId = request.headers.get("x-trace-id") || crypto.randomUUID();
   const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-trace-id", traceId);
+
+  // 3. Inyectar contexto de Tenant
+  const session = (request as any).auth;
   if (session?.user?.tenantId) {
     requestHeaders.set("x-tenant-id", session.user.tenantId);
     requestHeaders.set("x-user-role", session.user.role || "");

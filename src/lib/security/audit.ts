@@ -9,7 +9,8 @@ export type AuditEventType =
   | "PASSWORD_CHANGED"
   | "INVITATION_SENT"
   | "INVITATION_ACCEPTED"
-  | "COMPANY_REGISTERED";
+  | "COMPANY_REGISTERED"
+  | "ONBOARDING_COMPLETED";
 
 export async function logAuditEvent(params: {
   eventType: AuditEventType;

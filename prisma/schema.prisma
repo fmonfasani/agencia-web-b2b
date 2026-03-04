@@ -411,22 +411,59 @@ enum DealStage {
 
 // AI or Automated Seller Agent (no human login)
 model Agent {
-  id           String       @id @default(cuid())
-  tenantId     String
+  id           String   @id @default(cuid())
+  tenantId     String?
   name         String
-  type         AgentType    @default(COMERCIAL)
-  channel      AgentChannel @default(WEB)
+  description  String?
+  systemPrompt String   @map("system_prompt") @db.Text
+  config       Json     @default("{}")
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Fields for the original CRM app (optional compatibility or migration)
+  type         AgentType?    @default(COMERCIAL)
+  channel      AgentChannel? @default(WEB)
   assistantId  String?      // OpenAI Assistant ID
   promptConfig String?      @db.Text
   knowledgeBase String?     @db.Text
-  isActive     Boolean      @default(true)
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  tenant       Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  tenant       Tenant?          @relation(fields: [tenantId], references: [id])
+  apiKeys      AgentApiKey[]
+  conversations Conversation[]
   deals        Deal[]
 
+  @@map("agents")
   @@index([tenantId])
-  @@index([tenantId, isActive])
+}
+
+model AgentApiKey {
+  id          String    @id @default(cuid())
+  agentId     String
+  keyHash     String    @unique @map("key_hash")   // SHA-256 del key real
+  label       String                               // ej: "cliente-a.com"
+  active      Boolean   @default(true)
+  lastUsedAt  DateTime? @map("last_used_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  agent       Agent     @relation(fields: [agentId], references: [id])
+
+  @@map("agent_api_keys")
+}
+
+model Conversation {
+  id        String    @id @default(cuid())
+  agentId   String
+  sessionId String    @map("session_id")   // generado en el cliente (UUID)
+  messages  Json      @default("[]")       // array de {role, content}
+  metadata  Json      @default("{}")       // IP, referrer, etc
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  agent     Agent     @relation(fields: [agentId], references: [id])
+
+  @@index([agentId, sessionId])
+  @@map("conversations")
 }
 
 // Multi-product support per tenant
