@@ -24,6 +24,7 @@ import {
   Database,
   Monitor,
   Plus,
+  Map as MapIcon,
   BarChart3,
   Filter,
   LayoutDashboard,
@@ -36,6 +37,7 @@ import {
   MessageCircle,
   ExternalLink,
 } from "lucide-react";
+
 import Link from "next/link";
 
 // --- Visual Helpers ---
@@ -252,6 +254,13 @@ export default async function DashboardPage({
         </div>
         <div className="flex gap-3">
           <Link
+            href={`/${locale}/admin/dashboard/scraper`}
+            className="bg-orange-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-orange-600 transition-all shadow-lg shadow-orange-200 flex items-center gap-2"
+          >
+            <MapIcon size={16} />
+            Scraper Maps
+          </Link>
+          <Link
             href={`/${locale}/admin/dashboard/ingest`}
             className="bg-[#0a0a0b] text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-slate-800 transition-all shadow-lg shadow-black/10 flex items-center gap-2"
           >
@@ -259,6 +268,7 @@ export default async function DashboardPage({
             Nuevo Lead Manual
           </Link>
         </div>
+
       </div>
 
       {/* MÉTRICAS REVENUE OS */}

@@ -10,6 +10,15 @@ class Settings(BaseSettings):
     database_url: str
     admin_secret: str
     allowed_origins: str = "*"
+
+    # --- Scraper (Apify) ---
+    apify_api_token: str = ""
+    # URL base de la app Next.js para hacer el ingest de leads
+    # En producción: https://tu-dominio.com | En local: http://localhost:3000
+    nextjs_internal_url: str = "http://localhost:3000"
+    # Secret compartido entre agent-service y Next.js para llamadas internas
+    internal_api_secret: str = ""
+
     class Config:
         env_file = ".env"
 
