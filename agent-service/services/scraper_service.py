@@ -16,7 +16,7 @@ from core.config import settings
 logger = logging.getLogger(__name__)
 
 # Actor de Apify para Google Maps (el más popular y actualizado)
-APIFY_ACTOR_ID = "compass/crawler-google-places"
+APIFY_ACTOR_ID = "compass~crawler-google-places"
 APIFY_BASE_URL = "https://api.apify.com/v2"
 
 
