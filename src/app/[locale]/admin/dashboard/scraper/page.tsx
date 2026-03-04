@@ -1,6 +1,5 @@
 import { requireAuth } from "@/lib/auth/request-auth";
 import { redirect } from "next/navigation";
-import { resolveTenantIdFromHeaders } from "@/lib/tenant-context";
 import ScraperForm from "@/components/admin/ScraperForm";
 import { ArrowLeft, Map } from "lucide-react";
 import Link from "next/link";
@@ -18,17 +17,15 @@ export default async function ScraperPage({
         redirect(`/${locale}/auth/sign-in`);
     }
 
-    const headersList = await headers();
-    const tenantId =
-        resolveTenantIdFromHeaders(
-            headersList,
-            auth.session.tenantId || process.env.DEFAULT_TENANT_ID
-        ) || "";
-
-    // URL del agent-service y credenciales (solo disponibles en el servidor)
-    const agentServiceUrl =
-        process.env.AGENT_SERVICE_URL || "http://localhost:8000";
-    const adminSecret = process.env.AGENT_SERVICE_ADMIN_SECRET || "";
+    // Intentar obtener tenantId del header, sino del session
+    let tenantId = auth.session.tenantId || "";
+    try {
+        const headersList = await headers();
+        const fromHeader = headersList.get("x-tenant-id");
+        if (fromHeader) tenantId = fromHeader;
+    } catch {
+        // No header disponible, usamos el de la sesión
+    }
 
     return (
         <div className="p-8 max-w-2xl mx-auto space-y-8">
@@ -60,8 +57,6 @@ export default async function ScraperPage({
                 <ScraperForm
                     locale={locale}
                     tenantId={tenantId}
-                    agentServiceUrl={agentServiceUrl}
-                    adminSecret={adminSecret}
                 />
             </div>
 

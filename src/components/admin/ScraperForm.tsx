@@ -41,13 +41,9 @@ const QUERY_PRESETS = [
 export default function ScraperForm({
     locale,
     tenantId,
-    agentServiceUrl,
-    adminSecret,
 }: {
     locale: string;
     tenantId: string;
-    agentServiceUrl: string;
-    adminSecret: string;
 }) {
     const [query, setQuery] = useState("");
     const [location, setLocation] = useState("Buenos Aires, Argentina");
@@ -63,8 +59,7 @@ export default function ScraperForm({
             pollingRef.current = setInterval(async () => {
                 try {
                     const res = await fetch(
-                        `${agentServiceUrl}/scraper/status/${job.job_id}`,
-                        { headers: { "X-Admin-Secret": adminSecret } }
+                        `/${locale}/api/admin/scrapers/status/${job.job_id}`
                     );
                     if (res.ok) {
                         const updated: ScrapeJob = await res.json();
@@ -95,11 +90,10 @@ export default function ScraperForm({
         setJob(null);
 
         try {
-            const res = await fetch(`${agentServiceUrl}/scraper/run`, {
+            const res = await fetch(`/${locale}/api/admin/scrapers/run`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "X-Admin-Secret": adminSecret,
                 },
                 body: JSON.stringify({
                     query: query.trim(),
@@ -146,10 +140,10 @@ export default function ScraperForm({
         return (
             <div
                 className={`rounded-3xl border-2 p-6 space-y-4 transition-all ${isRunning
-                        ? "border-blue-200 bg-blue-50"
-                        : isCompleted
-                            ? "border-emerald-200 bg-emerald-50"
-                            : "border-rose-200 bg-rose-50"
+                    ? "border-blue-200 bg-blue-50"
+                    : isCompleted
+                        ? "border-emerald-200 bg-emerald-50"
+                        : "border-rose-200 bg-rose-50"
                     }`}
             >
                 {/* Header del estado */}
@@ -275,8 +269,8 @@ export default function ScraperForm({
                                     type="button"
                                     onClick={() => setQuery(preset.query)}
                                     className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${query === preset.query
-                                            ? "bg-slate-900 text-white border-slate-900"
-                                            : "bg-white text-slate-500 border-slate-200 hover:border-slate-400"
+                                        ? "bg-slate-900 text-white border-slate-900"
+                                        : "bg-white text-slate-500 border-slate-200 hover:border-slate-400"
                                         }`}
                                 >
                                     {preset.label}
