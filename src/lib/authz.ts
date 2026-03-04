@@ -40,6 +40,7 @@ import { auth } from "./auth";
 import { getActiveTenantId } from "./tenant-context";
 
 import { requireAuth as requireCustomAuth } from "./auth/request-auth";
+import { redirect } from "next/navigation";
 
 export async function requireTenantMembership(allowedRoles?: AppRole[]) {
   // 1. Try NextAuth (Google/OAuth)
@@ -65,7 +66,7 @@ export async function requireTenantMembership(allowedRoles?: AppRole[]) {
   }
 
   if (!user) {
-    throw new AuthorizationError("Authentication required", 401);
+    redirect("/en/auth/sign-in");
   }
 
   const activeTenantId = await getActiveTenantId();
