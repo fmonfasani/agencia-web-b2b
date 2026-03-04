@@ -1,22 +1,30 @@
-const findManyMock = jest.fn();
-const createMock = jest.fn();
+import { vi, describe, it, expect, beforeEach } from "vitest";
 
-const redisSetMock = jest.fn();
-const redisSaddMock = jest.fn();
-const redisGetMock = jest.fn();
-const redisSmembersMock = jest.fn();
+const findManyMock = vi.fn();
+const createMock = vi.fn();
 
-jest.mock("@/lib/prisma", () => ({
+const redisSetMock = vi.fn();
+const redisSaddMock = vi.fn();
+const redisGetMock = vi.fn();
+const redisSmembersMock = vi.fn();
+
+vi.mock("@/lib/prisma", () => ({
   prisma: {
     lead: {
       findMany: (...args: unknown[]) => findManyMock(...args),
       create: (...args: unknown[]) => createMock(...args),
     },
   },
+  getTenantPrisma: vi.fn().mockImplementation(() => ({
+    lead: {
+      findMany: (...args: unknown[]) => findManyMock(...args),
+      create: (...args: unknown[]) => createMock(...args),
+    },
+  })),
 }));
 
-jest.mock("@upstash/redis", () => ({
-  Redis: jest.fn().mockImplementation(() => ({
+vi.mock("@upstash/redis", () => ({
+  Redis: vi.fn().mockImplementation(() => ({
     set: (...args: unknown[]) => redisSetMock(...args),
     sadd: (...args: unknown[]) => redisSaddMock(...args),
     get: (...args: unknown[]) => redisGetMock(...args),
@@ -34,7 +42,7 @@ import { getAllLeads, getLead, saveLead } from "@/lib/bot/lead-manager";
 
 describe("Lead multi-tenant protections", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("fails fast when tenantId is missing", async () => {

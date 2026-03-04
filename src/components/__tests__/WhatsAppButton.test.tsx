@@ -1,20 +1,19 @@
-import { render } from "@testing-library/react";
-import { describe, it, expect } from "@jest/globals";
+import { render, screen } from "@testing-library/react";
+import { describe, it, expect } from "vitest";
 import WhatsAppButton from "../WhatsAppButton";
-import { screen } from "@testing-library/dom";
 
 describe("WhatsAppButton Component", () => {
   it("renders the WhatsApp button", () => {
     render(<WhatsAppButton />);
 
-    const button = screen.getByRole("link", { name: /chat on whatsapp/i });
+    const button = screen.getByRole("link", { name: /label/i });
     expect(button).toBeInTheDocument();
   });
 
   it("has correct WhatsApp URL structure", () => {
     render(<WhatsAppButton />);
 
-    const button = screen.getByRole("link", { name: /chat on whatsapp/i });
+    const button = screen.getByRole("link", { name: /label/i });
     const href = button.getAttribute("href");
 
     expect(href).toContain("wa.me");
@@ -24,7 +23,7 @@ describe("WhatsAppButton Component", () => {
   it("opens in new tab with security attributes", () => {
     render(<WhatsAppButton />);
 
-    const button = screen.getByRole("link", { name: /chat on whatsapp/i });
+    const button = screen.getByRole("link", { name: /label/i });
 
     expect(button).toHaveAttribute("target", "_blank");
     expect(button).toHaveAttribute("rel", "noopener noreferrer");
@@ -33,7 +32,7 @@ describe("WhatsAppButton Component", () => {
   it("button has correct styling classes", () => {
     render(<WhatsAppButton />);
 
-    const button = screen.getByRole("link", { name: /chat on whatsapp/i });
+    const button = screen.getByRole("link", { name: /label/i });
     expect(button).toHaveClass("fixed", "bottom-6", "right-6");
   });
 });

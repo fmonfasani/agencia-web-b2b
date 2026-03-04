@@ -1,12 +1,9 @@
-import { render } from "@testing-library/react";
-import { describe, it, expect } from "@jest/globals";
+import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi } from "vitest";
 import Header from "../Header";
 
-// screen is now imported from @testing-library/dom
-import { screen } from "@testing-library/dom";
-
 // Mock framer-motion to avoid animation issues in tests
-jest.mock("framer-motion", () => ({
+vi.mock("framer-motion", () => ({
   motion: {
     div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
     span: ({ children, ...props }: any) => <span {...props}>{children}</span>,
@@ -34,15 +31,15 @@ describe("Header Component", () => {
   it("renders navigation items", () => {
     render(<Header />);
 
-    expect(screen.getByText("Servicios")).toBeInTheDocument();
-    expect(screen.getByText("Proceso")).toBeInTheDocument();
-    expect(screen.getByText("Precios")).toBeInTheDocument();
+    expect(screen.getByText("nav.services")).toBeInTheDocument();
+    expect(screen.getByText("nav.process")).toBeInTheDocument();
+    expect(screen.getByText("nav.pricing")).toBeInTheDocument();
   });
 
   it("renders CTA button", () => {
     render(<Header />);
 
-    const ctaButtons = screen.getAllByText("Agendar llamada");
+    const ctaButtons = screen.getAllByText("nav.cta");
     expect(ctaButtons.length).toBeGreaterThan(0);
   });
 

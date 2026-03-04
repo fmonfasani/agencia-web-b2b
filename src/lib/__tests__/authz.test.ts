@@ -1,75 +1,109 @@
 import { requireTenantMembership } from "../authz";
 import { auth } from "../auth";
 import { requireAuth as requireCustomAuth } from "../auth/request-auth";
+import { vi, describe, it, expect, beforeEach, Mock } from "vitest";
 
 // Mock dependencies
-jest.mock("../auth", () => ({
-    auth: jest.fn(),
+vi.mock("../auth", () => ({
+  auth: vi.fn(),
 }));
 
-jest.mock("../auth/request-auth", () => ({
-    requireAuth: jest.fn(),
+vi.mock("../auth/request-auth", () => ({
+  requireAuth: vi.fn(),
 }));
 
-jest.mock("../tenant-context", () => ({
-    getActiveTenantId: jest.fn(() => Promise.resolve("tenant-123")),
+vi.mock("../tenant-context", () => ({
+  getActiveTenantId: vi.fn(() => Promise.resolve("tenant-123")),
 }));
 
 describe("Authorization Logic (authz.ts)", () => {
-    beforeEach(() => {
-        jest.clearAllMocks();
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should authorize via NextAuth session", async () => {
+    const mockUser = {
+      id: "user-1",
+      email: "test@example.com",
+      tenantId: "tenant-123",
+      role: "ADMIN",
+    };
+    (auth as Mock).mockResolvedValue({ user: mockUser });
+
+    const result = await requireTenantMembership();
+
+    expect(result.user).toEqual(mockUser);
+    expect(result.tenantId).toBe("tenant-123");
+  });
+
+  it("should authorize via Custom Session (fallback)", async () => {
+    (auth as Mock).mockResolvedValue(null); // NextAuth fails
+    const mockUser = {
+      id: "user-2",
+      email: "custom@example.com",
+      role: "MEMBER",
+    };
+    const mockSession = { tenantId: "tenant-123" };
+    (requireCustomAuth as Mock).mockResolvedValue({
+      user: mockUser,
+      session: mockSession,
     });
 
-    it("should authorize via NextAuth session", async () => {
-        const mockUser = { id: "user-1", email: "test@example.com", tenantId: "tenant-123", role: "ADMIN" };
-        (auth as jest.Mock).mockResolvedValue({ user: mockUser });
+    const result = await requireTenantMembership();
 
-        const result = await requireTenantMembership();
+    expect(result.user.id).toBe("user-2");
+    expect(result.tenantId).toBe("tenant-123");
+    expect(result.user.role).toBe("MEMBER");
+  });
 
-        expect(result.user).toEqual(mockUser);
-        expect(result.tenantId).toBe("tenant-123");
-    });
+  it("should throw AuthorizationError if no session at all", async () => {
+    (auth as Mock).mockResolvedValue(null);
+    (requireCustomAuth as Mock).mockResolvedValue(null);
 
-    it("should authorize via Custom Session (fallback)", async () => {
-        (auth as jest.Mock).mockResolvedValue(null); // NextAuth fails
-        const mockUser = { id: "user-2", email: "custom@example.com", role: "MEMBER" };
-        const mockSession = { tenantId: "tenant-123" };
-        (requireCustomAuth as jest.Mock).mockResolvedValue({ user: mockUser, session: mockSession });
+    await expect(requireTenantMembership()).rejects.toThrow(
+      "Authentication required",
+    );
+  });
 
-        const result = await requireTenantMembership();
+  it("should throw Forbidden if user belongs to different tenant", async () => {
+    const mockUser = {
+      id: "user-1",
+      email: "test@example.com",
+      tenantId: "WRONG-TENANT",
+      role: "MEMBER",
+    };
+    (auth as Mock).mockResolvedValue({ user: mockUser });
 
-        expect(result.user.id).toBe("user-2");
-        expect(result.tenantId).toBe("tenant-123");
-        expect(result.user.role).toBe("MEMBER");
-    });
+    // Assuming getActiveTenantId returns "tenant-123" (mocked above)
+    await expect(requireTenantMembership()).rejects.toThrow(
+      "Access denied to this tenant",
+    );
+  });
 
-    it("should throw AuthorizationError if no session at all", async () => {
-        (auth as jest.Mock).mockResolvedValue(null);
-        (requireCustomAuth as jest.Mock).mockResolvedValue(null);
+  it("should authorize SUPER_ADMIN even in different tenant", async () => {
+    const mockUser = {
+      id: "admin-1",
+      email: "admin@example.com",
+      tenantId: "SYSTEM",
+      role: "SUPER_ADMIN",
+    };
+    (auth as Mock).mockResolvedValue({ user: mockUser });
 
-        await expect(requireTenantMembership()).rejects.toThrow("Authentication required");
-    });
+    const result = await requireTenantMembership();
+    expect(result.user).toEqual(mockUser);
+  });
 
-    it("should throw Forbidden if user belongs to different tenant", async () => {
-        const mockUser = { id: "user-1", email: "test@example.com", tenantId: "WRONG-TENANT", role: "MEMBER" };
-        (auth as jest.Mock).mockResolvedValue({ user: mockUser });
+  it("should throw Forbidden if role is not allowed", async () => {
+    const mockUser = {
+      id: "user-1",
+      email: "test@example.com",
+      tenantId: "tenant-123",
+      role: "VIEWER",
+    };
+    (auth as Mock).mockResolvedValue({ user: mockUser });
 
-        // Assuming getActiveTenantId returns "tenant-123" (mocked above)
-        await expect(requireTenantMembership()).rejects.toThrow("Access denied to this tenant");
-    });
-
-    it("should authorize SUPER_ADMIN even in different tenant", async () => {
-        const mockUser = { id: "admin-1", email: "admin@example.com", tenantId: "SYSTEM", role: "SUPER_ADMIN" };
-        (auth as jest.Mock).mockResolvedValue({ user: mockUser });
-
-        const result = await requireTenantMembership();
-        expect(result.user).toEqual(mockUser);
-    });
-
-    it("should throw Forbidden if role is not allowed", async () => {
-        const mockUser = { id: "user-1", email: "test@example.com", tenantId: "tenant-123", role: "VIEWER" };
-        (auth as jest.Mock).mockResolvedValue({ user: mockUser });
-
-        await expect(requireTenantMembership(["ADMIN"])).rejects.toThrow("Insufficient permissions");
-    });
+    await expect(requireTenantMembership(["ADMIN"])).rejects.toThrow(
+      "Insufficient permissions",
+    );
+  });
 });

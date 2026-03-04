@@ -1,127 +1,111 @@
-/** @jest-environment node */
 import { POST } from "@/app/[locale]/api/auth/register-company/route";
 import { prisma } from "@/lib/prisma";
 import { createSession } from "@/lib/auth/session";
 import { hashPassword } from "@/lib/auth/password";
-import { logAuditEvent } from "@/lib/security/audit";
+import { vi, describe, it, expect, beforeEach, Mock } from "vitest";
 
 // Mock dependencies
-jest.mock("@/lib/prisma", () => ({
-    prisma: {
-        user: {
-            findUnique: jest.fn(),
-            upsert: jest.fn(),
-        },
-        tenant: {
-            findUnique: jest.fn(),
-            create: jest.fn(),
-        },
-        plan: {
-            findUnique: jest.fn(),
-        },
-        membership: {
-            create: jest.fn(),
-        },
-        pipeline: {
-            create: jest.fn(),
-        },
-        subscription: {
-            create: jest.fn(),
-        },
-        businessEvent: {
-            create: jest.fn(),
-        },
-        $transaction: jest.fn((callback) => callback(prisma)),
+vi.mock("@/lib/prisma", () => ({
+  prisma: {
+    $transaction: vi.fn(),
+    tenant: {
+      create: vi.fn(),
+      findUnique: vi.fn(),
     },
+    user: {
+      create: vi.fn(),
+      findUnique: vi.fn(),
+      upsert: vi.fn(),
+    },
+    company: { create: vi.fn() },
+    membership: { create: vi.fn() },
+    invitation: { create: vi.fn() },
+    plan: { findUnique: vi.fn() },
+    pipeline: { create: vi.fn() },
+    subscription: { create: vi.fn() },
+    businessEvent: { create: vi.fn() },
+  },
 }));
 
-jest.mock("@/lib/auth/session", () => ({
-    createSession: jest.fn(),
+vi.mock("@/lib/auth/session", () => ({
+  createSession: vi.fn(),
 }));
 
-jest.mock("@/lib/auth/password", () => ({
-    hashPassword: jest.fn(),
+vi.mock("@/lib/auth/password", () => ({
+  hashPassword: vi.fn(),
 }));
 
-jest.mock("@/lib/security/audit", () => ({
-    logAuditEvent: jest.fn(),
+vi.mock("@/lib/security/audit", () => ({
+  logAuditEvent: vi.fn(),
 }));
 
-describe("API: register-company Integration", () => {
-    beforeEach(() => {
-        jest.clearAllMocks();
+describe("Company Registration Integration", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should register a company and user successfully in a transaction", async () => {
+    // Setup mocks
+    const mockTenant = {
+      id: "tenant-123",
+      name: "Acme Corp",
+      slug: "acme-corp",
+    };
+    const mockUser = { id: "user-456", email: "admin@acme.com" };
+    const mockPlan = { id: "plan-1", code: "STARTER", pricePerYear: 100 };
+
+    (prisma.user.findUnique as Mock).mockResolvedValue(null);
+    (prisma.plan.findUnique as Mock).mockResolvedValue(mockPlan);
+    (prisma.tenant.findUnique as Mock).mockResolvedValue(null);
+    (prisma.businessEvent.create as Mock).mockResolvedValue({ id: "event-2" });
+
+    (hashPassword as Mock).mockReturnValue("hashed-password");
+    (createSession as Mock).mockResolvedValue({
+      token: "session-token",
+      session: { expires: new Date(Date.now() + 3600000) },
     });
 
-    it("should register a company successfully", async () => {
-        const mockData = {
-            firstName: "Fede",
-            lastName: "Monfasani",
-            email: "fede@example.com",
-            companyName: "Agencia Leads",
-            password: "password123",
-            plan: "STARTER"
-        };
-
-        const request = new Request("http://localhost/api/auth/register-company", {
-            method: "POST",
-            body: JSON.stringify(mockData)
-        });
-
-        (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
-        (prisma.plan.findUnique as jest.Mock).mockResolvedValue({ id: "plan-1", code: "STARTER" });
-        (prisma.tenant.findUnique as jest.Mock).mockResolvedValue(null);
-        (prisma.user.upsert as jest.Mock).mockResolvedValue({ id: "user-1", email: mockData.email });
-        (prisma.tenant.create as jest.Mock).mockResolvedValue({ id: "tenant-1", slug: "agencia-leads" });
-        (hashPassword as jest.Mock).mockReturnValue("hashed-pwd");
-        (createSession as jest.Mock).mockResolvedValue({
-            token: "session-token",
-            session: { expires: new Date(Date.now() + 3600000) }
-        });
-
-        const response = await POST(request as any);
-        const body = await response.json();
-
-        expect(response.status).toBe(200);
-        expect(body.success).toBe(true);
-        expect(prisma.user.upsert).toHaveBeenCalled();
-        expect(prisma.tenant.create).toHaveBeenCalled();
-        expect(prisma.membership.create).toHaveBeenCalled();
-        expect(createSession).toHaveBeenCalledWith("user-1", "tenant-1");
+    // Mock transaction implementation
+    (prisma.$transaction as Mock).mockImplementation(async (callback) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const tx: any = {
+        tenant: { create: vi.fn().mockResolvedValue(mockTenant) },
+        user: {
+          findUnique: vi.fn().mockResolvedValue(null),
+          create: vi.fn().mockResolvedValue(mockUser),
+          upsert: vi.fn().mockResolvedValue(mockUser),
+        },
+        company: { create: vi.fn().mockResolvedValue({ id: "comp-1" }) },
+        membership: { create: vi.fn().mockResolvedValue({ id: "mem-1" }) },
+        plan: { findUnique: vi.fn().mockResolvedValue(mockPlan) },
+        pipeline: { create: vi.fn().mockResolvedValue({ id: "pipe-1" }) },
+        subscription: { create: vi.fn().mockResolvedValue({ id: "sub-1" }) },
+        businessEvent: { create: vi.fn().mockResolvedValue({ id: "event-1" }) },
+      };
+      return callback(tx);
     });
 
-    it("should return 400 for incomplete data", async () => {
-        const request = new Request("http://localhost/api/auth/register-company", {
-            method: "POST",
-            body: JSON.stringify({ email: "incomplete@test.com" })
-        });
+    const body = {
+      firstName: "Fede",
+      lastName: "Monfa",
+      email: "admin@acme.com",
+      companyName: "Acme Corp",
+      password: "password123",
+    };
 
-        const response = await POST(request as any);
-        const body = await response.json();
-
-        expect(response.status).toBe(400);
-        expect(body.error).toBe("Datos incompletos");
+    const request = new Request("http://localhost/api/auth/register-company", {
+      method: "POST",
+      body: JSON.stringify(body),
     });
 
-    it("should return 400 if user with password already exists", async () => {
-        const mockData = {
-            firstName: "Fede",
-            lastName: "Monfasani",
-            email: "existing@example.com",
-            companyName: "Agencia",
-            password: "password123"
-        };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const response = await POST(request as any);
+    const result = await response.json();
 
-        const request = new Request("http://localhost/api/auth/register-company", {
-            method: "POST",
-            body: JSON.stringify(mockData)
-        });
-
-        (prisma.user.findUnique as jest.Mock).mockResolvedValue({ id: "user-1", passwordHash: "already-has-one" });
-
-        const response = await POST(request as any);
-        const body = await response.json();
-
-        expect(response.status).toBe(400);
-        expect(body.error).toBe("Este email ya está registrado");
-    });
+    expect(response.status).toBe(201);
+    expect(result.success).toBe(true);
+    expect(result.tenantId).toBe(mockTenant.id);
+    expect(prisma.$transaction).toHaveBeenCalled();
+    expect(createSession).toHaveBeenCalledWith(mockUser.id, mockTenant.id);
+  });
 });

@@ -26,6 +26,7 @@ export async function listLeadsByTenant(
   const tPrisma = getTenantPrisma(activeTenantId);
 
   return tPrisma.lead.findMany({
+    where: { tenantId: activeTenantId },
     orderBy: { createdAt: "desc" },
     take: limit,
     skip: offset,

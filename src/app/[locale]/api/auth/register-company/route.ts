@@ -167,12 +167,15 @@ export async function POST(request: Request) {
       metadata: { companyName, plan: selectedPlanCode },
     });
 
-    const response = NextResponse.json({
-      success: true,
-      message: "Empresa registrada con éxito",
-      tenantId: result.tenant.id,
-      slug: result.tenant.slug,
-    });
+    const response = NextResponse.json(
+      {
+        success: true,
+        message: "Empresa registrada con éxito",
+        tenantId: result.tenant.id,
+        slug: result.tenant.slug,
+      },
+      { status: 201 },
+    );
 
     response.cookies.set(
       SESSION_COOKIE_NAME,
