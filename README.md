@@ -119,4 +119,116 @@ bash scripts/fix-pr-setup.sh git@github.com:<owner>/<repo>.git
 
 ---
 
+## 🖥️ VPS — Comandos Esenciales
+
+> **Servidor:** `134.209.41.51` | **Usuario:** `root`
+
+### 🔌 Conexión SSH
+```bash
+ssh root@134.209.41.51
+```
+
+---
+
+### 🐳 Docker / Agent Service
+
+```bash
+# Ver estado de los contenedores
+cd /opt/agencia-web-b2b/agent-service && docker compose ps
+
+# Ver logs en tiempo real
+docker compose logs -f
+
+# Reiniciar servicio (ej: después de cambiar .env)
+docker compose up -d --force-recreate
+
+# Ver variables de entorno activas
+docker compose exec agent-service env | grep -E "SECRET|URL|TOKEN"
+```
+
+---
+
+### 🗄️ Base de Datos (PostgreSQL)
+
+```bash
+# Conectarse a la DB
+docker exec -it multidb-postgres psql -U postgres -d agencia_web_b2b
+
+# Contar leads totales
+docker exec -it multidb-postgres psql -U postgres -d agencia_web_b2b -c \
+  'SELECT COUNT(*) FROM "Lead";'
+
+# Ver últimos leads scrapeados
+docker exec -it multidb-postgres psql -U postgres -d agencia_web_b2b -c \
+  'SELECT name, phone, description, "createdAt" FROM "Lead" ORDER BY "createdAt" DESC LIMIT 10;'
+
+# Leads por fuente
+docker exec -it multidb-postgres psql -U postgres -d agencia_web_b2b -c \
+  'SELECT "sourceType", COUNT(*) FROM "Lead" GROUP BY "sourceType";'
+```
+
+---
+
+### 🤖 Scraping Manual (desde VPS)
+
+```bash
+# Lanzar scraping puntual
+curl -X POST http://localhost:8000/scraper/run \
+  -H "Content-Type: application/json" \
+  -H "x-admin-secret: Karaoke27570Echeverria" \
+  -d '{"query":"personal trainer","location":"Buenos Aires, Argentina","max_leads":25,"tenant_id":"cmmb7uaqe0002js04qbetwu40","language":"es"}'
+
+# Verificar estado de un job
+curl http://localhost:8000/scraper/status/<JOB_ID> \
+  -H "x-admin-secret: Karaoke27570Echeverria"
+
+# Test endpoint de health
+curl http://localhost:8000/health
+```
+
+---
+
+### ⏰ Cron Job — Scraping Automático cada 20 minutos
+
+```bash
+# Crear script de scraping
+cat > /opt/scrape-personal-trainer.sh << 'EOF'
+#!/bin/bash
+TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
+echo "[$TIMESTAMP] Iniciando scraping..."
+curl -s -X POST http://localhost:8000/scraper/run \
+  -H "Content-Type: application/json" \
+  -H "x-admin-secret: Karaoke27570Echeverria" \
+  -d '{"query":"personal trainer","location":"Buenos Aires, Argentina","max_leads":25,"tenant_id":"cmmb7uaqe0002js04qbetwu40","language":"es"}'
+echo ""
+EOF
+chmod +x /opt/scrape-personal-trainer.sh
+
+# Registrar el cron (cada 20 minutos)
+(crontab -l 2>/dev/null; echo "*/20 * * * * /opt/scrape-personal-trainer.sh >> /var/log/scraper.log 2>&1") | crontab -
+
+# Ver crons activos
+crontab -l
+
+# Ver logs del scraper
+tail -f /var/log/scraper.log
+
+# Detener el cron
+crontab -r
+```
+
+---
+
+### 📥 Importar Leads desde archivos JSON (local)
+
+```bash
+# Un archivo o carpeta completa — skippea duplicados automáticamente
+npx tsx scripts/import-leads.ts "scraping download"
+
+# Desde Apify API (requiere token)
+APIFY_API_TOKEN=xxxx npx tsx scripts/import-leads.ts
+```
+
+---
+
 _Desarrollado para Agencia Leads — Transformando Datos en Revenue._
