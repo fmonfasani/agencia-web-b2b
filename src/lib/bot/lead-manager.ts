@@ -1,10 +1,31 @@
 import { requireTenantId } from "@/lib/tenant-context";
 import { Redis } from "@upstash/redis";
 
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL || "",
-  token: process.env.UPSTASH_REDIS_REST_TOKEN || "",
-});
+// Lazy initialization to avoid crashing when env vars are missing or invalid
+let _redis: Redis | null = null;
+
+function isValidRedisUrl(url: string | undefined): boolean {
+  return typeof url === "string" && url.startsWith("https://");
+}
+
+function getRedis(): Redis | null {
+  if (_redis) return _redis;
+
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+  if (!isValidRedisUrl(url) || !token) {
+    return null;
+  }
+
+  try {
+    _redis = new Redis({ url: url!, token });
+    return _redis;
+  } catch (error) {
+    console.error("[Lead Manager] Failed to initialize Redis:", error);
+    return null;
+  }
+}
 
 export interface LeadInfo {
   phone: string;
@@ -25,6 +46,11 @@ export async function saveLead(
   lead: LeadInfo,
   tenantId?: string,
 ): Promise<void> {
+  const redis = getRedis();
+  if (!redis) {
+    console.warn("[Lead Manager] Redis not available, skipping lead save");
+    return;
+  }
   try {
     const activeTenantId = requireTenantId(tenantId ?? lead.tenantId);
     const key = `lead:${activeTenantId}:${lead.phone}`;
@@ -46,6 +72,8 @@ export async function getLead(
   phone: string,
   tenantId?: string,
 ): Promise<LeadInfo | null> {
+  const redis = getRedis();
+  if (!redis) return null;
   try {
     const activeTenantId = requireTenantId(tenantId);
     return await redis.get<LeadInfo>(`lead:${activeTenantId}:${phone}`);
@@ -59,6 +87,8 @@ export async function getLead(
  * Gets all leads managed by the bot.
  */
 export async function getAllLeads(tenantId?: string): Promise<LeadInfo[]> {
+  const redis = getRedis();
+  if (!redis) return [];
   try {
     const activeTenantId = requireTenantId(tenantId);
     const keys = await redis.smembers(`all_leads:${activeTenantId}`);

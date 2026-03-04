@@ -1,11 +1,17 @@
 import { Redis } from "@upstash/redis";
 
+// Validate URL starts with https:// to avoid crashing with invalid env vars
+function isValidRedisUrl(url: string | undefined): boolean {
+  return typeof url === "string" && url.startsWith("https://");
+}
+
 const redis =
-  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+  isValidRedisUrl(process.env.UPSTASH_REDIS_REST_URL) &&
+    process.env.UPSTASH_REDIS_REST_TOKEN
     ? new Redis({
-        url: process.env.UPSTASH_REDIS_REST_URL,
-        token: process.env.UPSTASH_REDIS_REST_TOKEN,
-      })
+      url: process.env.UPSTASH_REDIS_REST_URL!,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    })
     : null;
 
 export type RateLimitResult = {
