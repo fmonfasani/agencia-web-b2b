@@ -52,11 +52,23 @@ export default function ScraperForm({
     const [job, setJob] = useState<ScrapeJob | null>(null);
     const [error, setError] = useState<string | null>(null);
     const pollingRef = useRef<NodeJS.Timeout | null>(null);
+    const pollCountRef = useRef(0);
+    const MAX_POLLS = 30; // máx 5 minutos (30 × 10s)
 
-    // ── Polling: una vez iniciado el job, consulta cada 5s hasta que termine ──
+    // ── Polling: una vez iniciado el job, consulta cada 10s hasta que termine ──
     useEffect(() => {
         if (job && (job.status === "RUNNING" || job.status === "PENDING")) {
+            pollCountRef.current = 0;
             pollingRef.current = setInterval(async () => {
+                pollCountRef.current += 1;
+
+                // Cancelar si se superó el límite de intentos
+                if (pollCountRef.current > MAX_POLLS) {
+                    clearInterval(pollingRef.current!);
+                    setJob(prev => prev ? { ...prev, status: "FAILED", message: "Timeout: el scraping tardó demasiado." } : prev);
+                    return;
+                }
+
                 try {
                     const res = await fetch(
                         `/${locale}/api/admin/scrapers/status/${job.job_id}`
@@ -71,7 +83,7 @@ export default function ScraperForm({
                 } catch {
                     // Ignorar errores de polling silenciosamente
                 }
-            }, 5000);
+            }, 10000); // 10 segundos
         }
         return () => {
             if (pollingRef.current) clearInterval(pollingRef.current);
