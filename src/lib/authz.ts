@@ -69,11 +69,13 @@ export async function requireTenantMembership(allowedRoles?: AppRole[]) {
     redirect("/en/auth/sign-in");
   }
 
-  const activeTenantId = await getActiveTenantId();
-
-  // Verify if the user belongs to the active tenant
-  if (activeTenantId && (user as any).tenantId !== activeTenantId && (user as any).role !== "SUPER_ADMIN") {
-    throw new AuthorizationError("Access denied to this tenant", 403);
+  // Try to get tenant from request header, fallback to session tenantId
+  let activeTenantId: string | null = tenantId;
+  try {
+    const headerTenantId = await getActiveTenantId();
+    if (headerTenantId) activeTenantId = headerTenantId;
+  } catch {
+    // No x-tenant-id header — use the one from the user session (normal browser flow)
   }
 
   // Verify roles if specified
