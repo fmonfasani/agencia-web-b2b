@@ -8,6 +8,7 @@ import { routing } from "@/i18n/routing";
 import StructuredData from "@/components/StructuredData";
 import GoogleTagManager from "@/components/GoogleTagManager";
 import Analytics from "@/components/Analytics";
+import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
 import CookieConsent from "@/components/CookieConsent";
 import SalesChatWidget from "@/components/SalesChatWidget";
 
@@ -87,6 +88,7 @@ export default async function RootLayout({
 
           <StructuredData />
           <Analytics />
+          <VercelAnalytics />
           {children}
           <CookieConsent />
           <SalesChatWidget />
