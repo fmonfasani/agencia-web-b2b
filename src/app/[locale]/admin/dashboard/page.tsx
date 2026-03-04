@@ -229,7 +229,7 @@ export default async function DashboardPage({
   ];
 
   // 5. Unit Economics
-  const economics = await EconomicsService.getTenantROI(tenantId);
+  const economics = await EconomicsService.getTenantROI(tenantId ?? "");
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-10">
