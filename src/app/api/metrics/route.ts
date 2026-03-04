@@ -51,7 +51,7 @@ export async function GET() {
                 select: { value: true, assignedToUserId: true, assignedToAgentId: true, createdAt: true, closedAt: true },
             }),
             // Active agents
-            tPrisma.agent.count({ where: { isActive: true } }),
+            tPrisma.agent.count({ where: { active: true } }),
             // Active memberships
             tPrisma.membership.count({ where: { status: "ACTIVE" } }),
             // Customers MRR

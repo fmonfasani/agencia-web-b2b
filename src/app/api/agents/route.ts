@@ -57,7 +57,7 @@ export async function POST(req: Request) {
 
         // Enforce plan limit
         const currentAgentCount = await tPrisma.agent.count({
-            where: { isActive: true },
+            where: { active: true },
         });
         await assertPlanLimit(tenantId, "maxAgents", currentAgentCount);
 
@@ -73,14 +73,15 @@ export async function POST(req: Request) {
 
         const agent = await tPrisma.agent.create({
             data: {
-                tenantId, // Keeping for type safety / explicit data
+                tenantId,
                 name,
+                systemPrompt: promptConfig || "",
                 type: type || "COMERCIAL",
                 channel: channel || "WEB",
                 assistantId: assistantId || null,
                 promptConfig: promptConfig || null,
                 knowledgeBase: knowledgeBase || null,
-                isActive: true,
+                active: true,
             },
         });
 

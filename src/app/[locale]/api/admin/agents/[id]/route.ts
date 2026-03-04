@@ -16,7 +16,7 @@ export async function PATCH(
 
     try {
         const body = await request.json();
-        const { name, type, channel, promptConfig, assistantId, isActive } = body;
+        const { name, type, channel, promptConfig, assistantId, active } = body;
 
         const agent = await prisma.agent.update({
             where: {
@@ -29,7 +29,7 @@ export async function PATCH(
                 channel: channel as AgentChannel,
                 promptConfig,
                 assistantId,
-                isActive,
+                active,
             },
         });
 

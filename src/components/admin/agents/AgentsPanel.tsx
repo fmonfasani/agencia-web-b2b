@@ -23,7 +23,7 @@ interface Agent {
     type: "INFORMATIVO" | "COMERCIAL" | "SOPORTE";
     channel: "WHATSAPP" | "WEB" | "EMAIL";
     assistantId?: string;
-    isActive: boolean;
+    active: boolean;
 }
 
 export default function AgentsPanel({ locale }: { locale: string }) {
@@ -52,7 +52,7 @@ export default function AgentsPanel({ locale }: { locale: string }) {
         try {
             await fetch(`/${locale}/api/admin/agents/${id}`, {
                 method: "PATCH",
-                body: JSON.stringify({ isActive: !current }),
+                body: JSON.stringify({ active: !current }),
             });
             fetchAgents();
         } catch (err) {
@@ -101,7 +101,7 @@ export default function AgentsPanel({ locale }: { locale: string }) {
                         </div>
 
                         <div className="flex items-start gap-4">
-                            <div className={`size-14 rounded-2xl flex items-center justify-center shadow-inner ring-1 ring-inset ${agent.isActive ? 'bg-indigo-50 ring-indigo-100 text-indigo-600' : 'bg-slate-50 ring-slate-100 text-slate-400'}`}>
+                            <div className={`size-14 rounded-2xl flex items-center justify-center shadow-inner ring-1 ring-inset ${agent.active ? 'bg-indigo-50 ring-indigo-100 text-indigo-600' : 'bg-slate-50 ring-slate-100 text-slate-400'}`}>
                                 <Bot size={28} />
                             </div>
                             <div className="space-y-1">
@@ -129,11 +129,11 @@ export default function AgentsPanel({ locale }: { locale: string }) {
                             </div>
 
                             <div className="flex items-center gap-2">
-                                <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${agent.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
-                                    {agent.isActive ? 'ONLINE' : 'PAUSED'}
+                                <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${agent.active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                                    {agent.active ? 'ONLINE' : 'PAUSED'}
                                 </span>
-                                <button onClick={() => toggleAgent(agent.id, agent.isActive)}>
-                                    {agent.isActive ? (
+                                <button onClick={() => toggleAgent(agent.id, agent.active)}>
+                                    {agent.active ? (
                                         <ToggleRight className="text-indigo-600" size={28} />
                                     ) : (
                                         <ToggleLeft className="text-slate-300" size={28} />
