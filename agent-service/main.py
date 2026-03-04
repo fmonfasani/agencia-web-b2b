@@ -14,11 +14,13 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 origins = settings.allowed_origins.split(",") if settings.allowed_origins != "*" else ["*"]
 app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=["GET","POST","DELETE"], allow_headers=["*"])
 
+
 app.include_router(chat.router)
 app.include_router(agents.router)
 app.include_router(keys.router)
 app.include_router(scraper.router)
 app.mount("/widget", StaticFiles(directory="widget"), name="widget")
+
 
 @app.get("/health")
 async def health():
