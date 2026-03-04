@@ -43,32 +43,48 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }
 
-    // 1. Session & Role Validation
-    const auth = await requireAuth();
-    if (!auth) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    }
+    // 1a. M2M Auth: internal calls from agent-service (VPS)
+    const internalSecret = request.headers.get("x-internal-secret");
+    const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET;
+    let activeTenantId: string;
+    let tPrisma: ReturnType<typeof getTenantPrisma>;
 
-    const activeTenantId = resolveTenantIdFromHeaders(
-      request.headers,
-      auth.session.tenantId || process.env.DEFAULT_TENANT_ID,
-    );
+    if (internalSecret && INTERNAL_SECRET && internalSecret === INTERNAL_SECRET) {
+      // Internal machine-to-machine call — bypass session auth
+      const tenantFromHeader = request.headers.get("x-tenant-id") || process.env.DEFAULT_TENANT_ID || "";
+      if (!tenantFromHeader) {
+        return NextResponse.json({ error: "Missing x-tenant-id header" }, { status: 400 });
+      }
+      activeTenantId = tenantFromHeader;
+      tPrisma = getTenantPrisma(activeTenantId);
+    } else {
+      // 1b. Session & Role Validation (normal user request)
+      const auth = await requireAuth();
+      if (!auth) {
+        return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+      }
 
-    const tPrisma = getTenantPrisma(activeTenantId);
-
-    // Check membership role for this tenant
-    const membership = await tPrisma.membership.findFirst({
-      where: {
-        userId: auth.user.id,
-        status: "ACTIVE",
-      },
-    });
-
-    if (!membership || !["ADMIN", "SUPER_ADMIN"].includes(membership.role)) {
-      return NextResponse.json(
-        { error: "Permisos insuficientes" },
-        { status: 403 },
+      activeTenantId = resolveTenantIdFromHeaders(
+        request.headers,
+        auth.session.tenantId || process.env.DEFAULT_TENANT_ID,
       );
+
+      tPrisma = getTenantPrisma(activeTenantId);
+
+      // Check membership role for this tenant
+      const membership = await tPrisma.membership.findFirst({
+        where: {
+          userId: auth.user.id,
+          status: "ACTIVE",
+        },
+      });
+
+      if (!membership || !["ADMIN", "SUPER_ADMIN"].includes(membership.role)) {
+        return NextResponse.json(
+          { error: "Permisos insuficientes" },
+          { status: 403 },
+        );
+      }
     }
 
     // 2. Body Parsing & Validation
