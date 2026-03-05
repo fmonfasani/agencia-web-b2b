@@ -2,8 +2,9 @@
 
 import { useState, useMemo } from "react";
 import {
-    MapPin, Phone, Globe, ChevronDown, ChevronUp,
-    ExternalLink, Search, Download
+    ExternalLink, Search, Download, Zap, AlertCircle,
+    CheckCircle2, XCircle, Clock, MessageSquare, Mail,
+    ChevronRight, Info, MapPin, Phone, Globe, ChevronDown, ChevronUp
 } from "lucide-react";
 
 // Social media icons (SVG inline)
@@ -36,6 +37,26 @@ interface Lead {
     sourceType: string;
     createdAt: string;
     rawMetadata?: any;
+    intelligence?: {
+        tier: string;
+        opportunityScore: number;
+        demandScore: number;
+        digitalGapScore: number;
+        outreachScore: number;
+        websiteLoads?: boolean;
+        hasSSL?: boolean;
+        hasContactForm?: boolean;
+        hasBookingSystem?: boolean;
+        hasChatbot?: boolean;
+        hasWhatsappLink?: boolean;
+        responseTimeMs?: number;
+        detectedProblems: any;
+        topProblem?: string;
+        bestChannel?: string;
+        whatsappMsg?: string;
+        emailSubject?: string;
+        emailBody?: string;
+    } | null;
 }
 
 type Tab = "overview" | "contact" | "social" | "location" | "rating" | "all";
@@ -93,16 +114,36 @@ function StarRating({ score }: { score: number }) {
     );
 }
 
+function TierBadge({ tier }: { tier?: string }) {
+    if (!tier) return <span className="text-slate-300">—</span>;
+
+    const configs: Record<string, { label: string, color: string, icon: string }> = {
+        HOT: { label: "HOT", color: "bg-red-100 text-red-700 border-red-200", icon: "🔥" },
+        WARM: { label: "WARM", color: "bg-orange-100 text-orange-700 border-orange-200", icon: "🟡" },
+        COOL: { label: "COOL", color: "bg-blue-100 text-blue-700 border-blue-200", icon: "🔵" },
+        COLD: { label: "COLD", color: "bg-slate-100 text-slate-600 border-slate-200", icon: "❄️" },
+    };
+
+    const config = configs[tier] || configs.COLD;
+
+    return (
+        <span className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold border ${config.color}`}>
+            <span>{config.icon}</span>
+            {config.label}
+        </span>
+    );
+}
+
 function StatusBadge({ status }: { status: string }) {
     const colors: Record<string, string> = {
-        NEW: "bg-blue-100 text-blue-700",
-        CONTACTED: "bg-yellow-100 text-yellow-700",
-        QUALIFIED: "bg-green-100 text-green-700",
-        WON: "bg-emerald-100 text-emerald-700",
-        LOST: "bg-red-100 text-red-700",
+        NEW: "bg-blue-50 text-blue-600 border-blue-100",
+        CONTACTED: "bg-amber-50 text-amber-600 border-amber-100",
+        QUALIFIED: "bg-emerald-50 text-emerald-600 border-emerald-100",
+        WON: "bg-blue-600 text-white border-blue-700",
+        LOST: "bg-slate-100 text-slate-500 border-slate-200",
     };
     return (
-        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${colors[status] || "bg-slate-100 text-slate-600"}`}>
+        <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${colors[status] || "bg-slate-50 text-slate-500 border-slate-100"}`}>
             {status}
         </span>
     );
@@ -125,9 +166,10 @@ function TruncateText({ text, maxLength = 40 }: { text?: string | null; maxLengt
 export default function LeadsDataTable({ leads }: { leads: Lead[] }) {
     const [activeTab, setActiveTab] = useState<Tab>("overview");
     const [search, setSearch] = useState("");
-    const [sortField, setSortField] = useState<"name" | "rating" | "reviewsCount" | "potentialScore">("potentialScore");
+    const [sortField, setSortField] = useState<any>("potentialScore");
     const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
     const [page, setPage] = useState(1);
+    const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
     const PAGE_SIZE = 50;
 
     const filtered = useMemo(() => {
@@ -245,9 +287,8 @@ export default function LeadsDataTable({ leads }: { leads: Lead[] }) {
 
                             {activeTab === "overview" && (
                                 <>
-                                    <Th>Categoría</Th>
-                                    <Th>Teléfono</Th>
-                                    <Th>Website</Th>
+                                    <Th>Tier</Th>
+                                    <Th>Top Problema</Th>
                                     <Th field="rating">Rating</Th>
                                     <Th field="reviewsCount">Reviews</Th>
                                     <Th>Estado</Th>
@@ -318,13 +359,20 @@ export default function LeadsDataTable({ leads }: { leads: Lead[] }) {
                             const raw = lead.rawMetadata || {};
                             const rowClass = idx % 2 === 0 ? "bg-white" : "bg-slate-50/50";
                             return (
-                                <tr key={lead.id} className={`${rowClass} hover:bg-blue-50/30 transition-colors`}>
+                                <tr
+                                    key={lead.id}
+                                    className={`${rowClass} hover:bg-blue-50/30 transition-colors cursor-pointer group`}
+                                    onClick={() => setSelectedLead(lead)}
+                                >
                                     <Cell className="text-slate-400 tabular-nums w-8">
                                         {(page - 1) * PAGE_SIZE + idx + 1}
                                     </Cell>
                                     <Cell className="font-medium text-slate-900 min-w-[180px]">
                                         <div className="flex flex-col gap-0.5">
-                                            <span>{lead.name}</span>
+                                            <div className="flex items-center gap-1.5">
+                                                <span>{lead.name}</span>
+                                                <ChevronRight className="w-3 h-3 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                            </div>
                                             {lead.description && (
                                                 <span className="text-xs text-slate-400 font-normal">{lead.description}</span>
                                             )}
@@ -333,25 +381,12 @@ export default function LeadsDataTable({ leads }: { leads: Lead[] }) {
 
                                     {activeTab === "overview" && (
                                         <>
-                                            <Cell>
-                                                <span className="px-2 py-0.5 bg-slate-100 rounded-full text-xs text-slate-600">
-                                                    {lead.description || "—"}
-                                                </span>
-                                            </Cell>
-                                            <Cell>
-                                                {lead.phone ? (
-                                                    <a href={`tel:${lead.phone}`} className="text-blue-600 hover:underline flex items-center gap-1">
-                                                        <Phone className="w-3 h-3" /> {lead.phone}
-                                                    </a>
-                                                ) : <span className="text-slate-300">—</span>}
-                                            </Cell>
-                                            <Cell className="max-w-[200px]">
-                                                {lead.website ? (
-                                                    <a href={lead.website} target="_blank" rel="noreferrer"
-                                                        className="text-blue-600 hover:underline flex items-center gap-1 truncate">
-                                                        <Globe className="w-3 h-3 shrink-0" />
-                                                        <TruncateText text={lead.website.replace(/^https?:\/\//, "")} maxLength={30} />
-                                                    </a>
+                                            <Cell><TierBadge tier={lead.intelligence?.tier} /></Cell>
+                                            <Cell className="max-w-[150px]">
+                                                {lead.intelligence?.topProblem ? (
+                                                    <span className="text-[11px] text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 truncate block">
+                                                        {lead.intelligence.topProblem}
+                                                    </span>
                                                 ) : <span className="text-slate-300">—</span>}
                                             </Cell>
                                             <Cell>
@@ -364,9 +399,9 @@ export default function LeadsDataTable({ leads }: { leads: Lead[] }) {
                                             <Cell>
                                                 <div className="flex items-center gap-1">
                                                     <div className={`h-1.5 w-12 rounded-full bg-slate-100 overflow-hidden`}>
-                                                        <div className="h-full bg-blue-500 rounded-full" style={{ width: `${lead.potentialScore}%` }} />
+                                                        <div className="h-full bg-blue-500 rounded-full" style={{ width: `${lead.intelligence?.opportunityScore ?? lead.potentialScore}%` }} />
                                                     </div>
-                                                    <span className="text-xs text-slate-500">{lead.potentialScore}</span>
+                                                    <span className="text-xs text-slate-500 font-medium">{lead.intelligence?.opportunityScore ?? lead.potentialScore}</span>
                                                 </div>
                                             </Cell>
                                         </>
@@ -536,6 +571,190 @@ export default function LeadsDataTable({ leads }: { leads: Lead[] }) {
                         >
                             Siguiente →
                         </button>
+                    </div>
+                </div>
+            )}
+            {/* Intelligence Drawer */}
+            {selectedLead && (
+                <div className="fixed inset-0 z-50 flex justify-end">
+                    {/* Backdrop */}
+                    <div
+                        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
+                        onClick={() => setSelectedLead(null)}
+                    />
+
+                    {/* Panel */}
+                    <div className="relative w-full max-w-xl bg-white shadow-2xl h-full flex flex-col animate-in slide-in-from-right duration-300">
+                        {/* Header */}
+                        <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                            <div className="flex flex-col gap-1">
+                                <div className="flex items-center gap-3">
+                                    <h2 className="text-xl font-bold text-slate-900">{selectedLead.name}</h2>
+                                    <TierBadge tier={selectedLead.intelligence?.tier} />
+                                </div>
+                                <p className="text-sm text-slate-500 flex items-center gap-1.5">
+                                    <MapPin className="w-3.5 h-3.5" />
+                                    {selectedLead.address || "Sin dirección fija"}
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setSelectedLead(null)}
+                                className="p-2 hover:bg-white rounded-full transition-colors border border-transparent hover:border-slate-200"
+                            >
+                                <ChevronRight className="w-5 h-5 text-slate-400" />
+                            </button>
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1 overflow-y-auto p-6 space-y-8">
+                            {/* Summary Cards */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="p-4 rounded-2xl bg-blue-50 border border-blue-100">
+                                    <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-1">Opportunity Score</p>
+                                    <div className="flex items-end gap-2">
+                                        <span className="text-3xl font-black text-blue-900">{selectedLead.intelligence?.opportunityScore ?? 0}</span>
+                                        <span className="text-sm font-medium text-blue-700/60 mb-1">/ 100</span>
+                                    </div>
+                                    <div className="mt-3 h-1.5 w-full bg-blue-200/50 rounded-full overflow-hidden">
+                                        <div className="h-full bg-blue-600 rounded-full" style={{ width: `${selectedLead.intelligence?.opportunityScore ?? 0}%` }} />
+                                    </div>
+                                </div>
+                                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Mejor Canal</p>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        {selectedLead.intelligence?.bestChannel === "whatsapp" ? (
+                                            <>
+                                                <div className="p-2 bg-emerald-100 rounded-lg text-emerald-600">
+                                                    <WaIcon />
+                                                </div>
+                                                <span className="font-bold text-slate-700 uppercase text-xs">WhatsApp</span>
+                                            </>
+                                        ) : selectedLead.intelligence?.bestChannel === "email" ? (
+                                            <>
+                                                <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
+                                                    <Mail className="w-4 h-4" />
+                                                </div>
+                                                <span className="font-bold text-slate-700 uppercase text-xs">Email</span>
+                                            </>
+                                        ) : (
+                                            <span className="text-slate-400 font-medium italic">Sin definir</span>
+                                        )}
+                                    </div>
+                                    <p className="text-[10px] text-slate-400 mt-2 italic">Basado en datos disponibles</p>
+                                </div>
+                            </div>
+
+                            {/* Detailed Scores */}
+                            <div className="space-y-4">
+                                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                    <Info className="w-3 h-3" />
+                                    Digital Analysis Breakdown
+                                </h3>
+                                <div className="grid grid-cols-3 gap-2">
+                                    <div className="p-3 border border-slate-100 rounded-xl bg-white shadow-sm flex flex-col items-center text-center">
+                                        <span className="text-lg font-bold text-slate-800">{selectedLead.intelligence?.demandScore ?? 0}</span>
+                                        <span className="text-[10px] text-slate-400 font-medium">Demand</span>
+                                    </div>
+                                    <div className="p-3 border border-slate-100 rounded-xl bg-white shadow-sm flex flex-col items-center text-center">
+                                        <span className="text-lg font-bold text-slate-800">{selectedLead.intelligence?.digitalGapScore ?? 0}</span>
+                                        <span className="text-[10px] text-slate-400 font-medium">Digital Gap</span>
+                                    </div>
+                                    <div className="p-3 border border-slate-100 rounded-xl bg-white shadow-sm flex flex-col items-center text-center">
+                                        <span className="text-lg font-bold text-slate-800">{selectedLead.intelligence?.outreachScore ?? 0}</span>
+                                        <span className="text-[10px] text-slate-400 font-medium">Outreach</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Detected Problems */}
+                            <div className="space-y-4">
+                                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                    <AlertCircle className="w-3 h-3 text-red-400" />
+                                    Problemas y Oportunidades
+                                </h3>
+                                <div className="space-y-3">
+                                    {selectedLead.intelligence?.detectedProblems && (selectedLead.intelligence.detectedProblems as any[]).length > 0 ? (
+                                        (selectedLead.intelligence.detectedProblems as any[]).map((prob, i) => (
+                                            <div key={i} className="flex gap-4 p-4 rounded-2xl border border-slate-100 bg-white hover:border-blue-200 transition-colors group/item shadow-sm">
+                                                <div className="shrink-0 w-10 h-10 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center text-orange-500 font-bold">
+                                                    {i + 1}
+                                                </div>
+                                                <div className="flex-1 space-y-1">
+                                                    <div className="flex items-center justify-between">
+                                                        <h4 className="font-bold text-slate-800 text-sm">{prob.problem}</h4>
+                                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${prob.urgency >= 4 ? "bg-red-50 text-red-600" : "bg-blue-50 text-blue-600"
+                                                            }`}>
+                                                            {prob.urgency >= 4 ? "CRÍTICO" : "ALTO VESTA"}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-xs text-slate-500">{prob.pain}</p>
+                                                    <div className="pt-2 flex items-center gap-2">
+                                                        <div className="flex-1 h-px bg-slate-100" />
+                                                        <span className="text-[10px] font-black text-blue-600 uppercase tracking-tighter">Solución Recomendada</span>
+                                                        <div className="flex-1 h-px bg-slate-100" />
+                                                    </div>
+                                                    <p className="text-[11px] font-bold text-blue-700 bg-blue-50/50 p-2 rounded-lg border border-blue-100/50">
+                                                        ✨ {prob.service}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="p-8 text-center border-2 border-dashed border-slate-100 rounded-3xl">
+                                            <CheckCircle2 className="w-10 h-10 text-emerald-100 mx-auto mb-3" />
+                                            <p className="text-sm text-slate-400">No se detectaron brechas digitales críticas</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* AI Generated Message */}
+                            <div className="space-y-4">
+                                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                    <MessageSquare className="w-3 h-3 text-blue-400" />
+                                    Outreach Automatizado (IA)
+                                </h3>
+                                <div className="p-5 rounded-3xl bg-slate-900 text-slate-100 relative overflow-hidden group/box shadow-xl border border-slate-800">
+                                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover/box:opacity-10 transition-opacity">
+                                        <Zap className="w-32 h-32 text-blue-400" />
+                                    </div>
+
+                                    <div className="relative space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2 px-2 py-1 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                                                <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                                                <span className="text-[10px] font-bold text-blue-400 uppercase">WhatsApp Personalizado</span>
+                                            </div>
+                                            <button
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(selectedLead.intelligence?.whatsappMsg || "");
+                                                    alert("Copiado al portapapeles");
+                                                }}
+                                                className="text-[10px] font-bold hover:text-blue-400 transition-colors uppercase"
+                                            >
+                                                Copiar Texto
+                                            </button>
+                                        </div>
+
+                                        <p className="text-xs leading-relaxed text-slate-300 italic">
+                                            {selectedLead.intelligence?.whatsappMsg || "Selecciona un lead con análisis completo para generar el mensaje automático."}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Footer Actions */}
+                        <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex gap-3">
+                            <button className="flex-1 flex items-center justify-center gap-2 bg-slate-900 text-white py-3 px-4 rounded-2xl font-bold text-sm hover:bg-black transition-all shadow-lg active:scale-[0.98]">
+                                <MessageSquare className="w-4 h-4" />
+                                Abrir WhatsApp
+                            </button>
+                            <button className="flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-700 p-3 rounded-2xl hover:bg-slate-100 transition-all font-bold text-sm">
+                                <Zap className="w-4 h-4 text-amber-500" />
+                                Re-Analizar
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

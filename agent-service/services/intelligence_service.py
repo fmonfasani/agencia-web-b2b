@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 
 import httpx
 from bs4 import BeautifulSoup
+from services.ai_service import generate_outreach_messages
 
 logger = logging.getLogger(__name__)
 
@@ -322,5 +323,20 @@ async def analyze_lead(lead: dict) -> IntelligenceResult:
     channels = compute_channels(lead, wa)
     result.channel_scores = channels["channel_scores"]
     result.best_channel = channels["best_channel"]
+
+    # 5. Generar mensajes de outreach AI
+    if result.top_problem:
+        # Encontrar los detalles del problema principal para dárselos a la IA
+        problem_info = next((p for p in result.detected_problems if p["problem"] == result.top_problem), None)
+        if problem_info:
+            ai_msgs = await generate_outreach_messages(
+                lead_name=lead.get("name", "Negocio"),
+                top_problem=result.top_problem,
+                service=problem_info.get("service", "Servicios digitales"),
+                pain=problem_info.get("pain", "Falta de optimización digital")
+            )
+            result.whatsapp_msg = ai_msgs.get("whatsapp")
+            result.email_subject = ai_msgs.get("email_subject")
+            result.email_body = ai_msgs.get("email_body")
 
     return result

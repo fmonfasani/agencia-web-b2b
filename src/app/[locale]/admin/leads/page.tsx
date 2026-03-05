@@ -38,6 +38,7 @@ export default async function LeadsPage() {
             sourceType: true,
             createdAt: true,
             rawMetadata: true,
+            intelligence: true,
         },
     });
 

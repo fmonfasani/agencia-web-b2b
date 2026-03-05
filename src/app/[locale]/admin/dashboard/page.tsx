@@ -2,12 +2,7 @@ import { db } from "@/lib/scoped-prisma";
 import { requireTenantMembership } from "@/lib/authz";
 import { redirect } from "next/navigation";
 import { EconomicsService } from "@/lib/economics/tracker";
-import LeadStatusControl from "@/components/admin/LeadStatusControl";
-import LeadContactButton from "@/components/admin/LeadContactButton";
-
-// Tipos reflejados del esquema de Prisma
-type LeadSourceType = "SCRAPER" | "MANUAL" | "API" | "ADS";
-type BusinessType = "SERVICIO" | "INDUSTRIA" | "COMERCIO" | "OFICIO";
+import LeadsDataTable from "@/components/admin/LeadsDataTable";
 import {
   Users,
   DollarSign,
@@ -17,125 +12,15 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   TrendingUp,
-  ChevronLeft,
-  ChevronRight,
-  Search,
-  Globe,
   Database,
-  Monitor,
   Plus,
   Map as MapIcon,
   BarChart3,
   Filter,
   LayoutDashboard,
-  Building2,
-  Mail,
-  Phone,
-  Instagram,
-  Facebook,
-  Linkedin,
-  MessageCircle,
-  ExternalLink,
 } from "lucide-react";
 
 import Link from "next/link";
-
-// --- Visual Helpers ---
-
-const SourceBadge = ({ type }: { type: LeadSourceType }) => {
-  const configs = {
-    SCRAPER: {
-      icon: Database,
-      color: "text-purple-600 bg-purple-50",
-      label: "Scraper",
-    },
-    MANUAL: {
-      icon: Plus,
-      color: "text-amber-600 bg-amber-50",
-      label: "Manual",
-    },
-    API: { icon: Zap, color: "text-blue-600 bg-blue-50", label: "API" },
-    ADS: {
-      icon: Monitor,
-      color: "text-emerald-600 bg-emerald-50",
-      label: "Ads",
-    },
-  };
-
-  const config = configs[type as keyof typeof configs] || configs.MANUAL;
-  const Icon = config.icon;
-
-  return (
-    <div
-      className={`flex items-center gap-1.5 px-2 py-0.5 rounded-lg border border-current opacity-80 ${config.color}`}
-    >
-      <Icon size={12} />
-      <span className="text-[10px] font-bold uppercase">{config.label}</span>
-    </div>
-  );
-};
-
-const BusinessBadge = ({ type }: { type: BusinessType | null }) => {
-  if (!type) return <span className="text-slate-300">—</span>;
-
-  const styles = {
-    SERVICIO: "border-blue-200 text-blue-700 bg-blue-50",
-    INDUSTRIA: "border-purple-200 text-purple-700 bg-purple-50",
-    COMERCIO: "border-orange-200 text-orange-700 bg-orange-50",
-    OFICIO: "border-emerald-200 text-emerald-700 bg-emerald-50",
-  };
-
-  return (
-    <span
-      className={`px-2 py-0.5 rounded text-[10px] font-bold border ${styles[type as keyof typeof styles] || "bg-slate-50 text-slate-500"}`}
-    >
-      {type}
-    </span>
-  );
-};
-
-const ScoreIndicator = ({ score }: { score: number }) => {
-  const color =
-    score >= 80
-      ? "text-emerald-600"
-      : score >= 40
-        ? "text-amber-600"
-        : "text-rose-600";
-  return (
-    <div className="flex flex-col gap-1 min-w-[60px]">
-      <div className="flex justify-between items-center text-[10px] font-bold">
-        <span className={color}>{score} pts</span>
-      </div>
-      <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-        <div
-          className={`h-full transition-all duration-500 rounded-full ${score >= 80 ? "bg-emerald-500" : score >= 40 ? "bg-amber-500" : "bg-rose-500"}`}
-          style={{ width: `${score}%` }}
-        />
-      </div>
-    </div>
-  );
-};
-
-const StatusBadge = ({ status }: { status: string }) => {
-  const styles = {
-    NEW: "bg-blue-100 text-blue-700 border-blue-200",
-    CONTACTED: "bg-amber-100 text-amber-700 border-amber-200",
-    QUALIFIED: "bg-emerald-100 text-emerald-700 border-emerald-200",
-    LOST: "bg-rose-100 text-rose-700 border-rose-200",
-    PROPOSAL_SENT: "bg-purple-100 text-purple-700 border-purple-200",
-    DISQUALIFIED: "bg-slate-100 text-slate-400 border-slate-200",
-  };
-  const label = status || "NEW";
-  const style = styles[label as keyof typeof styles] || styles.NEW;
-
-  return (
-    <span
-      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${style}`}
-    >
-      {label}
-    </span>
-  );
-};
 
 export const dynamic = "force-dynamic";
 
@@ -144,380 +29,202 @@ interface MetricCardProps {
   value: string | number;
   trend?: number;
   icon: React.ElementType;
+  description?: string;
+  color?: string;
 }
 
-const MetricCard = ({ title, value, trend, icon: Icon }: MetricCardProps) => (
-  <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+const MetricCard = ({ title, value, trend, icon: Icon, description, color = "blue" }: MetricCardProps) => (
+  <div className="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
     <div className="flex items-center justify-between mb-4">
-      <div
-        className={`p-3 rounded-2xl bg-slate-50 text-slate-600 group-hover:scale-110 transition-transform`}
-      >
+      <div className={`p-3 rounded-2xl bg-${color}-50 text-${color}-600 group-hover:scale-110 transition-transform`}>
         <Icon size={20} />
       </div>
-      {trend && (
-        <span
-          className={`flex items-center gap-1 text-xs font-bold ${trend > 0 ? "text-emerald-600" : "text-rose-600"}`}
-        >
-          {trend > 0 ? (
-            <ArrowUpRight size={14} />
-          ) : (
-            <ArrowDownRight size={14} />
-          )}
+      {trend !== undefined && (
+        <span className={`flex items-center gap-1 text-[10px] font-black uppercase px-2 py-1 rounded-lg ${trend > 0 ? "text-emerald-600 bg-emerald-50" : "text-rose-600 bg-rose-50"}`}>
+          {trend > 0 ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
           {Math.abs(trend)}%
         </span>
       )}
     </div>
-    <div>
-      <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">
+    <div className="relative z-10">
+      <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
         {title}
       </span>
-      <h3 className="text-2xl font-black text-slate-900 mt-1">{value}</h3>
+      <h3 className="text-2xl font-black text-slate-900 mt-1 leading-none">{value}</h3>
+      {description && <p className="text-[10px] text-slate-400 mt-2 font-medium">{description}</p>}
     </div>
-    <TrendingUp
-      size={80}
-      className="absolute -right-6 -bottom-6 text-slate-50 opacity-[0.03] rotate-12"
-    />
+    <div className="absolute -right-4 -bottom-4 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity">
+      <Icon size={120} />
+    </div>
   </div>
 );
 
-export default async function DashboardPage({
+export default async function CommercialHubPage({
   params,
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ page?: string; source?: string }>;
+  searchParams: Promise<{ source?: string }>;
 }) {
   const { locale } = await params;
-  const { page, source } = await searchParams;
-  const currentPage = parseInt(page || "1", 10);
-  const pageSize = 50;
-  const offset = (currentPage - 1) * pageSize;
+  const { source } = await searchParams;
 
-  // 1. Unified Auth & Tenant Security (Phase 1)
-  const { user, tenantId } = await requireTenantMembership();
+  const { tenantId } = await requireTenantMembership(["ADMIN", "SUPER_ADMIN"]);
   const scopedDb = await db();
-  const canEditLeadStatus = user.role !== "VIEWER";
 
-  // 2. Data Fetching via Scoped Prisma (Automatic Tenant Filtering)
-  const leads = await scopedDb.lead.findMany({
+  // 1. Fetch Leads with Intelligence
+  const leadsRaw = await scopedDb.lead.findMany({
     where: {
       sourceType: source ? (source.toUpperCase() as any) : undefined,
     },
-    take: pageSize,
-    skip: offset,
+    take: 1000,
     orderBy: { createdAt: "desc" },
+    include: {
+      intelligence: true,
+    },
   });
 
-  // 3. Real Metrics (Aggregate)
-  const stats = await scopedDb.lead.aggregate({
-    _avg: { potentialScore: true },
-    _count: { _all: true },
-  });
+  // 2. Aggregate Metrics
+  const totalLeads = leadsRaw.length;
+  const scraperLeads = leadsRaw.filter(l => l.sourceType === "SCRAPER").length;
+  const withPhone = leadsRaw.filter(l => l.phone || l.intelligence?.hasWhatsappLink).length;
+  const withWebsite = leadsRaw.filter(l => l.website).length;
 
-  // 4. Real Pipeline Value from Deals
+  const avgQuality = totalLeads
+    ? Math.round(leadsRaw.reduce((a, l) => a + (l.intelligence?.opportunityScore || l.potentialScore || 0), 0) / totalLeads)
+    : 0;
+
+  // 3. Financial Metrics
+  const economics = await EconomicsService.getTenantROI(tenantId ?? "");
   const dealsStats = await scopedDb.deal.aggregate({
     _sum: { value: true },
   });
-
-  const avgScore = Math.round(stats._avg.potentialScore || 0);
-  const totalLeads = stats._count._all;
   const pipelineValue = Number(dealsStats._sum.value || 0);
 
-  const sourceStats = [
-    { sourceType: "SCRAPER", _count: await scopedDb.lead.count({ where: { sourceType: "SCRAPER" } }) },
-    { sourceType: "MANUAL", _count: await scopedDb.lead.count({ where: { sourceType: "MANUAL" } }) },
-  ];
-
-  // 5. Unit Economics
-  const economics = await EconomicsService.getTenantROI(tenantId ?? "");
+  // 4. Serialize for Client Component
+  const serializedLeads = leadsRaw.map(l => ({
+    ...l,
+    createdAt: l.createdAt.toISOString(),
+    intelligence: l.intelligence ? {
+      ...l.intelligence,
+      analyzedAt: l.intelligence.analyzedAt.toISOString(),
+      updatedAt: l.intelligence.updatedAt.toISOString(),
+    } : null,
+  }));
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-10">
-      {/* HEADER VISIÓN COMERCIAL */}
-      <div className="flex items-end justify-between">
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <span className="bg-primary/10 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full border border-primary/20">
-              LEADS ENGINE V2.0
-            </span>
-            <span className="bg-slate-100 text-slate-500 text-[10px] font-bold px-2 py-0.5 rounded-full border border-slate-200">
-              NORMALIZACIÓN ACTIVA
-            </span>
-          </div>
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight">
-            Revenue Dashboard
-          </h1>
-          <p className="text-slate-500 mt-1 max-w-lg">
-            Gestión inteligente de leads. Scoring predictivo y normalización de
-            adquisición multicanal.
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <Link
-            href={`/${locale}/admin/dashboard/scraper`}
-            className="bg-orange-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-orange-600 transition-all shadow-lg shadow-orange-200 flex items-center gap-2"
-          >
-            <MapIcon size={16} />
-            Scraper Maps
-          </Link>
-          <Link
-            href={`/${locale}/admin/dashboard/ingest`}
-            className="bg-[#0a0a0b] text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-slate-800 transition-all shadow-lg shadow-black/10 flex items-center gap-2"
-          >
-            <Plus size={16} />
-            Nuevo Lead Manual
-          </Link>
-        </div>
+    <div className="min-h-screen bg-[#f8fafc]">
+      <div className="max-w-[1600px] mx-auto px-8 py-10 space-y-10">
 
-      </div>
-
-      {/* MÉTRICAS REVENUE OS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <MetricCard
-          title="Pipeline Value"
-          value={`$${pipelineValue.toLocaleString()}`}
-          trend={12.5}
-          icon={DollarSign}
-        />
-        <MetricCard
-          title="Leads Capturados"
-          value={totalLeads.toLocaleString()}
-          trend={4.2}
-          icon={Users}
-        />
-        <MetricCard
-          title="Lead Quality Avg"
-          value={`${avgScore}%`}
-          trend={2.1}
-          icon={Target}
-        />
-        <MetricCard
-          title="Scraper Coverage"
-          value={
-            sourceStats.find((s: any) => s.sourceType === "SCRAPER")?._count || 0
-          }
-          icon={Database}
-        />
-        <MetricCard
-          title="Efficiency Score"
-          value={`${economics.efficiencyScore.toFixed(1)}x`}
-          trend={economics.roi > 0 ? 15 : -5}
-          icon={Zap}
-        />
-        <MetricCard
-          title="OpEx (IA + Scraper)"
-          value={`$${economics.totalOpEx.toFixed(2)}`}
-          icon={Clock}
-        />
-        <MetricCard
-          title="Net Profit"
-          value={`$${economics.netProfit.toFixed(2)}`}
-          trend={economics.netProfit > 0 ? 8 : 0}
-          icon={TrendingUp}
-        />
-      </div>
-
-      {/* FILTROS POR ORIGEN */}
-      <div className="flex items-center gap-4 bg-white p-4 rounded-3xl border border-slate-200 shadow-sm">
-        <span className="text-xs font-bold text-slate-400 uppercase tracking-widest px-2">
-          Filtrar Origen:
-        </span>
-        <Link
-          href={`/${locale}/admin/dashboard`}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${!source ? "bg-slate-900 text-white shadow-md" : "text-slate-500 hover:bg-slate-50"}`}
-        >
-          Todos
-        </Link>
-        <Link
-          href={`/${locale}/admin/dashboard?source=scraper`}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${source === "scraper" ? "bg-purple-600 text-white shadow-md shadow-purple-200" : "text-slate-500 hover:bg-slate-50"}`}
-        >
-          Scraper
-        </Link>
-        <Link
-          href={`/${locale}/admin/dashboard?source=manual`}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${source === "manual" ? "bg-amber-600 text-white shadow-md shadow-amber-200" : "text-slate-500 hover:bg-slate-50"}`}
-        >
-          Manual
-        </Link>
-      </div>
-
-      {/* TABLA DE LEADS HUB */}
-      <div className="space-y-4 pt-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            Leads Hub
-            <span className="bg-slate-100 text-slate-500 text-[10px] px-2 py-0.5 rounded-full font-black border border-slate-200">
-              Pág {currentPage} / {Math.ceil(totalLeads / pageSize)} (
-              {totalLeads} total)
-            </span>
-          </h2>
-        </div>
-
-        <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden border-t-4 border-t-slate-900">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50/50 border-b border-slate-200">
-                <tr>
-                  <th className="px-6 py-4 font-bold text-slate-500 uppercase tracking-wider text-[10px]">
-                    Origen
-                  </th>
-                  <th className="px-6 py-4 font-bold text-slate-500 uppercase tracking-wider text-[10px]">
-                    Business Type
-                  </th>
-                  <th className="px-6 py-4 font-bold text-slate-500 uppercase tracking-wider text-[10px]">
-                    Prospecto / Empresa
-                  </th>
-                  <th className="px-6 py-4 font-bold text-slate-500 uppercase tracking-wider text-[10px]">
-                    Contacto
-                  </th>
-                  <th className="px-6 py-4 font-bold text-slate-500 uppercase tracking-wider text-[10px]">
-                    Digital Score
-                  </th>
-                  <th className="px-6 py-4 font-bold text-slate-500 uppercase tracking-wider text-[10px]">
-                    Estado
-                  </th>
-                  <th className="px-6 py-4 font-bold text-slate-500 uppercase tracking-wider text-[10px] text-right">
-                    Gestión
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {leads.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={7}
-                      className="px-6 py-20 text-center text-slate-400"
-                    >
-                      <div className="flex flex-col items-center gap-2">
-                        <Users size={40} className="text-slate-200" />
-                        <span className="font-medium">
-                          No hay leads todavía en este tenant.
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  leads.map((lead: any) => (
-                    <tr
-                      key={lead.id}
-                      className="hover:bg-slate-50/50 transition-colors group"
-                    >
-                      <td className="px-6 py-5 whitespace-nowrap">
-                        <SourceBadge type={lead.sourceType} />
-                      </td>
-                      <td className="px-6 py-5 whitespace-nowrap">
-                        <BusinessBadge type={lead.businessType} />
-                      </td>
-                      <td className="px-6 py-5">
-                        <div className="flex flex-col">
-                          <span className="font-bold text-slate-900">
-                            {lead.companyName || lead.name}
-                          </span>
-                          <span className="text-[10px] text-slate-400 font-medium">
-                            {lead.address || "No address provided"}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-5">
-                        <div className="flex items-center gap-2 mb-1">
-                          {lead.email && (
-                            <span
-                              title={lead.email}
-                              className="size-2 rounded-full bg-blue-400"
-                            />
-                          )}
-                          {lead.phone && (
-                            <span
-                              title={lead.phone}
-                              className="size-2 rounded-full bg-emerald-400"
-                            />
-                          )}
-                          {lead.website && (
-                            <Globe size={12} className="text-slate-400" />
-                          )}
-                          {lead.instagram && (
-                            <Instagram size={12} className="text-slate-400" />
-                          )}
-                          {lead.facebook && (
-                            <Facebook size={12} className="text-slate-400" />
-                          )}
-                          {lead.linkedin && (
-                            <Linkedin size={12} className="text-slate-400" />
-                          )}
-                          {lead.tiktok && (
-                            <div className="text-slate-400">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
-                              </svg>
-                            </div>
-                          )}
-                        </div>
-                        <span className="text-[10px] text-slate-500 transition-all group-hover:text-slate-900">
-                          {lead.email ||
-                            lead.phone ||
-                            lead.instagram ||
-                            "No contacts"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-5">
-                        <ScoreIndicator score={lead.potentialScore} />
-                      </td>
-                      <td className="px-6 py-5">
-                        <StatusBadge status={lead.status} />
-                      </td>
-                      <td className="px-6 py-5 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <LeadContactButton lead={lead} />
-                          <LeadStatusControl
-                            leadId={lead.id}
-                            initialStatus={lead.status}
-                            locale={locale}
-                            canEdit={canEditLeadStatus}
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+        {/* TOP HEADER */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <div className="px-2 py-0.5 bg-blue-600 text-white text-[10px] font-black rounded uppercase tracking-tighter shadow-lg shadow-blue-500/20">
+                Proprietary Data
+              </div>
+              <div className="px-2 py-0.5 bg-slate-200 text-slate-600 text-[10px] font-black rounded uppercase tracking-tighter">
+                V2.5 Engine
+              </div>
+            </div>
+            <h1 className="text-4xl font-black text-slate-900 tracking-tight">
+              Terminal Comercial <span className="text-blue-600">Hub</span>
+            </h1>
+            <p className="text-slate-500 font-medium max-w-xl">
+              Consolidación de inteligencia comercial, pipeline de ventas y KPIs operativos en tiempo real.
+            </p>
           </div>
 
-          <div className="bg-slate-50/50 border-t border-slate-200 px-6 py-4 flex items-center justify-between">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-              Páginas de Resultados ({totalLeads} total)
-            </span>
-            <div className="flex gap-2">
-              {currentPage > 1 && (
-                <Link
-                  href={`/${locale}/admin/dashboard?page=${currentPage - 1}${source ? `&source=${source}` : ""}`}
-                  className="p-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
-                >
-                  <ChevronLeft size={16} />
-                </Link>
-              )}
-              {currentPage < Math.ceil(totalLeads / pageSize) && (
-                <Link
-                  href={`/${locale}/admin/dashboard?page=${currentPage + 1}${source ? `&source=${source}` : ""}`}
-                  className="p-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
-                >
-                  <ChevronRight size={16} />
-                </Link>
-              )}
+          <div className="flex items-center gap-3">
+            <Link
+              href={`/${locale}/admin/dashboard?source=scraper`}
+              className={`px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${source === "scraper" ? "bg-slate-900 border-slate-900 text-white shadow-xl" : "bg-white border-slate-200 text-slate-500 hover:border-slate-300"}`}
+            >
+              Filtro: Scraper
+            </Link>
+            <Link
+              href={`/${locale}/admin/dashboard?source=manual`}
+              className={`px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${source === "manual" ? "bg-slate-900 border-slate-900 text-white shadow-xl" : "bg-white border-slate-200 text-slate-500 hover:border-slate-300"}`}
+            >
+              Filtro: Manual
+            </Link>
+            <div className="w-px h-8 bg-slate-200 mx-2" />
+            <Link
+              href={`/${locale}/admin/dashboard/scraper`}
+              className="bg-blue-600 text-white px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 flex items-center gap-2 group"
+            >
+              <MapIcon size={14} className="group-hover:rotate-12 transition-transform" />
+              Lanzar Discovery
+            </Link>
+          </div>
+        </div>
+
+        {/* METRICS GRID */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+          <MetricCard
+            title="Pipeline Value"
+            value={`$${pipelineValue.toLocaleString()}`}
+            trend={12.5}
+            icon={DollarSign}
+            color="blue"
+            description="Valor total de deals abiertos"
+          />
+          <MetricCard
+            title="Intelligence Coverage"
+            value={`${totalLeads}`}
+            trend={4.2}
+            icon={Users}
+            color="indigo"
+            description={`${scraperLeads} vía Discovery AI`}
+          />
+          <MetricCard
+            title="Lead Quality Avg"
+            value={`${avgQuality}/100`}
+            trend={2.1}
+            icon={Target}
+            color="amber"
+            description="Score promedio de oportunidad"
+          />
+          <MetricCard
+            title="Efficiency Score"
+            value={`${economics.efficiencyScore.toFixed(1)}x`}
+            trend={economics.efficiencyScore > 1 ? 5 : -2}
+            icon={Zap}
+            color="emerald"
+            description="Revenue / Costo Operacional"
+          />
+          <MetricCard
+            title="Net Profit (Unit)"
+            value={`$${economics.netProfit.toFixed(2)}`}
+            icon={TrendingUp}
+            color="slate"
+            description={`OpEx Total: $${economics.totalOpEx.toFixed(2)}`}
+          />
+        </div>
+
+        {/* MAIN DATA SECTION */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <h2 className="text-xl font-bold text-slate-900">Base Maestra de Inteligencia</h2>
+              <div className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 rounded-full text-[10px] font-bold text-slate-500 shadow-sm">
+                <Database size={10} />
+                {totalLeads} Entidades
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 text-[11px] font-bold text-slate-400">
+                <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                Live Sync
+              </div>
             </div>
           </div>
+
+          <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-200/40 overflow-hidden">
+            <LeadsDataTable leads={serializedLeads as any} />
+          </div>
         </div>
+
       </div>
     </div>
   );
