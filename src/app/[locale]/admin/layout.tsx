@@ -40,240 +40,129 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex overflow-hidden">
-      {/* Sidebar Revenue OS - Sistema Operativo de Ingresos */}
-      <aside className="w-72 bg-[#050506] text-white hidden md:flex flex-col border-r border-white/5 relative z-50">
+    <div className="min-h-screen bg-[#f7f7f7] flex overflow-hidden" style={{ fontFamily: "'DM Sans', 'Nunito', sans-serif" }}>
+      {/* Sidebar — Revenue OS Design System */}
+      <aside className="w-[220px] text-white hidden md:flex flex-col relative z-50 shrink-0"
+        style={{
+          background: "linear-gradient(180deg, #2c3e55 0%, #34495e 60%, #2c3e55 100%)",
+          boxShadow: "2px 0 20px rgba(0,0,0,0.12)",
+          borderRight: "1px solid rgba(255,255,255,0.06)",
+        }}>
+
         {/* Brand Header */}
-        <div className="h-24 flex items-center px-8">
+        <div style={{ padding: "22px 20px 16px" }}>
           <div className="flex items-center gap-3">
-            <div className="size-10 bg-white rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(255,255,255,0.15)] ring-1 ring-white/20">
-              <Zap size={22} className="text-black fill-black" />
+            <div style={{
+              width: 36, height: 36, borderRadius: 10,
+              background: "#4a7fa5",
+              boxShadow: "0 4px 12px rgba(59,130,246,0.40)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <Zap size={18} className="text-white fill-white" />
             </div>
             <div className="flex flex-col">
-              <span className="font-black text-xl tracking-tight bg-gradient-to-br from-white to-slate-500 bg-clip-text text-transparent">
+              <span style={{ fontSize: 13, fontWeight: 800, color: "#ffffff", lineHeight: 1.2 }}>
                 Revenue OS
               </span>
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none">
+              <span style={{ fontSize: 10, fontWeight: 500, color: "#c8daea", letterSpacing: "0.1em", textTransform: "uppercase" }}>
                 Agencia Leads
               </span>
             </div>
           </div>
         </div>
 
-        {/* Navigation - 8 Business Units */}
-        <div className="flex-1 overflow-y-auto px-3 space-y-2 py-4 custom-scrollbar">
+        {/* Navigation */}
+        <div className="flex-1 overflow-y-auto admin-scroll" style={{ padding: "12px 10px", display: "flex", flexDirection: "column", gap: 2 }}>
           {/* 1. EXECUTIVE */}
           <SidebarCategory label="Executive" iconName="PieChart">
-            <SidebarNavItem
-              href="#"
-              iconName="Zap"
-              label="Vista Global"
-              isLocked
-            />
-            <SidebarNavItem
-              href={`/${locale}/admin/revenue`}
-              iconName="DollarSign"
-              label="Revenue (MRR/ARR)"
-            />
-            <SidebarNavItem
-              href="#"
-              iconName="TrendingUp"
-              label="Forecast"
-              isLocked
-            />
+            <SidebarNavItem href="#" iconName="Zap" label="Vista Global" isLocked />
+            <SidebarNavItem href={`/${locale}/admin/revenue`} iconName="DollarSign" label="Revenue (MRR/ARR)" />
+            <SidebarNavItem href="#" iconName="TrendingUp" label="Forecast" isLocked />
           </SidebarCategory>
 
           {/* 2. COMERCIAL */}
-          <SidebarCategory
-            label="Comercial"
-            iconName="Briefcase"
-            defaultOpen={true}
-          >
-            <SidebarNavItem
-              href={`/${locale}/admin/dashboard`}
-              iconName="Users"
-              label="Leads Hub"
-            />
-            <SidebarNavItem
-              href={`/${locale}/admin/leads`}
-              iconName="Database"
-              label="Base de Leads"
-            />
-            <SidebarNavItem
-              href={`/${locale}/admin/deals`}
-              iconName="Layers"
-              label="Pipeline Kanban"
-            />
-            <SidebarNavItem
-              href="#"
-              iconName="Target"
-              label="Oportunidades"
-              isLocked
-            />
+          <SidebarCategory label="Comercial" iconName="Briefcase" defaultOpen={true}>
+            <SidebarNavItem href={`/${locale}/admin/dashboard`} iconName="Users" label="Leads Hub" />
+            <SidebarNavItem href={`/${locale}/admin/leads`} iconName="Database" label="Base de Leads" />
+            <SidebarNavItem href={`/${locale}/admin/deals`} iconName="Layers" label="Pipeline Kanban" />
+            <SidebarNavItem href="#" iconName="Target" label="Oportunidades" isLocked />
           </SidebarCategory>
 
           {/* 3. CLIENTES */}
           <SidebarCategory label="Clientes" iconName="Handshake">
-            <SidebarNavItem
-              href="#"
-              iconName="Users"
-              label="Cartera Activa"
-              isLocked
-            />
-            <SidebarNavItem
-              href="#"
-              iconName="Activity"
-              label="Health Score"
-              isLocked
-            />
-            <SidebarNavItem
-              href="#"
-              iconName="FileCheck"
-              label="Renovaciones"
-              isLocked
-            />
+            <SidebarNavItem href="#" iconName="Users" label="Cartera Activa" isLocked />
+            <SidebarNavItem href="#" iconName="Activity" label="Health Score" isLocked />
+            <SidebarNavItem href="#" iconName="FileCheck" label="Renovaciones" isLocked />
           </SidebarCategory>
 
           {/* 4. MARKETING */}
           <SidebarCategory label="Marketing" iconName="Megaphone">
-            <SidebarNavItem
-              href="#"
-              iconName="Search"
-              label="Campañas Ads"
-              isLocked
-            />
-            <SidebarNavItem
-              href="#"
-              iconName="Target"
-              label="ROI por Canal"
-              isLocked
-            />
-            <SidebarNavItem
-              href="#"
-              iconName="Search"
-              label="SEO / SEM"
-              isLocked
-            />
+            <SidebarNavItem href="#" iconName="Search" label="Campañas Ads" isLocked />
+            <SidebarNavItem href="#" iconName="Target" label="ROI por Canal" isLocked />
+            <SidebarNavItem href="#" iconName="Search" label="SEO / SEM" isLocked />
           </SidebarCategory>
 
           {/* 5. OPERACIONES */}
           <SidebarCategory label="Operaciones" iconName="Cpu">
-            <SidebarNavItem
-              href={`/${locale}/admin/operations/team`}
-              iconName="Users"
-              label="Gestión de Equipo"
-            />
-            <SidebarNavItem
-              href="#"
-              iconName="CreditCard"
-              label="Facturación"
-              isLocked
-            />
-            <SidebarNavItem
-              href="#"
-              iconName="FileText"
-              label="Contratos"
-              isLocked
-            />
-            <SidebarNavItem
-              href={`/${locale}/admin/agents`}
-              iconName="Bot"
-              label="AI Factory"
-            />
-            <SidebarNavItem
-              href="#"
-              iconName="Zap"
-              label="Automatización RPA"
-              isLocked
-            />
+            <SidebarNavItem href={`/${locale}/admin/operations/team`} iconName="Users" label="Gestión de Equipo" />
+            <SidebarNavItem href="#" iconName="CreditCard" label="Facturación" isLocked />
+            <SidebarNavItem href="#" iconName="FileText" label="Contratos" isLocked />
+            <SidebarNavItem href={`/${locale}/admin/agents`} iconName="Bot" label="AI Factory" />
+            <SidebarNavItem href="#" iconName="Zap" label="Automatización RPA" isLocked />
           </SidebarCategory>
 
           {/* 6. DATA */}
           <SidebarCategory label="Data" iconName="Database">
-            <SidebarNavItem
-              href="#"
-              iconName="Zap"
-              label="ETL Status"
-              isLocked
-            />
-            <SidebarNavItem
-              href="#"
-              iconName="Activity"
-              label="Integraciones"
-              isLocked
-            />
-            <SidebarNavItem
-              href="#"
-              iconName="History"
-              label="Logs de Data"
-              isLocked
-            />
+            <SidebarNavItem href="#" iconName="Zap" label="ETL Status" isLocked />
+            <SidebarNavItem href="#" iconName="Activity" label="Integraciones" isLocked />
+            <SidebarNavItem href="#" iconName="History" label="Logs de Data" isLocked />
           </SidebarCategory>
 
           {/* 7. SEGURIDAD */}
           <SidebarCategory label="Seguridad" iconName="ShieldCheck">
-            <SidebarNavItem
-              href={`/${locale}/admin/security/iam`}
-              iconName="Key"
-              label="Centros IAM"
-            />
-            <SidebarNavItem
-              href="#"
-              iconName="ShieldCheck"
-              label="Roles (RBAC)"
-              isLocked
-            />
-            <SidebarNavItem
-              href="#"
-              iconName="History"
-              label="Auditoría"
-              isLocked
-            />
+            <SidebarNavItem href={`/${locale}/admin/security/iam`} iconName="Key" label="Centros IAM" />
+            <SidebarNavItem href="#" iconName="ShieldCheck" label="Roles (RBAC)" isLocked />
+            <SidebarNavItem href="#" iconName="History" label="Auditoría" isLocked />
           </SidebarCategory>
 
           {/* 8. SETTINGS */}
           <SidebarCategory label="Settings" iconName="Settings">
-            <SidebarNavItem
-              href="#"
-              iconName="Settings"
-              label="General"
-              isLocked
-            />
-            <SidebarNavItem
-              href="#"
-              iconName="CreditCard"
-              label="Suscripción Pro"
-              isLocked
-            />
+            <SidebarNavItem href="#" iconName="Settings" label="General" isLocked />
+            <SidebarNavItem href="#" iconName="CreditCard" label="Suscripción Pro" isLocked />
           </SidebarCategory>
         </div>
 
         {/* Footer User Profile */}
-        <div className="p-5 bg-white/[0.03] border-t border-white/5 space-y-4">
-          <div className="flex items-center gap-3 px-3 py-2.5 bg-white/5 rounded-2xl border border-white/5 shadow-inner backdrop-blur-md">
-            <div className="size-10 rounded-xl bg-slate-800 flex items-center justify-center text-xs font-bold ring-1 ring-white/10 shadow-inner group-hover:scale-105 transition-transform">
-              <UserIcon size={18} className="text-slate-300" />
+        <div style={{ padding: "16px 12px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          <div style={{
+            display: "flex", alignItems: "center", gap: 10,
+            padding: "10px 12px",
+            background: "rgba(255,255,255,0.05)",
+            borderRadius: 10,
+            border: "1px solid rgba(255,255,255,0.06)",
+          }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: 8,
+              background: "rgba(74,127,165,0.25)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <User size={15} className="text-slate-300" />
             </div>
             <div className="flex flex-col min-w-0">
-              <span className="text-sm font-bold truncate text-slate-100 italic">
-                Core Admin
-              </span>
-              <span className="text-[9px] text-emerald-500 uppercase tracking-[2px] font-black flex items-center gap-1.5">
-                <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_5px_rgba(16,185,129,0.5)]"></span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#ffffff", lineHeight: 1.3 }}>Core Admin</span>
+              <span style={{ fontSize: 9, fontWeight: 600, color: "#2ecc8f", textTransform: "uppercase", letterSpacing: "0.12em" }}>
                 {membership.role}
               </span>
             </div>
           </div>
-          <div className="px-1">
+          <div className="mt-2 px-1">
             <LogoutButton locale={locale} />
           </div>
         </div>
       </aside>
 
-      {/* Main OS Canvas */}
-      <main className="flex-1 overflow-auto bg-[#fafafa] relative scroll-smooth">
-        {/* Subtle Background Decoration */}
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-slate-200/20 blur-[120px] rounded-full -mr-64 -mt-64 pointer-events-none opacity-50 z-0"></div>
+      {/* Main content */}
+      <main className="flex-1 overflow-auto relative admin-scroll" style={{ background: "#f7f7f7" }}>
         <div className="relative z-10">{children}</div>
       </main>
     </div>

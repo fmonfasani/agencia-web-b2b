@@ -1,8 +1,44 @@
+/* ─── DM Sans (Revenue OS Design System) ─── */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&display=swap');
+
 @import "tailwindcss";
 
 @theme {
-  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'DM Sans', 'Nunito', ui-sans-serif, system-ui, sans-serif;
 
+  /* === REVENUE OS DESIGN TOKENS === */
+
+  /* App backgrounds */
+  --color-bg-app: #f7f7f7;
+  --color-bg-card: #ffffff;
+  --color-bg-row-alt: #fafafa;
+  --color-bg-row-hover: #edf2f7;
+  --color-bg-table-head: #efefef;
+  --color-bg-input: #fafafa;
+
+  /* Accent family (blue-slate) */
+  --color-accent-1: #4a7fa5;
+  --color-accent-2: #5a8fb5;
+  --color-accent-3: #3d6e8a;
+  --color-accent-dark: #2c5f7a;
+
+  /* Sidebar */
+  --color-sidebar-top: #2c3e55;
+  --color-sidebar-mid: #34495e;
+
+  /* Text hierarchy */
+  --color-text-primary: #1a2623;
+  --color-text-secondary: #374151;
+  --color-text-muted: #6b7280;
+  --color-text-faint: #9ca3af;
+  --color-text-link: #4a7fa5;
+  --color-text-empty: #d1d5db;
+
+  /* Borders */
+  --color-border-light: #f0f2f1;
+  --color-border-input: #e5e7eb;
+
+  /* Legacy — public site colors */
   --color-primary: #135bec;
   --color-primary-dark: #0e45b5;
   --color-background-light: #ffffff;
@@ -10,19 +46,26 @@
   --color-surface: #f9fafb;
   --color-surface-hover: #f3f4f6;
   --color-text-main: #0f172a;
-  --color-text-secondary: #475569;
   --color-border-subtle: #f1f5f9;
 
+  /* Radii */
+  --radius-card: 14px;
+  --radius-table: 16px;
+  --radius-input: 9px;
+  --radius-btn: 10px;
+  --radius-badge: 99px;
   --radius-lg: 0.5rem;
   --radius-xl: 0.75rem;
   --radius-2xl: 1rem;
   --radius-3xl: 1.5rem;
 
-  --shadow-premium:
-    0 10px 30px -10px rgba(0, 0, 0, 0.04), 0 4px 10px -5px rgba(0, 0, 0, 0.02);
-  --shadow-premium-hover:
-    0 20px 40px -15px rgba(19, 91, 236, 0.08),
-    0 10px 20px -10px rgba(0, 0, 0, 0.04);
+  /* Shadows */
+  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.06);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.10);
+  --shadow-table: 0 2px 16px rgba(0, 0, 0, 0.06);
+  --shadow-btn: 0 4px 14px rgba(52, 96, 126, 0.30);
+  --shadow-premium: 0 10px 30px -10px rgba(0, 0, 0, 0.04), 0 4px 10px -5px rgba(0, 0, 0, 0.02);
+  --shadow-premium-hover: 0 20px 40px -15px rgba(19, 91, 236, 0.08), 0 10px 20px -10px rgba(0, 0, 0, 0.04);
 }
 
 :root {
@@ -32,40 +75,94 @@
 
 @layer base {
   body {
-    @apply bg-white text-text-main selection:bg-primary/10 selection:text-primary;
+    @apply bg-white text-text-main;
+    font-family: 'DM Sans', 'Nunito', ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    selection-background-color: rgba(74, 127, 165, 0.15);
+    selection-color: #2c5f7a;
   }
 
   *:focus-visible {
-    @apply outline-none ring-2 ring-primary ring-offset-2;
+    outline: none;
+    box-shadow: 0 0 0 2px #4a7fa5, 0 0 0 4px rgba(74, 127, 165, 0.15);
   }
 }
 
 @layer utilities {
+
+  /* Revenue OS admin body */
+  .admin-bg {
+    background-color: #f7f7f7;
+  }
+
+  /* Scrollbar custom */
+  .custom-scrollbar::-webkit-scrollbar,
+  .admin-scroll::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track,
+  .admin-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb,
+  .admin-scroll::-webkit-scrollbar-thumb {
+    background: #8aaac8;
+    border-radius: 99px;
+  }
+
+  /* Sidebar gradient */
+  .sidebar-gradient {
+    background: linear-gradient(180deg, #2c3e55 0%, #34495e 60%, #2c3e55 100%);
+  }
+
+  /* KPI card accent borders */
+  .kpi-blue {
+    border-left: 4px solid #4a7fa5;
+  }
+
+  .kpi-teal {
+    border-left: 4px solid #2ecc8f;
+  }
+
+  .kpi-amber {
+    border-left: 4px solid #f59e0b;
+  }
+
+  .kpi-slate {
+    border-left: 4px solid #6b7280;
+  }
+
+  /* Score bar colors */
+  .score-green {
+    background-color: #2ecc8f;
+  }
+
+  .score-blue {
+    background-color: #3b82f6;
+  }
+
+  .score-amber {
+    background-color: #f59e0b;
+  }
+
+  /* Public site utilities */
   .technical-grid {
-    background-image: radial-gradient(
-      circle at 1px 1px,
-      #e2e8f0 1px,
-      transparent 0
-    );
+    background-image: radial-gradient(circle at 1px 1px, #e2e8f0 1px, transparent 0);
     background-size: 24px 24px;
   }
 
   .glow-mesh {
     background:
-      radial-gradient(
-        circle at 50% -20%,
-        rgba(19, 91, 236, 0.05) 0%,
-        transparent 70%
-      ),
-      radial-gradient(
-        circle at 0% 100%,
-        rgba(19, 91, 236, 0.03) 0%,
-        transparent 50%
-      );
+      radial-gradient(circle at 50% -20%, rgba(19, 91, 236, 0.05) 0%, transparent 70%),
+      radial-gradient(circle at 0% 100%, rgba(19, 91, 236, 0.03) 0%, transparent 50%);
   }
 
   .glass-card {
-    @apply bg-white/70 backdrop-blur-sm border border-white/10 shadow-premium;
+    @apply bg-white/70 backdrop-blur-sm border border-white/10;
+    box-shadow: var(--shadow-premium);
   }
 
   .text-balance {
@@ -84,4 +181,19 @@
 html {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Global scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #8aaac8;
+  border-radius: 99px;
 }
