@@ -221,7 +221,7 @@ export default async function CommercialHubPage({
           </div>
 
           <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-200/40 overflow-hidden">
-            <LeadsDataTable leads={serializedLeads as any} />
+            <LeadsDataTable leads={serializedLeads} />
           </div>
         </div>
 

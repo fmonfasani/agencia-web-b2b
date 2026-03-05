@@ -32,30 +32,35 @@ interface Lead {
     whatsapp?: string | null;
     linkedin?: string | null;
     tiktok?: string | null;
+    email?: string | null;
     status: string;
     potentialScore: number;
     sourceType: string;
     createdAt: string;
     rawMetadata?: any;
     intelligence?: {
+        id?: string;
+        updatedAt?: string | Date;
+        leadId?: string;
+        analyzedAt?: string | Date;
         tier: string;
         opportunityScore: number;
         demandScore: number;
         digitalGapScore: number;
         outreachScore: number;
-        websiteLoads?: boolean;
-        hasSSL?: boolean;
-        hasContactForm?: boolean;
-        hasBookingSystem?: boolean;
-        hasChatbot?: boolean;
-        hasWhatsappLink?: boolean;
-        responseTimeMs?: number;
+        websiteLoads?: boolean | null;
+        hasSSL?: boolean | null;
+        hasContactForm?: boolean | null;
+        hasBookingSystem?: boolean | null;
+        hasChatbot?: boolean | null;
+        hasWhatsappLink?: boolean | null;
+        responseTimeMs?: number | null;
         detectedProblems: any;
-        topProblem?: string;
-        bestChannel?: string;
-        whatsappMsg?: string;
-        emailSubject?: string;
-        emailBody?: string;
+        topProblem?: string | null;
+        bestChannel?: string | null;
+        whatsappMsg?: string | null;
+        emailSubject?: string | null;
+        emailBody?: string | null;
     } | null;
 }
 
