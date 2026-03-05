@@ -292,6 +292,9 @@ model Lead {
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
 
+  // Lead Intelligence (1:1)
+  intelligence     LeadIntelligence?
+
   @@index([tenantId])
   @@index([tenantId, sourceType, status])
   @@index([potentialScore])
@@ -572,4 +575,51 @@ model BusinessEvent {
   @@index([tenantId])
   @@index([type])
   @@index([createdAt])
+}
+
+// Lead Intelligence Engine — análisis digital + scoring + outreach AI
+model LeadIntelligence {
+  id                  String   @id @default(cuid())
+  leadId              String   @unique
+
+  // Tier classification
+  tier                String   @default("COLD") // HOT | WARM | COOL | COLD
+  opportunityScore    Int      @default(0)       // 0-100 final
+  demandScore         Int      @default(0)       // rating + reviews
+  digitalGapScore     Int      @default(0)       // brecha digital
+  outreachScore       Int      @default(0)       // canales disponibles
+
+  // Website analysis (sin Playwright — HTTP checks)
+  websiteLoads        Boolean?
+  hasSSL              Boolean?
+  hasContactForm      Boolean?
+  hasBookingSystem    Boolean?
+  hasChatbot          Boolean?
+  hasWhatsappLink     Boolean?
+  responseTimeMs      Int?     // latencia en ms
+
+  // Detected problems (array de objetos {key, problem, service, urgency})
+  detectedProblems    Json     @default("[]")
+  topProblem          String?  // problema más urgente
+  revenueEstimate     Int?     // USD/mes estimado de oportunidad
+
+  // Channel intelligence
+  bestChannel         String?  // whatsapp | email | instagram | linkedin
+  channelScores       Json     @default("{}")
+
+  // AI outreach messages
+  whatsappMsg         String?  @db.Text
+  emailSubject        String?
+  emailBody           String?  @db.Text
+
+  // Meta
+  modelVersion        String   @default("1.0")
+  analyzedAt          DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  lead                Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([tier])
+  @@index([opportunityScore])
+  @@index([analyzedAt])
 }

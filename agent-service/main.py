@@ -5,7 +5,7 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from core.config import settings
 from core.rate_limit import limiter
-from routers import chat, agents, keys, scraper
+from routers import chat, agents, keys, scraper, intelligence
 
 app = FastAPI(title="Agent Service", version="1.0.0")
 app.state.limiter = limiter
@@ -19,6 +19,7 @@ app.include_router(chat.router)
 app.include_router(agents.router)
 app.include_router(keys.router)
 app.include_router(scraper.router)
+app.include_router(intelligence.router)
 app.mount("/widget", StaticFiles(directory="widget"), name="widget")
 
 
