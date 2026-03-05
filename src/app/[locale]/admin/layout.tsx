@@ -146,7 +146,7 @@ export default async function AdminLayout({
               background: "rgba(74,127,165,0.25)",
               display: "flex", alignItems: "center", justifyContent: "center",
             }}>
-              <User size={15} className="text-slate-300" />
+              <UserIcon size={15} className="text-slate-300" />
             </div>
             <div className="flex flex-col min-w-0">
               <span style={{ fontSize: 12, fontWeight: 700, color: "#ffffff", lineHeight: 1.3 }}>Core Admin</span>
