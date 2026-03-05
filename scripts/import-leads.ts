@@ -13,18 +13,39 @@ import * as path from "path";
 const prisma = new PrismaClient();
 const TENANT_ID = process.env.DEFAULT_TENANT_ID || "cmmb7uaqe0002js04qbetwu40";
 
-const DATASET_IDS = [
-    "NXaFNr1yIjpY23GEU", "YYjDOF8BeJhVK01zt", "FMAU12clEpT9mCbr4",
-    "KgJcFv2RG9Ahn0Xtd", "Ta7upjl9NTY13s604", "ihIUL1oQVdfwJgZn8", "TdGhXw2e7Zj3egYZZ",
-];
+const ACTOR_ID = "nwua9Gu5YrADL7ZDj"; // compass~crawler-google-places
 
-async function fetchFromApify(datasetId: string): Promise<any[]> {
+async function fetchAllFromApify(): Promise<any[]> {
     const token = process.env.APIFY_API_TOKEN;
     if (!token) return [];
-    const res = await fetch(`https://api.apify.com/v2/datasets/${datasetId}/items?token=${token}&format=json&limit=1000`);
-    if (!res.ok) { console.warn(`  ⚠️  Dataset ${datasetId}: ${res.status}`); return []; }
-    return res.json();
+
+    console.log("🔍 Obteniendo runs del actor desde Apify...");
+    const runsRes = await fetch(`https://api.apify.com/v2/acts/${ACTOR_ID}/runs?token=${token}&limit=200&status=SUCCEEDED`);
+    if (!runsRes.ok) { console.warn(`⚠️  Runs API: ${runsRes.status}`); return []; }
+    const runsData = await runsRes.json();
+    const runs = runsData.data?.items || [];
+    console.log(`   ${runs.length} runs exitosos\n`);
+
+    const allPlaces: any[] = [];
+    const seen = new Set<string>();
+
+    for (const run of runs) {
+        const datasetId = run.defaultDatasetId;
+        if (!datasetId) continue;
+        process.stdout.write(`📥 Dataset ${datasetId.slice(0, 8)}... `);
+        const res = await fetch(`https://api.apify.com/v2/datasets/${datasetId}/items?token=${token}&format=json&limit=1000`);
+        if (!res.ok) { console.log(`⚠️ ${res.status}`); continue; }
+        const items: any[] = await res.json();
+        let added = 0;
+        for (const item of items) {
+            const key = item.placeId || item.title || item.name;
+            if (key && !seen.has(key)) { seen.add(key); allPlaces.push(item); added++; }
+        }
+        console.log(`${items.length} items, ${added} nuevos`);
+    }
+    return allPlaces;
 }
+
 
 function readJsonFile(filePath: string): any[] {
     const content = fs.readFileSync(filePath, "utf-8");
@@ -116,13 +137,11 @@ async function main() {
             console.error("❌ Uso:\n  Archivos locales: npx tsx scripts/import-leads.ts 'scraping download'\n  Desde Apify:      APIFY_API_TOKEN=xxx npx tsx scripts/import-leads.ts");
             process.exit(1);
         }
-        for (const dsId of DATASET_IDS) {
-            console.log(`\n📥 Dataset ${dsId}...`);
-            const places = await fetchFromApify(dsId);
-            console.log(`   ${places.length} lugares`);
-            const { inserted, skipped, errors } = await importPlaces(places, dsId);
-            totalInserted += inserted; totalSkipped += skipped; totalErrors += errors;
-        }
+        const places = await fetchAllFromApify();
+        console.log(`\n📊 Total únicos: ${places.length}`);
+        const { inserted, skipped, errors } = await importPlaces(places, "apify-api");
+        totalInserted += inserted; totalSkipped += skipped; totalErrors += errors;
+
     }
 
     console.log(`\n${"=".repeat(50)}`);
