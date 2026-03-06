@@ -1,0 +1,19 @@
+# MCP Configuration Plan
+
+The goal is to update the MCP configuration file to enable the most used servers with correct settings and paths.
+
+## Proposed Changes
+
+### Configuration
+
+#### [MODIFY] [mcp_config.json](file:///C:/Users/fmonf/.antigravity/mcp_config.json)
+
+- **postgres**: Update with the connection string found in the project's [.env](file:///c:/Users/fmonf/Desktop/Software%20Enginnering%20LAPTOP/Agencia%20B2B/agencia-web-b2b/.env) file.
+- **filesystem**: Update with the absolute path to the current project: `c:/Users/fmonf/Desktop/Software Enginnering LAPTOP/Agencia B2B/agencia-web-b2b`.
+- **StitchMCP**: Add StitchMCP configuration from the other config file seen, as it seems to be an important one.
+
+## Verification Plan
+
+### Manual Verification
+- Verify that the `mcp_config.json` file has been updated correctly.
+- Check that the paths and connection strings are correct.
