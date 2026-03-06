@@ -7,6 +7,7 @@ import { prisma, getTenantPrisma } from "@/lib/prisma";
 import { Role } from "@prisma/client";
 import { z } from "zod";
 import { ratelimit } from "@/lib/ratelimit";
+import { logBusinessMetric } from "@/lib/sre/metrics";
 
 const leadSchema = z.object({
   sourceType: z.enum(["SCRAPER", "MANUAL", "API", "ADS"]).default("MANUAL"),
@@ -124,7 +125,36 @@ export async function POST(request: NextRequest) {
     };
 
     // 3. Process & Persist
-    const lead = await ingestLead(ingestInput);
+    const start = performance.now();
+    let lead;
+    try {
+      lead = await ingestLead(ingestInput);
+      const duration = (performance.now() - start) / 1000;
+
+      // Log SLIs
+      await logBusinessMetric({
+        tenantId: activeTenantId,
+        type: "EXTRACTION_SUCCESS",
+        status: "SUCCESS",
+        metadata: { source: data.sourceType }
+      });
+
+      await logBusinessMetric({
+        tenantId: activeTenantId,
+        type: "EXTRACTION_LATENCY",
+        status: "SUCCESS",
+        value: duration,
+        metadata: { source: data.sourceType }
+      });
+    } catch (err) {
+      await logBusinessMetric({
+        tenantId: activeTenantId,
+        type: "EXTRACTION_SUCCESS",
+        status: "FAILURE",
+        metadata: { source: data.sourceType, error: String(err) }
+      });
+      throw err;
+    }
 
     return NextResponse.json({
       success: true,

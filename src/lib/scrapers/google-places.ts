@@ -1,8 +1,9 @@
 import { ingestLead, LeadIngestInput } from "../leads/ingest.service";
+import { placesRequest } from "../observability/places-client";
 
 /**
  * Service to interact with external data sources for lead generation.
- * Currently optimized for Google Places logic.
+ * Optimized for Google Places logic with FinOps transparency.
  */
 
 export interface ScrapeOptions {
@@ -10,34 +11,51 @@ export interface ScrapeOptions {
     query: string;
     location?: string;
     radius?: number;
+    limit?: number;
 }
 
 export async function triggerGooglePlacesScrape(options: ScrapeOptions) {
-    console.log(`[Scraper] Starting scrape for tenant ${options.tenantId} with query: ${options.query}`);
-
-    // En una implementación real, aquí llamaríamos a Google Places API o un servicio de scraping como Apify/Outscraper.
-    // Por ahora, simularemos la llegada de 1 lead para validar el flujo de ingesta.
-
-    const mockLead: LeadIngestInput = {
-        tenantId: options.tenantId,
-        sourceType: "SCRAPER",
-        name: "Empresa de Prueba Scraped",
-        email: "contacto@pruebascraped.com",
-        phone: "+5491100000000",
-        website: "https://pruebascraped.com",
-        category: options.query, // Usamos la query como categoría inicial
-        address: options.location || "Buenos Aires, Argentina",
-        googlePlaceId: `mock-id-${Date.now()}`,
-        rating: 4.5,
-        reviewsCount: 120,
-    };
+    console.log(`[Scraper] Starting FinOps-tracked scrape for tenant ${options.tenantId} with query: ${options.query}`);
 
     try {
-        const persistResult = await ingestLead(mockLead);
+        // 1. Search via Tracked Places Client
+        const data = await placesRequest<any>({
+            tenantId: options.tenantId,
+            endpoint: "searchText",
+            params: {
+                textQuery: options.query,
+                // Location bias or circle can be added here if needed
+            }
+        });
+
+        const places = data.places || [];
+
+        const results = [];
+
+        // 2. Ingest results
+        for (const place of places) {
+            const leadInput: LeadIngestInput = {
+                tenantId: options.tenantId,
+                sourceType: "SCRAPER",
+                name: place.displayName?.text || "Unknown",
+                address: place.formattedAddress,
+                googlePlaceId: place.id,
+                website: place.websiteUri,
+                phone: place.internationalPhoneNumber,
+                rating: place.rating,
+                reviewsCount: place.userRatingCount,
+                category: options.query,
+                rawMetadata: place,
+            };
+
+            const lead = await ingestLead(leadInput);
+            results.push(lead);
+        }
+
         return {
             success: true,
-            processed: 1,
-            sampleLeadId: persistResult.id
+            processed: results.length,
+            leads: results,
         };
     } catch (error) {
         console.error("[Scraper Error]:", error);

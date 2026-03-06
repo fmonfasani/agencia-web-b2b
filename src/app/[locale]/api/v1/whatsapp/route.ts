@@ -10,6 +10,8 @@ import { saveLead } from "@/lib/bot/lead-manager";
 import { notifyQualifiedLead } from "@/lib/bot/notification-manager";
 import { resolveTenantIdFromHeaders } from "@/lib/tenant-context";
 import { checkRateLimit, getClientIp } from "@/lib/security/rate-limit";
+import * as Sentry from "@sentry/nextjs";
+import { setSentryContext } from "@/lib/observability/sentry-utils";
 
 /**
  * GET Handler: Webhook Verification
@@ -56,6 +58,8 @@ export async function POST(req: NextRequest) {
       new Headers(req.headers),
       process.env.DEFAULT_TENANT_ID,
     );
+
+    setSentryContext(activeTenantId);
 
     const payload = JSON.parse(rawBody);
     const entry = payload.entry?.[0];
@@ -105,6 +109,7 @@ export async function POST(req: NextRequest) {
               { role: "assistant", content: aiResponse },
             ],
             from,
+            activeTenantId
           );
           if (leadData) {
             const tenantLeadData = { ...leadData, tenantId: activeTenantId };

@@ -113,7 +113,7 @@ export default async function AdminLayout({
           {/* 6. DATA */}
           <SidebarCategory label="Data" iconName="Database">
             <SidebarNavItem href="#" iconName="Zap" label="ETL Status" isLocked />
-            <SidebarNavItem href="#" iconName="Activity" label="Integraciones" isLocked />
+            <SidebarNavItem href={`/${locale}/admin/observability`} iconName="Activity" label="Observabilidad" />
             <SidebarNavItem href="#" iconName="History" label="Logs de Data" isLocked />
           </SidebarCategory>
 

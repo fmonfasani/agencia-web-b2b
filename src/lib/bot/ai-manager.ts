@@ -59,7 +59,7 @@ export async function generateAIResponse(
       { role: "user", content: userMessage },
     ];
 
-    const response = await aiEngine.generateWithFallback(messages);
+    const response = await aiEngine.generateWithFallback(messages, tenantId);
 
     return response || "Lo siento, tuve un problema procesando tu mensaje. ¿Podrías repetirlo?";
   } catch (error) {
@@ -74,6 +74,7 @@ export async function generateAIResponse(
 export async function extractLeadData(
   history: MessageContext[],
   phone: string,
+  tenantId?: string,
 ): Promise<LeadInfo | null> {
 
   try {
@@ -88,7 +89,7 @@ export async function extractLeadData(
       Responde SOLO el JSON purificado.
     `;
 
-    const response = await aiEngine.generateWithFallback([{ role: "user", content: prompt }], {
+    const response = await aiEngine.generateWithFallback([{ role: "user", content: prompt }], tenantId, {
       response_format: { type: "json_object" },
       temperature: 0,
     });

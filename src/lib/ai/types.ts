@@ -1,6 +1,6 @@
 export interface AIProvider {
     name: string;
-    generateResponse(messages: any[], options?: any): Promise<string | null>;
+    generateResponse(messages: any[], tenantId?: string, options?: any): Promise<string | null>;
     isAvailable(): boolean;
 }
 

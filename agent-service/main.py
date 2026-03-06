@@ -32,5 +32,18 @@ app.mount("/widget", StaticFiles(directory="widget"), name="widget")
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "provider": settings.llm_provider}
+    is_scheduler_running = False
+    try:
+        is_scheduler_running = scraper_scheduler.scheduler.running
+    except Exception:
+        pass
+        
+    if not is_scheduler_running:
+        return {"status": "unhealthy", "reason": "scheduler_not_running"}, 503
+        
+    return {
+        "status": "ok", 
+        "provider": settings.llm_provider,
+        "scheduler": "running"
+    }
 

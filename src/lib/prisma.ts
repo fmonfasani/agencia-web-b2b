@@ -15,10 +15,10 @@ if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
  * These models have a `tenantId` field and must be scoped.
  */
 const MULTI_TENANT_MODELS = [
-  "Agent", "Product", "Service", "Pipeline", "Deal", 
-  "Customer", "Lead", "Activity", "Task", "Project", 
-  "UserDailyMetrics", "Membership", "Invitation", 
-  "InvitationAudit", "Subscription", "BusinessEvent"
+  "Agent", "Product", "Service", "Pipeline", "Deal",
+  "Customer", "Lead", "Activity", "Task", "Project",
+  "UserDailyMetrics", "Membership", "Invitation",
+  "InvitationAudit", "Subscription", "BusinessEvent", "ApiCostEvent"
 ];
 
 /**
@@ -64,7 +64,7 @@ export function getTenantPrisma(tenantId: string) {
             // 4. Update/Delete Operations: Inject tenantId in 'where'
             if (["update", "updateMany", "delete", "deleteMany", "upsert"].includes(operation)) {
               castArgs.where = { ...castArgs.where, tenantId };
-              
+
               if (operation === "upsert") {
                 castArgs.create = { ...castArgs.create, tenantId };
                 castArgs.update = { ...castArgs.update, tenantId };

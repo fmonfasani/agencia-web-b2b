@@ -41,12 +41,12 @@ export class AIEngine {
         // TODO: Add Gradient AI once SDK/Endpoint is confirmed
     }
 
-    async generateWithFallback(messages: any[], options?: any): Promise<string> {
+    async generateWithFallback(messages: any[], tenantId?: string, options?: any): Promise<string> {
         for (const provider of this.providers) {
             if (!provider.isAvailable()) continue;
 
             console.log(`[AI Engine] Attempting with ${provider.name}...`);
-            const response = await provider.generateResponse(messages, options);
+            const response = await provider.generateResponse(messages, tenantId, options);
 
             if (response) {
                 console.log(`[AI Engine] Success with ${provider.name}.`);

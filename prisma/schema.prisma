@@ -118,6 +118,8 @@ model Tenant {
   tasks            Task[]
   projects         Project[]
   userDailyMetrics UserDailyMetrics[]
+  apiCostEvents    ApiCostEvent[]
+  businessMetrics  BusinessMetric[]
 }
 
 model PasswordResetToken {
@@ -622,4 +624,39 @@ model LeadIntelligence {
   @@index([tier])
   @@index([opportunityScore])
   @@index([analyzedAt])
+}
+
+model ApiCostEvent {
+  id             String   @id @default(cuid())
+  tenantId       String
+  api            String   // "openai" | "google_places"
+  endpoint       String
+  model          String?  // only for OpenAI
+  tokensInput    Int?
+  tokensOutput   Int?
+  responseCount  Int?
+  costUsd        Float
+  timestamp      DateTime @default(now())
+  createdAt      DateTime @default(now())
+
+  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([tenantId, api, timestamp])
+}
+
+model BusinessMetric {
+  id        String   @id @default(cuid())
+  tenantId  String
+  type      String   // "EXTRACTION_SUCCESS", "EXTRACTION_LATENCY"
+  status    String   // "SUCCESS", "FAILURE"
+  value     Float?
+  metadata  Json?
+  timestamp DateTime @default(now())
+  
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([type])
+  @@index([timestamp])
 }
