@@ -28,17 +28,17 @@ export default auth(async function middleware(request: NextRequest) {
   requestHeaders.set("x-trace-id", traceId);
 
   // 3. Inyectar contexto de Tenant
-  const session = (request as any).auth;
+  // @ts-expect-error NextAuth v5 dynamically adds auth to the request
+  const session = request.auth;
   if (session?.user?.tenantId) {
     requestHeaders.set("x-tenant-id", session.user.tenantId);
     requestHeaders.set("x-user-role", session.user.role || "");
   }
 
-  // 3. Ejecutar el middleware de idiomas con las nuevas cabeceras
-  const response = intlMiddleware(new NextRequest(request, {
-    headers: requestHeaders,
-  }));
+  // 3. Ejecutar el middleware de idiomas
+  const response = intlMiddleware(request);
 
+  // Inyectar cabeceras en la respuesta si es necesario
   if (session?.user?.tenantId) {
     response.headers.set("x-tenant-id", session.user.tenantId);
     response.headers.set("x-user-role", session.user.role || "");
@@ -48,6 +48,10 @@ export default auth(async function middleware(request: NextRequest) {
 });
 
 export const config = {
-  // Matcher simplificado y seguro
-  matcher: ["/((?!api|_next|.*\\..*).*)"],
+  // Matcher que incluye la raíz y las rutas localizadas, excluyendo estáticos y APIs
+  matcher: [
+    "/",
+    "/(es|en)/:path*",
+    "/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)",
+  ],
 };
