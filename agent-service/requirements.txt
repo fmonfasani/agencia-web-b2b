@@ -11,3 +11,9 @@ apscheduler>=3.10.1
 setuptools
 googlemaps==4.10.0
 beautifulsoup4==4.12.3
+psutil==6.1.1
+opentelemetry-api
+opentelemetry-sdk
+opentelemetry-instrumentation-fastapi
+opentelemetry-instrumentation-requests
+opentelemetry-exporter-otlp

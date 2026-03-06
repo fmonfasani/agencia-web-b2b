@@ -1,6 +1,6 @@
 import React from "react";
-import ObservabilityDashboard from "@/components/admin/ObservabilityDashboard";
+import ObservabilityCommandCenter from "@/components/admin/ObservabilityCommandCenter";
 
 export default function ObservabilityPage() {
-    return <ObservabilityDashboard />;
+    return <ObservabilityCommandCenter />;
 }

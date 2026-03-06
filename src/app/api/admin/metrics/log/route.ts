@@ -1,0 +1,40 @@
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+
+/**
+ * Internal endpoint for agent-service to report business metrics and failures.
+ * Protected by X-Internal-Secret.
+ */
+export async function POST(req: NextRequest) {
+    const internalSecret = req.headers.get("X-Internal-Secret");
+    const sharedSecret = process.env.INTERNAL_API_SECRET || "";
+
+    if (!internalSecret || internalSecret !== sharedSecret) {
+        return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
+    try {
+        const body = await req.json();
+        const { tenantId, type, status, value, metadata } = body;
+
+        if (!tenantId || !type || !status) {
+            return NextResponse.json({ error: "Campos requeridos faltantes" }, { status: 400 });
+        }
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const metric = await (prisma as any).businessMetric.create({
+            data: {
+                tenantId,
+                type,
+                status,
+                value,
+                metadata: metadata || {}
+            }
+        });
+
+        return NextResponse.json({ success: true, id: metric.id });
+    } catch (error: any) {
+        console.error("[METRIC_LOG_API_ERROR]", error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}

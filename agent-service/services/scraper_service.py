@@ -80,6 +80,30 @@ class BaseScraper:
                 logger.warning(f"Error calling ingest: {e}")
                 return False
 
+    async def _report_failure(self, tenant_id: str, error_msg: str, detail: Optional[str] = None):
+        """Reporta un fallo crítico de negocio (402, 403, etc) al dashboard."""
+        url = f"{self.nextjs_url}/api/admin/metrics/log"
+        headers = {
+            "Content-Type": "application/json",
+            "X-Internal-Secret": self.internal_api_secret or ""
+        }
+        payload = {
+            "tenantId": tenant_id,
+            "type": "EXTRACTION_FAILURE",
+            "status": "FAILURE",
+            "metadata": {
+                "error": error_msg,
+                "detail": detail,
+                "timestamp": datetime.utcnow().isoformat()
+            }
+        }
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            try:
+                await client.post(url, json=payload, headers=headers)
+                logger.info(f"[Scraper] Reported critical failure: {error_msg}")
+            except Exception as e:
+                logger.error(f"[Scraper] Failed to report failure to dashboard: {e}")
+
 
 class ApifyScraper(BaseScraper):
     """Scraper que usa la API de Apify."""
@@ -133,13 +157,20 @@ class ApifyScraper(BaseScraper):
                 "language": "es",
                 "exportPlaceUrls": True,
             }
-            resp = await client.post(
-                f"{APIFY_BASE_URL}/acts/{APIFY_ACTOR_ID}/run-sync-get-dataset-items",
-                params={"token": self.api_token, "timeout": 120},
-                json=actor_input,
-            )
-            resp.raise_for_status()
-            return resp.json()
+            try:
+                resp = await client.post(
+                    f"{APIFY_BASE_URL}/acts/{APIFY_ACTOR_ID}/run-sync-get-dataset-items",
+                    params={"token": self.api_token, "timeout": 120},
+                    json=actor_input,
+                )
+                if resp.status_code == 402:
+                    await self._report_failure(job.tenant_id, "APIFY_BILLING_ERROR", "402 Payment Required")
+                resp.raise_for_status()
+                return resp.json()
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code == 402:
+                    raise Exception("Error de pago en Apify (402). Por favor revisa tu suscripción.")
+                raise
 
 
 class GoogleMapsScraper(BaseScraper):
@@ -205,6 +236,8 @@ class GoogleMapsScraper(BaseScraper):
 
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.post(url, json=payload, headers=headers)
+            if resp.status_code == 403:
+                await self._report_failure(job.tenant_id, "GOOGLE_AUTH_ERROR", "403 Forbidden - Check API Key restrictions")
             resp.raise_for_status()
             data = resp.json()
             return data.get("places", [])

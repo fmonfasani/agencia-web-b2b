@@ -660,3 +660,53 @@ model BusinessMetric {
   @@index([type])
   @@index([timestamp])
 }
+
+model VpsMetric {
+  id        String   @id @default(cuid())
+  cpuUsage  Float
+  memUsage  Float
+  diskUsage Float
+  netIn     Float?   // Inbound bytes/s
+  netOut    Float?   // Outbound bytes/s
+  timestamp DateTime @default(now())
+
+  @@index([timestamp])
+}
+
+model Trace {
+  id        String   @id @default(cuid())
+  traceId   String
+  service   String
+  operation String
+  duration  Int
+  status    String
+  createdAt DateTime @default(now())
+
+  @@index([traceId])
+  @@index([service])
+  @@index([createdAt])
+}
+
+model Metric {
+  id        String   @id @default(cuid())
+  name      String
+  value     Float
+  tags      Json?
+  createdAt DateTime @default(now())
+
+  @@index([name])
+  @@index([createdAt])
+}
+
+model LogEntry {
+  id        String   @id @default(cuid())
+  level     String
+  message   String
+  traceId   String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([level])
+  @@index([traceId])
+  @@index([createdAt])
+}

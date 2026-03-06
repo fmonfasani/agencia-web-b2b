@@ -60,6 +60,35 @@ export async function GET() {
             }
         })
 
+        // Check for Apify 402 errors in any relevant logs or business metrics
+        const apifyBillingError = await (prisma as any).businessMetric.findFirst({
+            where: {
+                type: 'EXTRACTION_FAILURE',
+                metadata: {
+                    path: ['error'],
+                    string_contains: '402'
+                }
+            }
+        });
+
+        if (apifyBillingError) {
+            alerts.push("URGENTE: Error de pago en Apify (402 Payment Required). El scraping está detenido.");
+        }
+
+        const googleAuthError = await (prisma as any).businessMetric.findFirst({
+            where: {
+                type: 'EXTRACTION_FAILURE',
+                metadata: {
+                    path: ['error'],
+                    string_contains: 'GOOGLE_AUTH_ERROR'
+                }
+            }
+        });
+
+        if (googleAuthError) {
+            alerts.push("CRITICO: Error 403 en Google Maps. Revisa las restricciones de tu API Key o cuotas.");
+        }
+
         // Business SLIs (Last 7 days)
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);

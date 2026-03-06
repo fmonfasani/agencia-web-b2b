@@ -7,7 +7,6 @@ services:
     restart: always
     volumes:
       - ./widget:/app/widget
-    extra_hosts:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s

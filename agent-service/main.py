@@ -6,13 +6,27 @@ from slowapi.errors import RateLimitExceeded
 from core.config import settings
 from core.rate_limit import limiter
 from core.scheduler import scraper_scheduler
+from core.observability import setup_observability
 from routers import chat, agents, keys, scraper, intelligence, schedules
 
 app = FastAPI(title="Agent Service", version="1.0.0")
 
+# Initialize Observability (OpenTelemetry)
+setup_observability(app)
+
 @app.on_event("startup")
 async def startup_event():
     scraper_scheduler.start()
+    # Colectar métricas de la VPS cada 5 minutos
+    from core.metrics_collector import vps_metrics_collector
+    scraper_scheduler.scheduler.add_job(
+        vps_metrics_collector.push_metrics,
+        "interval",
+        minutes=5,
+        id="vps_metrics_collection",
+        max_instances=1
+    )
+    logger.info("[Scheduler] VPS metrics collection job registered.")
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)

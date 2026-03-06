@@ -1,71 +1,35 @@
-import { prisma } from "@/lib/prisma";
-
-export type LogLevel = "INFO" | "WARN" | "ERROR" | "FATAL" | "DEBUG";
-
-interface LogContext {
-    tenantId?: string;
-    userId?: string;
-    requestId?: string;
-    traceId?: string;
-}
+import { logger } from '@/lib/logger';
+import { prisma } from '@/lib/prisma';
+import { trace, context } from '@opentelemetry/api';
 
 /**
- * Enterprise-grade logger for Revenue OS.
- * Designed for structured logging and scalability.
+ * Core logging function that bridges Winston, OpenTelemetry and Prisma.
  */
-export class SaaSLogger {
-    private static format(level: LogLevel, message: string, context?: LogContext, meta?: any) {
-        const payload = {
-            timestamp: new Date().toISOString(),
-            level,
-            message,
-            tenantId: context?.tenantId,
-            userId: context?.userId,
-            requestId: context?.requestId,
-            traceId: context?.traceId,
-            ...meta,
-        };
+async function log(level: 'info' | 'warn' | 'error', message: string, metadata?: any) {
+    const span = trace.getSpan(context.active());
+    const traceId = span?.spanContext().traceId;
 
-        // En producción, esto iría a stdout en formato JSON para Grafana Loki/Datadog
-        return JSON.stringify(payload);
-    }
+    // 1. Output to standard logging (Winston -> Console/Sentry)
+    logger.log(level, message, { ...metadata, traceId });
 
-    static info(message: string, context?: LogContext, meta?: any) {
-        console.log(this.format("INFO", message, context, meta));
-    }
-
-    static error(message: string, context?: LogContext, meta?: any) {
-        console.error(this.format("ERROR", message, context, meta));
-    }
-
-    static warn(message: string, context?: LogContext, meta?: any) {
-        console.warn(this.format("WARN", message, context, meta));
-    }
-
-    static debug(message: string, context?: LogContext, meta?: any) {
-        if (process.env.NODE_ENV === "development") {
-            console.debug(this.format("DEBUG", message, context, meta));
-        }
-    }
-
-    /**
-     * Special method to log to the database business events table
-     * while also logging to the standard stream.
-     */
-    static async business(message: string, tenantId: string, type: string, payload: any) {
-        this.info(`[Business Event] ${type}: ${message}`, { tenantId }, { payload });
-
-        try {
-            await prisma.businessEvent.create({
-                data: {
-                    tenantId,
-                    type,
-                    payload,
-                    source: "system",
-                },
-            });
-        } catch (err) {
-            this.error("Failed to persist business event to DB", { tenantId }, { originalError: err });
-        }
+    // 2. Persist to Database for the internal observability dashboard
+    try {
+        await prisma.logEntry.create({
+            data: {
+                level,
+                message,
+                traceId,
+                metadata: metadata || {},
+            },
+        });
+    } catch (error) {
+        // We don't want logger failure to crash the application
+        console.warn('[Observability:Logger] Failed to persist log entry:', error);
     }
 }
+
+export const info = (msg: string, meta?: any) => log('info', msg, meta);
+export const warn = (msg: string, meta?: any) => log('warn', msg, meta);
+export const error = (msg: string, meta?: any) => log('error', msg, meta);
+
+export default { info, warn, error };

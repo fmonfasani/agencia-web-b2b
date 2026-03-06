@@ -16,6 +16,7 @@ import {
     XCircle,
     Zap
 } from "lucide-react";
+import VpsMetricsCharts from "./VpsMetricsCharts";
 
 interface HealthData {
     status: string;
@@ -150,7 +151,7 @@ export default function ObservabilityDashboard() {
                         className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-5"
                     >
                         <div className={`p-4 rounded-xl ${item.status === 'healthy' || item.status === 'up' ? 'bg-emerald-50' :
-                                item.status === 'warning' ? 'bg-amber-50' : 'bg-rose-50'
+                            item.status === 'warning' ? 'bg-amber-50' : 'bg-rose-50'
                             }`}>
                             <item.icon className={
                                 item.status === 'healthy' || item.status === 'up' ? 'text-emerald-500' :
@@ -266,6 +267,15 @@ export default function ObservabilityDashboard() {
                         </table>
                     </div>
                 </div>
+            </div>
+
+            {/* VPS Hardware Metrics (Time-Series) */}
+            <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                    <Cpu className="text-slate-800" size={24} />
+                    <h2 className="text-2xl font-black text-slate-800 tracking-tight uppercase">Rendimiento de Servidor (VPS)</h2>
+                </div>
+                <VpsMetricsCharts />
             </div>
 
             {/* Footer Branding SRE */}
