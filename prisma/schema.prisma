@@ -738,3 +738,16 @@ model Finding {
   message        String @db.Text
   recommendation String @db.Text
 }
+
+model RumEvent {
+  id        String   @id @default(uuid())
+  sessionId String
+  userId    String?
+  page      String
+  metric    String
+  value     Float
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([page, metric, createdAt])
+}
