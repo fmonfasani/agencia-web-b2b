@@ -710,3 +710,31 @@ model LogEntry {
   @@index([traceId])
   @@index([createdAt])
 }
+
+model Audit {
+  id                String    @id @default(cuid())
+  repositoryUrl     String
+  status            String    @default("pending")
+  overallScore      Float?
+  architectureScore Float?
+  securityScore     Float?
+  codeQualityScore  Float?
+  devopsScore       Float?
+  summary           String?   @db.Text
+  createdAt         DateTime  @default(now())
+
+  findings Finding[]
+}
+
+model Finding {
+  id             String @id @default(cuid())
+  auditId        String
+  audit          Audit  @relation(fields: [auditId], references: [id])
+
+  severity       String
+  category       String
+  file           String?
+  line           Int?
+  message        String @db.Text
+  recommendation String @db.Text
+}
