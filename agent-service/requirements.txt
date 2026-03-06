@@ -7,3 +7,7 @@ pydantic-settings==2.3.0
 python-multipart==0.0.9
 slowapi==0.1.9
 apify-client==1.8.1
+apscheduler>=3.10.1
+setuptools
+googlemaps==4.10.0
+beautifulsoup4==4.12.3

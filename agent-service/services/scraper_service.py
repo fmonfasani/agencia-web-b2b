@@ -37,30 +37,58 @@ class ScraperJob:
     created_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
 
 
-class ApifyScraper:
-    """
-    Cliente para Apify Google Maps Scraper.
-    Requiere APIFY_API_TOKEN en el .env del agent-service.
-    Requiere NEXTJS_INTERNAL_URL para hacer el ingest de leads.
-    """
+class BaseScraper:
+    """Clase base con lógica común para todos los scrapers."""
 
     def __init__(self):
-        self.api_token = getattr(settings, "apify_api_token", None)
-        # URL interna de la app Next.js (ej: http://localhost:3000 o https://tu-dominio.com)
+        # URL interna de la app Next.js
         self.nextjs_url = getattr(settings, "nextjs_internal_url", "http://localhost:3000")
         self.ingest_url = f"{self.nextjs_url}/api/leads/ingest"
         # Token de autenticación de la API interna de Next.js
         self.internal_api_secret = getattr(settings, "internal_api_secret", None)
 
-    async def create_job(
-        self,
-        query: str,
-        location: str,
-        max_leads: int,
-        tenant_id: str,
-        language: str = "es",
-    ) -> ScraperJob:
-        """Crea un nuevo job de scraping (sin ejecutarlo todavía)."""
+    async def _ingest_lead(self, place: dict, tenant_id: str) -> bool:
+        """Envía un lead al endpoint /api/leads/ingest de Next.js."""
+        # Detectar si el payload viene de Apify o de Google Places API (New)
+        # Mapeo unificado de campos
+        lead_payload = {
+            "sourceType": "SCRAPER",
+            "name": place.get("title") or place.get("displayName", {}).get("text") or place.get("name"),
+            "phone": place.get("phone") or place.get("internationalPhoneNumber") or place.get("nationalPhoneNumber"),
+            "website": place.get("website") or place.get("websiteUri"),
+            "address": place.get("address") or place.get("formattedAddress") or place.get("location", {}).get("address"),
+            "category": place.get("categoryName") or (place.get("types", [None])[0] if place.get("types") else None),
+            "rating": place.get("totalScore") or place.get("rating"),
+            "reviewsCount": place.get("reviewsCount") or place.get("userRatingCount"),
+            "googlePlaceId": place.get("placeId") or place.get("id"),
+            "googleMapsUrl": place.get("url") or place.get("googleMapsUri"),
+            "rawMetadata": place,
+        }
+
+        lead_payload = {k: v for k, v in lead_payload.items() if v is not None}
+
+        headers = {"Content-Type": "application/json"}
+        if self.internal_api_secret:
+            headers["X-Internal-Secret"] = self.internal_api_secret
+        headers["X-Tenant-Id"] = tenant_id
+
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            try:
+                response = await client.post(self.ingest_url, json=lead_payload, headers=headers)
+                return response.status_code in (200, 201)
+            except Exception as e:
+                logger.warning(f"Error calling ingest: {e}")
+                return False
+
+
+class ApifyScraper(BaseScraper):
+    """Scraper que usa la API de Apify."""
+
+    def __init__(self):
+        super().__init__()
+        self.api_token = getattr(settings, "apify_api_token", None)
+
+    async def create_job(self, query: str, location: str, max_leads: int, tenant_id: str) -> ScraperJob:
         return ScraperJob(
             job_id=str(uuid.uuid4()),
             query=query,
@@ -70,174 +98,173 @@ class ApifyScraper:
         )
 
     async def run_and_ingest(self, job: ScraperJob, jobs_registry: dict):
-        """
-        Función principal (ejecutada en background):
-        1. Llama a Apify para extraer negocios de Google Maps
-        2. Envía cada lead al endpoint /api/leads/ingest de Next.js
-        """
         try:
             job.status = "RUNNING"
             job.message = "Conectando con Apify..."
 
             if not self.api_token:
-                raise ValueError("APIFY_API_TOKEN no está configurado en el .env del agent-service.")
+                raise ValueError("APIFY_API_TOKEN no configurado.")
 
-            # 1. Lanzar el actor de Apify
             places = await self._run_apify_actor(job)
             job.leads_found = len(places)
             job.message = f"Encontrados {len(places)} negocios. Procesando..."
 
-            logger.info(f"[Scraper Job {job.job_id}] Apify devolvió {len(places)} lugares.")
-
-            # 2. Ingestar cada lead en Next.js
             ingested = 0
             for place in places:
-                try:
-                    success = await self._ingest_lead(place, job.tenant_id)
-                    if success:
-                        ingested += 1
-                except Exception as e:
-                    job.errors.append(str(e))
-                    logger.warning(f"[Scraper Job {job.job_id}] Error ingesting lead: {e}")
-
-                # Pequeña pausa para no saturar el rate limit del endpoint
-                await asyncio.sleep(0.1)
+                if await self._ingest_lead(place, job.tenant_id):
+                    ingested += 1
+                await asyncio.sleep(0.05)
 
             job.leads_ingested = ingested
             job.status = "COMPLETED"
-            job.message = f"✅ Completado: {ingested}/{len(places)} leads ingresados al CRM."
-
-            logger.info(f"[Scraper Job {job.job_id}] Completado. {ingested}/{len(places)} leads ingresados.")
+            job.message = f"✅ Completado: {ingested}/{len(places)} leads ingresados."
 
         except Exception as e:
             job.status = "FAILED"
             job.message = f"❌ Error: {str(e)}"
             job.errors.append(str(e))
-            logger.error(f"[Scraper Job {job.job_id}] FAILED: {e}", exc_info=True)
+            logger.error(f"[ApifyScraper] FAILED: {e}")
 
     async def _run_apify_actor(self, job: ScraperJob) -> list[dict]:
-        """
-        Ejecuta el actor de Apify y espera a que termine.
-        Retorna la lista de lugares extraídos de Google Maps.
-        """
         async with httpx.AsyncClient(timeout=180.0) as client:
-            # Input del actor (ver docs: https://apify.com/compass/crawler-google-places)
             actor_input = {
                 "searchStringsArray": [f"{job.query} {job.location}"],
                 "maxCrawledPlacesPerSearch": job.max_leads,
-                "language": job.language if hasattr(job, "language") else "es",
-                "includeWebResults": False,
+                "language": "es",
                 "exportPlaceUrls": True,
-                "additionalInfo": True,
-                "maxImages": 0,        # No necesitamos imágenes para leads
-                "maxReviews": 0,       # No necesitamos reviews
-                "scrapingOptions": {
-                    "scrapeReviewerInfo": False,
-                },
             }
-
-            # Iniciar el run del actor (modo síncrono con waiter)
-            logger.info(f"[Scraper] Lanzando actor Apify con input: {actor_input}")
-            run_response = await client.post(
+            resp = await client.post(
                 f"{APIFY_BASE_URL}/acts/{APIFY_ACTOR_ID}/run-sync-get-dataset-items",
                 params={"token": self.api_token, "timeout": 120},
                 json=actor_input,
-                headers={"Content-Type": "application/json"},
             )
+            resp.raise_for_status()
+            return resp.json()
 
-            if run_response.status_code == 200:
-                return run_response.json()
 
-            # Si falla el modo síncrono, intentamos el modo asíncrono
-            logger.warning(f"[Scraper] Modo síncrono falló ({run_response.status_code}), usando modo async...")
-            return await self._run_async_with_polling(client, actor_input, job)
+class GoogleMapsScraper(BaseScraper):
+    """Scraper que usa la API de Google Places directamente."""
 
-    async def _run_async_with_polling(
-        self,
-        client: httpx.AsyncClient,
-        actor_input: dict,
-        job: ScraperJob,
-    ) -> list[dict]:
-        """Alternativa: lanza el actor y hace polling hasta obtener resultados."""
-        # Lanzar run
-        run_resp = await client.post(
-            f"{APIFY_BASE_URL}/acts/{APIFY_ACTOR_ID}/runs",
-            params={"token": self.api_token},
-            json=actor_input,
+    def __init__(self):
+        super().__init__()
+        self.api_key = getattr(settings, "google_maps_api_key", None)
+
+    async def create_job(self, query: str, location: str, max_leads: int, tenant_id: str) -> ScraperJob:
+        return ScraperJob(
+            job_id=str(uuid.uuid4()),
+            query=query,
+            location=location,
+            tenant_id=tenant_id,
+            max_leads=max_leads,
         )
-        run_resp.raise_for_status()
-        run_data = run_resp.json()
-        run_id = run_data["data"]["id"]
-        job.apify_run_id = run_id
-        job.message = f"Actor Apify corriendo (run_id: {run_id})..."
 
-        # Polling cada 10 segundos hasta que termine
-        for attempt in range(24):  # máx 4 minutos
-            await asyncio.sleep(10)
-            status_resp = await client.get(
-                f"{APIFY_BASE_URL}/actor-runs/{run_id}",
-                params={"token": self.api_token},
-            )
-            run_status = status_resp.json()["data"]["status"]
-            logger.info(f"[Scraper] Apify run {run_id} status: {run_status}")
+    async def run_and_ingest(self, job: ScraperJob, jobs_registry: dict):
+        """Usa Google Places Text Search (New) para obtener leads."""
+        try:
+            job.status = "RUNNING"
+            job.message = "Conectando con Google Maps API..."
 
-            if run_status == "SUCCEEDED":
-                break
-            if run_status in ("FAILED", "TIMED-OUT", "ABORTED"):
-                raise RuntimeError(f"Apify actor terminó con estado: {run_status}")
+            if not self.api_key:
+                raise ValueError("GOOGLE_MAPS_API_KEY no configurado.")
 
-        # Obtener los resultados del dataset
-        dataset_id = run_resp.json()["data"]["defaultDatasetId"]
-        dataset_resp = await client.get(
-            f"{APIFY_BASE_URL}/datasets/{dataset_id}/items",
-            params={"token": self.api_token, "format": "json"},
-        )
-        dataset_resp.raise_for_status()
-        return dataset_resp.json()
+            # 1. Buscar en Google Places
+            places = await self._search_places(job)
+            job.leads_found = len(places)
+            job.message = f"Encontrados {len(places)} negocios en Google. Procesando..."
 
-    async def _ingest_lead(self, place: dict, tenant_id: str) -> bool:
-        """
-        Envía un lugar de Google Maps al endpoint /api/leads/ingest de Next.js.
-        Mapea los campos de Apify al schema de LeadIngestInput.
-        """
-        # Mapeo de campos de Apify al schema de tu app
-        lead_payload = {
-            "sourceType": "SCRAPER",
-            "name": place.get("title") or place.get("name"),
-            "phone": place.get("phone") or place.get("phoneUnformatted"),
-            "website": place.get("website"),
-            "address": place.get("address") or place.get("street"),
-            "category": place.get("categoryName") or place.get("categories", [None])[0],
-            "rating": place.get("totalScore") or place.get("rating"),
-            "reviewsCount": place.get("reviewsCount") or place.get("userRatingsTotal"),
-            "googlePlaceId": place.get("placeId"),
-            "googleMapsUrl": place.get("url") or place.get("permanentlyClosed"),
-            "description": place.get("description"),
-            "rawMetadata": place,
+            # 2. Ingestar
+            ingested = 0
+            for place in places:
+                if await self._ingest_lead(place, job.tenant_id):
+                    ingested += 1
+                await asyncio.sleep(0.05)
+
+            job.leads_ingested = ingested
+            job.status = "COMPLETED"
+            job.message = f"✅ Completado: {ingested}/{len(places)} leads ingresados via Google API."
+
+        except Exception as e:
+            job.status = "FAILED"
+            job.message = f"❌ Error Google API: {str(e)}"
+            job.errors.append(str(e))
+            logger.error(f"[GoogleScraper] FAILED: {e}")
+
+    async def _search_places(self, job: ScraperJob) -> list[dict]:
+        """Llamada a Google Places API (New) - Text Search."""
+        url = "https://places.googleapis.com/v1/places:searchText"
+        headers = {
+            "Content-Type": "application/json",
+            "X-Goog-Api-Key": self.api_key,
+            "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.internationalPhoneNumber,places.websiteUri,places.rating,places.userRatingCount,places.types,places.googleMapsUri"
+        }
+        payload = {
+            "textQuery": f"{job.query} in {job.location}",
+            "maxResultCount": min(job.max_leads, 20), # Google permite máx 20 por página en New API
+            "languageCode": "es"
         }
 
-        # Quitar campos None para no contaminar el schema
-        lead_payload = {k: v for k, v in lead_payload.items() if v is not None}
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.post(url, json=payload, headers=headers)
+            resp.raise_for_status()
+            data = resp.json()
+            return data.get("places", [])
 
-        # Headers de autenticación interna
-        headers = {"Content-Type": "application/json"}
-        if self.internal_api_secret:
-            headers["X-Internal-Secret"] = self.internal_api_secret
-        # Pasar el tenantId como header para resolveTenantIdFromHeaders
-        headers["X-Tenant-Id"] = tenant_id
 
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.post(
-                self.ingest_url,
-                json=lead_payload,
-                headers=headers,
-            )
+class FallbackScraper(BaseScraper):
+    """Scraper inteligente que intenta con un proveedor y cae al otro si falla."""
 
-            if response.status_code in (200, 201):
-                return True
+    def __init__(self, primary_provider: str):
+        super().__init__()
+        self.primary_provider = primary_provider
+        self.google = GoogleMapsScraper()
+        self.apify = ApifyScraper()
 
-            logger.warning(
-                f"[Scraper] Ingest falló para '{lead_payload.get('name')}': "
-                f"{response.status_code} - {response.text[:200]}"
-            )
-            return False
+    async def create_job(self, query: str, location: str, max_leads: int, tenant_id: str) -> ScraperJob:
+        return ScraperJob(
+            job_id=str(uuid.uuid4()),
+            query=query,
+            location=location,
+            tenant_id=tenant_id,
+            max_leads=max_leads,
+        )
+
+    async def run_and_ingest(self, job: ScraperJob, jobs_registry: dict):
+        """Intenta con el primario, si falla o da 0, intenta con el secundario."""
+        try:
+            # 1. Intentar con el primario
+            if self.primary_provider == "google":
+                primary = self.google
+                secondary = self.apify
+                p_name, s_name = "Google Maps", "Apify"
+            else:
+                primary = self.apify
+                secondary = self.google
+                p_name, s_name = "Apify", "Google Maps"
+
+            logger.info(f"[FallbackScraper] Iniciando con {p_name} para Job {job.job_id}")
+            await primary.run_and_ingest(job, jobs_registry)
+
+            # 2. Verificar si necesitamos el fallback
+            # Si falló o si terminó pero encontró 0 leads
+            if job.status == "FAILED" or (job.status == "COMPLETED" and job.leads_found == 0):
+                logger.info(f"[FallbackScraper] {p_name} falló o dio 0. Aplicando FALLBACK a {s_name}")
+                
+                # Limpiar estado previo si fue un FAILED
+                prev_errors = job.errors.copy()
+                job.status = "RUNNING"
+                job.message = f"Reintentando con {s_name} (Auto-fallback)..."
+                job.errors = [] # Reset para el nuevo intento, pero guardamos log
+                
+                await secondary.run_and_ingest(job, jobs_registry)
+                
+                if job.status == "COMPLETED":
+                    job.message = f"✅ Completado via {s_name} (Fallback). " + job.message
+                
+                # Restaurar errores previos si el secundario también falla o para historial
+                if prev_errors:
+                    job.errors = prev_errors + job.errors
+
+        except Exception as e:
+            job.status = "FAILED"
+            job.message = f"❌ Error crítico en Fallback: {str(e)}"
+            logger.error(f"[FallbackScraper] CRITICAL: {e}")

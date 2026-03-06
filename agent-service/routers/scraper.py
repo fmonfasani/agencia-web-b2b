@@ -8,7 +8,8 @@ from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 from typing import Optional
 from core.auth import require_admin
-from services.scraper_service import ApifyScraper, ScraperJob
+from services.scraper_service import ApifyScraper, GoogleMapsScraper, ScraperJob, BaseScraper, FallbackScraper
+from typing import Literal
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/scraper", tags=["scraper"])
@@ -21,6 +22,7 @@ class ScrapeRequest(BaseModel):
     max_leads: int = 50  # Límite de leads a extraer
     tenant_id: str       # ID del tenant que recibirá los leads
     language: str = "es" # Idioma de búsqueda
+    provider: Literal["apify", "google"] = "apify" # Proveedor de scraping
 
 
 class ScrapeStatusResponse(BaseModel):
@@ -39,9 +41,9 @@ active_jobs: dict[str, ScraperJob] = {}
 async def run_scraper(body: ScrapeRequest, background_tasks: BackgroundTasks):
     """
     Lanza un job de scraping de Google Maps en segundo plano.
-    Los resultados se envían automáticamente a /api/leads/ingest.
     """
-    scraper = ApifyScraper()
+    # Siempre usamos el FallbackScraper para máxima confiabilidad
+    scraper = FallbackScraper(primary_provider=body.provider)
 
     # Crear el job
     job = await scraper.create_job(
@@ -49,22 +51,21 @@ async def run_scraper(body: ScrapeRequest, background_tasks: BackgroundTasks):
         location=body.location,
         max_leads=body.max_leads,
         tenant_id=body.tenant_id,
-        language=body.language,
     )
 
     # Guardar el job
     active_jobs[job.job_id] = job
 
-    # Ejecutar en background para no bloquear la respuesta
+    # Ejecutar en background
     background_tasks.add_task(scraper.run_and_ingest, job, active_jobs)
 
-    logger.info(f"[Scraper] Job {job.job_id} lanzado para query='{body.query}' location='{body.location}'")
+    logger.info(f"[Scraper] Job {job.job_id} ({body.provider}) lanzado para query='{body.query}'")
 
     return {
         "job_id": job.job_id,
         "status": "RUNNING",
-        "message": f"Scraping iniciado para '{body.query}' en '{body.location}'. Máximo {body.max_leads} leads.",
-        "estimated_time_seconds": min(body.max_leads * 2, 180),
+        "provider": body.provider,
+        "message": f"Scraping ({body.provider}) iniciado para '{body.query}'.",
     }
 
 

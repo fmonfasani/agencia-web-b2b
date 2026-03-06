@@ -13,6 +13,8 @@ class Settings(BaseSettings):
 
     # --- Scraper (Apify) ---
     apify_api_token: str = ""
+    # --- Scraper (Google Maps Direct) ---
+    google_maps_api_key: str = ""
     # URL base de la app Next.js para hacer el ingest de leads
     # En producción: https://tu-dominio.com | En local: http://localhost:3000
     nextjs_internal_url: str = "http://localhost:3000"
@@ -21,5 +23,6 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
+        extra = "ignore"
 
 settings = Settings()
