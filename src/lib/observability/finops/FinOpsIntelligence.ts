@@ -67,8 +67,7 @@ export class FinOpsIntelligence {
         const gte = new Date();
         gte.setDate(gte.getDate() - days);
 
-        // @ts-ignore - Prisma groupBy typing can be complex with dynamic field enums
-        const leadsByIndustry = await prisma.lead.groupBy({
+        const eventsByIndustry = await prisma.operationEvent.groupBy({
             by: ['industry'],
             where: { createdAt: { gte } },
             _count: { _all: true },
@@ -82,9 +81,9 @@ export class FinOpsIntelligence {
             'Health': 2.9,
         };
 
-        return (leadsByIndustry as any[]).map((group) => ({
+        return eventsByIndustry.map((group) => ({
             industry: group.industry || 'Unknown',
-            leads: group._count?._all || 0,
+            leads: group._count?._all || 0, // In this context, these are operation events
             roi: roiMap[group.industry || ''] || 2.5,
         }));
     }

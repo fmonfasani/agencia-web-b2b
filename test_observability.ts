@@ -21,7 +21,8 @@ async function testObservability() {
     };
 
     // 1. Test Info Log
-    SaaSLogger.info("Intento de ejecución de Scraper iniciado", context, {
+    SaaSLogger.info("Intento de ejecución de Scraper iniciado", {
+        ...context,
         query: "Software Factories",
         region: "LATAM"
     });
@@ -30,7 +31,8 @@ async function testObservability() {
     try {
         throw new Error("Conexión con Google Places API fallida (Timeout 5000ms)");
     } catch (err: any) {
-        SaaSLogger.error("Error crítico en motor de búsqueda", context, {
+        SaaSLogger.error("Error crítico en motor de búsqueda", {
+            ...context,
             error: err.message,
             retryCount: 3
         });
