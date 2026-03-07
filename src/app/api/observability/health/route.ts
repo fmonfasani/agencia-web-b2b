@@ -14,7 +14,11 @@ export async function GET() {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const health: any = {
+    const health: {
+        status: "ok" | "degraded";
+        timestamp: string;
+        services: Record<string, unknown>;
+    } = {
         status: 'ok',
         timestamp: new Date().toISOString(),
         services: {}
@@ -38,7 +42,7 @@ export async function GET() {
         } else {
             health.services.redis = { status: 'skipped', message: 'Not configured' };
         }
-    } catch (e) {
+    } catch {
         health.status = 'degraded';
         health.services.redis = { status: 'error' };
     }
@@ -57,7 +61,7 @@ export async function GET() {
         } else {
             health.services.agentService = { status: 'unhealthy', code: res.status };
         }
-    } catch (e) {
+    } catch {
         health.services.agentService = { status: 'unreachable' };
     }
 
