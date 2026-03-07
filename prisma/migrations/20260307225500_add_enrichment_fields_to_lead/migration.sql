@@ -1,19 +1,12 @@
 -- Alter existing enrichment shape
-UPDATE "Lead"
-SET "technologies" = '[]'::jsonb
-WHERE "technologies" IS NULL;
+ALTER TABLE "Lead"
+ADD COLUMN "technologies_new" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];
 
 ALTER TABLE "Lead"
-ALTER COLUMN "technologies" TYPE TEXT[]
-USING CASE
-  WHEN "technologies" IS NULL THEN ARRAY[]::TEXT[]
-  WHEN jsonb_typeof("technologies") = 'array' THEN ARRAY(SELECT jsonb_array_elements_text("technologies"))
-  ELSE ARRAY[]::TEXT[]
-END;
+DROP COLUMN "technologies";
 
 ALTER TABLE "Lead"
-ALTER COLUMN "technologies" SET DEFAULT ARRAY[]::TEXT[],
-ALTER COLUMN "technologies" SET NOT NULL;
+RENAME COLUMN "technologies_new" TO "technologies";
 
 -- Add new enrichment and pipeline context fields
 ALTER TABLE "Lead"

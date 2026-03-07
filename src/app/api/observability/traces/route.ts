@@ -2,8 +2,15 @@ import { NextResponse } from "next/server";
 import { Role } from "@prisma/client";
 import { AuthorizationError, requireRole } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
+import { requireInternalSecret } from "@/lib/api-auth";
 
-export async function GET() {
+export async function GET(request: Request) {
+    try {
+        requireInternalSecret(request);
+    } catch {
+        return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
+    }
+
     try {
         await requireRole(["ADMIN", "SUPER_ADMIN"] as Role[]);
 
