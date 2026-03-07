@@ -33,6 +33,7 @@ export const AppointmentsService = {
     const appointment = await tPrisma.appointment.create({
       data: {
         leadId: input.leadId,
+        tenantId,
         scheduledAt,
         duration: input.duration ?? 30,
         type: input.type ?? AppointmentType.CALL,

@@ -56,29 +56,23 @@ export const authConfig = {
         signIn: "/es/auth/sign-in",
     },
     callbacks: {
-        async session({
-            session,
-            token,
-        }: {
-            session: {
-                user?: { id?: string; tenantId?: string; role?: string };
-            };
-            token: { sub?: string; tenantId?: string; role?: string };
-        }) {
+        async session({ session, token }) {
             if (session.user && token) {
-                session.user.id = token.sub;
-                session.user.tenantId = token.tenantId ?? "internal";
-                session.user.role = token.role ?? "member";
+                session.user.id =
+                    typeof token.sub === "string"
+                        ? token.sub
+                        : (session.user.id ?? "internal");
+                session.user.tenantId =
+                    typeof token.tenantId === "string" ? token.tenantId : "internal";
+                session.user.role =
+                    typeof token.role === "string" ? token.role : "member";
             }
-            return session;
+            return {
+                ...session,
+                expires: session.expires,
+            };
         },
-        async jwt({
-            token,
-            user,
-        }: {
-            token: { tenantId?: string; role?: string };
-            user?: { tenantId?: string; role?: string };
-        }) {
+        async jwt({ token, user }) {
             if (user) {
                 token.tenantId = user.tenantId;
                 token.role = user.role;

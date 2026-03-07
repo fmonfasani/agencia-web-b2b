@@ -1,5 +1,5 @@
 import { prisma, getTenantPrisma } from "@/lib/prisma";
-import { Role } from "@prisma/client";
+import { AuditEventType, Role } from "@prisma/client";
 import { canModifyRole } from "./rbac";
 
 /**
@@ -85,10 +85,11 @@ export const IAMService = {
     const tPrisma = getTenantPrisma(tenantId);
     return await tPrisma.auditEvent.create({
       data: {
-        eventType: action,
+        eventType: AuditEventType.ADMIN_ACTION,
         userId: actorId, // Who did it
         tenantId, // Explicitly included for schema compliance
         metadata: {
+          action,
           targetUserId: targetId,
           ...metadata,
         },
