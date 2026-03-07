@@ -54,7 +54,15 @@ export const authConfig = {
         signIn: "/es/auth/sign-in",
     },
     callbacks: {
-        async session({ session, token }: any) {
+        async session({
+            session,
+            token,
+        }: {
+            session: {
+                user?: { id?: string; tenantId?: string; role?: string };
+            };
+            token: { sub?: string; tenantId?: string; role?: string };
+        }) {
             if (session.user && token) {
                 session.user.id = token.sub;
                 session.user.tenantId = token.tenantId ?? "internal";
@@ -62,7 +70,13 @@ export const authConfig = {
             }
             return session;
         },
-        async jwt({ token, user }: any) {
+        async jwt({
+            token,
+            user,
+        }: {
+            token: { tenantId?: string; role?: string };
+            user?: { tenantId?: string; role?: string };
+        }) {
             if (user) {
                 token.tenantId = user.tenantId;
                 token.role = user.role;
