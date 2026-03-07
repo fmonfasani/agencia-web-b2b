@@ -1,9 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from datetime import datetime
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from core.config import settings
+from core.job_store import ensure_scraper_jobs_table, mark_inflight_jobs_interrupted
 from core.rate_limit import limiter
 from core.scheduler import scraper_scheduler
 from core.observability import setup_observability
@@ -19,6 +21,11 @@ setup_observability(app)
 
 @app.on_event("startup")
 async def startup_event():
+    ensure_scraper_jobs_table()
+    interrupted = mark_inflight_jobs_interrupted()
+    if interrupted:
+        logger.warning("[Jobs] Marked %s in-flight jobs as interrupted after restart.", interrupted)
+
     scraper_scheduler.start()
     # Colectar métricas de la VPS cada 5 minutos
     from core.metrics_collector import vps_metrics_collector
@@ -49,18 +56,8 @@ app.mount("/widget", StaticFiles(directory="widget"), name="widget")
 
 @app.get("/health")
 async def health():
-    is_scheduler_running = False
-    try:
-        is_scheduler_running = scraper_scheduler.scheduler.running
-    except Exception:
-        pass
-        
-    if not is_scheduler_running:
-        return {"status": "unhealthy", "reason": "scheduler_not_running"}, 503
-        
     return {
-        "status": "ok", 
-        "provider": settings.llm_provider,
-        "scheduler": "running"
+        "status": "ok",
+        "timestamp": datetime.now().isoformat()
     }
 
