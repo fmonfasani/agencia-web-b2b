@@ -51,4 +51,23 @@ next-env.d.ts
 /intelligence_engine/data/
 /intelligence_engine/**/data/
 
+# Agent & Tools Clutter
+.agents/
+.playwright-mcp/
+playwright-report/
+test-results/
+.gemini/
+*.log
+*.resolved
+
+# Python
+__pycache__/
+*.pyc
+
+# Temporary Scripts
+fetch_leads.js
+fix_db.js
+save_intelligence.js
+tmp_*.js
+scripts/inject-test-lead.ts
 
