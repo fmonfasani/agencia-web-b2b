@@ -14,12 +14,12 @@ export const initOtel = async () => {
         const { getNodeAutoInstrumentations } = await import('@opentelemetry/auto-instrumentations-node');
         const { OTLPTraceExporter } = await import('@opentelemetry/exporter-trace-otlp-http');
 
-        // Defensive import for Resource to handle different export patterns
+        // Defensive import for Resource to handle different export patterns across versions
         const resourcesModule: any = await import('@opentelemetry/resources');
-        const Resource = resourcesModule.Resource || resourcesModule.default?.Resource;
+        const Resource = resourcesModule.Resource || resourcesModule.default?.Resource || resourcesModule.default;
 
-        if (!Resource) {
-            throw new Error('Resource class not found in @opentelemetry/resources');
+        if (!Resource || typeof Resource !== 'function') {
+            throw new Error('Resource class not found or invalid in @opentelemetry/resources');
         }
 
         // Handle potential different import paths for semantic conventions across versions

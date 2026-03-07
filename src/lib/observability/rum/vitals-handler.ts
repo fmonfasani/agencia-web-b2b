@@ -15,7 +15,7 @@ export const initWebVitals = async () => {
         if (vitals.onTTFB) vitals.onTTFB(sendToRum);
         if (vitals.onINP) vitals.onINP(sendToRum);
         if (vitals.onFCP) vitals.onFCP(sendToRum);
-        if (vitals.onFID) vitals.onFID(sendToRum);
+        // onFID is deprecated in favor of onINP in newer web-vitals
     } catch (error) {
         console.warn('[Rum:WebVitals] Failed to load web-vitals library:', error);
     }
