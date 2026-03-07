@@ -8,12 +8,14 @@ export const authConfig = {
         Google({
             clientId: process.env.AUTH_GOOGLE_ID,
             clientSecret: process.env.AUTH_GOOGLE_SECRET,
+            // SECURITY: email linking without active session enables account takeover
             allowDangerousEmailAccountLinking: false,
         }),
         MicrosoftEntraID({
             clientId: process.env.AUTH_MICROSOFT_ENTRA_ID_ID,
             clientSecret: process.env.AUTH_MICROSOFT_ENTRA_ID_SECRET,
             issuer: process.env.AUTH_MICROSOFT_ENTRA_ID_ISSUER,
+            // SECURITY: email linking without active session enables account takeover
             allowDangerousEmailAccountLinking: false,
         }),
         Credentials({
