@@ -1,0 +1,95 @@
+﻿{
+    "dependencias":  {
+                         "name":  "agencia-web-b2b",
+                         "version":  "0.1.0",
+                         "dependencies":  {
+                                              "@auth/prisma-adapter":  "^2.11.1",
+                                              "@opentelemetry/api":  "^1.9.0",
+                                              "@opentelemetry/auto-instrumentations-node":  "^0.56.0",
+                                              "@opentelemetry/exporter-trace-otlp-http":  "^0.57.0",
+                                              "@opentelemetry/resources":  "^1.30.0",
+                                              "@opentelemetry/sdk-node":  "^0.57.0",
+                                              "@opentelemetry/semantic-conventions":  "^1.30.0",
+                                              "@prisma/client":  "^6.19.2",
+                                              "@sentry/nextjs":  "^10.42.0",
+                                              "@types/nodemailer":  "^7.0.11",
+                                              "@upstash/ratelimit":  "^2.0.8",
+                                              "@upstash/redis":  "^1.36.1",
+                                              "@vercel/analytics":  "^1.6.1",
+                                              "axios":  "^1.13.5",
+                                              "clsx":  "^2.1.1",
+                                              "framer-motion":  "^12.29.0",
+                                              "lucide-react":  "^0.563.0",
+                                              "next":  "^16.1.6",
+                                              "next-auth":  "^5.0.0-beta.30",
+                                              "next-intl":  "^4.8.0",
+                                              "nodemailer":  "^7.0.13",
+                                              "openai":  "^6.25.0",
+                                              "prisma":  "^6.19.2",
+                                              "react":  "^19.2.4",
+                                              "react-dom":  "^19.2.4",
+                                              "recharts":  "^3.7.0",
+                                              "resend":  "^6.9.2",
+                                              "tailwind-merge":  "^3.4.0",
+                                              "web-vitals":  "^5.1.0",
+                                              "winston":  "^3.19.0"
+                                          },
+                         "devDependencies":  {
+                                                 "@lhci/cli":  "^0.15.1",
+                                                 "@playwright/test":  "^1.58.0",
+                                                 "@tailwindcss/postcss":  "^4",
+                                                 "@testing-library/dom":  "^10.4.1",
+                                                 "@testing-library/jest-dom":  "^6.9.1",
+                                                 "@testing-library/react":  "^16.3.2",
+                                                 "@testing-library/user-event":  "^14.6.1",
+                                                 "@types/gtag.js":  "^0.0.20",
+                                                 "@types/jest":  "^30.0.0",
+                                                 "@types/node":  "^20",
+                                                 "@types/react":  "^19",
+                                                 "@types/react-dom":  "^19",
+                                                 "@vitejs/plugin-react":  "^5.1.4",
+                                                 "babel-plugin-react-compiler":  "1.0.0",
+                                                 "eslint":  "^9",
+                                                 "eslint-config-next":  "16.1.4",
+                                                 "husky":  "^9.1.7",
+                                                 "jest":  "^30.2.0",
+                                                 "jest-environment-jsdom":  "^30.2.0",
+                                                 "jsdom":  "^27.0.1",
+                                                 "lint-staged":  "^16.2.7",
+                                                 "prettier":  "^3.8.1",
+                                                 "tailwindcss":  "^4",
+                                                 "typescript":  "^5",
+                                                 "vitest":  "^3.2.4"
+                                             }
+                     },
+    "git_hotspots":  "[{\"Name\":\"package.json\",\"Count\":21},{\"Name\":\"prisma/schema.prisma\",\"Count\":20},{\"Name\":\"src/app/[locale]/admin/dashboard/page.tsx\",\"Count\":17},{\"Name\":\"src/middleware.ts\",\"Count\":16},{\"Name\":\"package-lock.json\",\"Count\":16},{\"Name\":\"src/lib/auth.ts\",\"Count\":15},{\"Name\":\"src/app/[locale]/admin/layout.tsx\",\"Count\":13},{\"Name\":\"src/components/Header.tsx\",\"Count\":11},{\"Name\":\"src/app/[locale]/api/leads/ingest/route.ts\",\"Count\":9},{\"Name\":\"src/components/Footer.tsx\",\"Count\":9}]",
+    "estructura":  "[{\"Name\":\".agents\",\"Type\":\"Directory\"},{\"Name\":\".codex\",\"Type\":\"Directory\"},{\"Name\":\".github\",\"Type\":\"Directory\"},{\"Name\":\".husky\",\"Type\":\"Directory\"},{\"Name\":\".playwright-mcp\",\"Type\":\"Directory\"},{\"Name\":\".swc\",\"Type\":\"Directory\"},{\"Name\":\"agent-service\",\"Type\":\"Directory\"},{\"Name\":\"Agents\",\"Type\":\"Directory\"},{\"Name\":\"auditor\",\"Type\":\"Directory\"},{\"Name\":\"docs\",\"Type\":\"Directory\"},{\"Name\":\"e2e\",\"Type\":\"Directory\"},{\"Name\":\"intelligence_engine\",\"Type\":\"Directory\"},{\"Name\":\"lead-system\",\"Type\":\"Directory\"},{\"Name\":\"messages\",\"Type\":\"Directory\"},{\"Name\":\"playwright-report\",\"Type\":\"Directory\"},{\"Name\":\"prisma\",\"Type\":\"Directory\"},{\"Name\":\"public\",\"Type\":\"Directory\"},{\"Name\":\"scripts\",\"Type\":\"Directory\"},{\"Name\":\"src\",\"Type\":\"Directory\"},{\"Name\":\"test-results\",\"Type\":\"Directory\"},{\"Name\":\"tests\",\"Type\":\"Directory\"},{\"Name\":\"tmp\",\"Type\":\"Directory\"},{\"Name\":\".env\",\"Type\":\"File\"},{\"Name\":\".gitignore\",\"Type\":\"File\"},{\"Name\":\".npmrc\",\"Type\":\"File\"},{\"Name\":\"Automated Outreach \\u0026 Lead Intelligencewalkthrough_outreach.md.resolved\",\"Type\":\"File\"},{\"Name\":\"bash.exe.stackdump\",\"Type\":\"File\"},{\"Name\":\"Build Fix Plan Resolving Module Resolution Errorsbuild_fix_plan.md.resolved\",\"Type\":\"File\"},{\"Name\":\"check_do.js\",\"Type\":\"File\"},{\"Name\":\"check_supabase.js\",\"Type\":\"File\"},{\"Name\":\"check_user.sql\",\"Type\":\"File\"},{\"Name\":\"eslint.config.mjs\",\"Type\":\"File\"},{\"Name\":\"implementation_plan.md.resolved\",\"Type\":\"File\"},{\"Name\":\"jest.config.js\",\"Type\":\"File\"},{\"Name\":\"jest.setup.js\",\"Type\":\"File\"},{\"Name\":\"Launch Readiness \\u0026 Production Hardeningwalkthrough_launch.md.resolved\",\"Type\":\"File\"},{\"Name\":\"leads-export-2026-03-05.csv\",\"Type\":\"File\"},{\"Name\":\"lighthouserc.json\",\"Type\":\"File\"},{\"Name\":\"list_dbs.js\",\"Type\":\"File\"},{\"Name\":\"list_dbs_prisma.js\",\"Type\":\"File\"},{\"Name\":\"list_tables_postgres.js\",\"Type\":\"File\"},{\"Name\":\"Master Project Tracke- Agencia B2B-task.md.resolved\",\"Type\":\"File\"},{\"Name\":\"Master Project Tracker   Agencia B2B - task.md.resolved\",\"Type\":\"File\"},{\"Name\":\"Master Project Tracker Agencia B2B task.md.resolved\",\"Type\":\"File\"},{\"Name\":\"Master Project Tracker Agencia B2B-task.md.resolved\",\"Type\":\"File\"},{\"Name\":\"mcp_config_template.json\",\"Type\":\"File\"},{\"Name\":\"Multi-tenant White-labeling (Phase 8) - whitelabel_implementation_plan.md.resolved\",\"Type\":\"File\"},{\"Name\":\"Multi-tenant White-labeling (Phase 8)whitelabel_implementation_plan.md.resolved\",\"Type\":\"File\"},{\"Name\":\"Multi-tenant White-labeling -Phase 8-whitelabel_implementation_plan.md.resolved\",\"Type\":\"File\"},{\"Name\":\"Multi-tenant White-labeling whitelabel_implementation_plan.md.resolved\",\"Type\":\"File\"},{\"Name\":\"next-env.d.ts\",\"Type\":\"File\"},{\"Name\":\"next.config.ts\",\"Type\":\"File\"},{\"Name\":\"outreach_implementation_plan.md.resolved\",\"Type\":\"File\"},{\"Name\":\"package-lock.json\",\"Type\":\"File\"},{\"Name\":\"package.json\",\"Type\":\"File\"},{\"Name\":\"Phase  Advanced AI Lead Scoringintelligence_scoring_plan.md.resolved\",\"Type\":\"File\"},{\"Name\":\"Phase 9 Launch Readiness \\u0026 Production Setup-task.md.resolved\",\"Type\":\"File\"},{\"Name\":\"playwright.config.ts\",\"Type\":\"File\"},{\"Name\":\"postcss.config.mjs\",\"Type\":\"File\"},{\"Name\":\"prisma.config.ts\",\"Type\":\"File\"},{\"Name\":\"README.md\",\"Type\":\"File\"},{\"Name\":\"Reliability \\u0026 WhatsApp Alerts - walkthrough_reliability.md.resolved\",\"Type\":\"File\"},{\"Name\":\"Reliability \\u0026 WhatsApp Alerts walkthrough_reliability.md.resolved\",\"Type\":\"File\"},{\"Name\":\"scraper_diagnostic.md.resolved\",\"Type\":\"File\"},{\"Name\":\"sentry.client.config.ts\",\"Type\":\"File\"},{\"Name\":\"sentry.edge.config.ts\",\"Type\":\"File\"},{\"Name\":\"sentry.server.config.ts\",\"Type\":\"File\"},{\"Name\":\"stabilization_planv2.0.md.resolved\",\"Type\":\"File\"},{\"Name\":\"test_business_roi.js\",\"Type\":\"File\"},{\"Name\":\"test_business_roi.ts\",\"Type\":\"File\"},{\"Name\":\"test_observability.ts\",\"Type\":\"File\"},{\"Name\":\"tsconfig.json\",\"Type\":\"File\"},{\"Name\":\"tsconfig.tsbuildinfo\",\"Type\":\"File\"},{\"Name\":\"vitest.config.ts\",\"Type\":\"File\"},{\"Name\":\"vitest.setup.ts\",\"Type\":\"File\"},{\"Name\":\"Walkthrough - Phase 6 Advanced AI Lead Scoringwalkthrough_intelligence.md.resolved\",\"Type\":\"File\"},{\"Name\":\"Walkthrough Multi-tenant White-labeling \\u0026 Agency Identitywalkthrough_whitelabel.md.resolved\",\"Type\":\"File\"},{\"Name\":\"whatsapp_alerts_plan.md.resolved\",\"Type\":\"File\"}]",
+    "git_log":  "[\"7b9401d|fmonfasani|2026-03-07|fix: total container stabilization v2\",\"e56b114|fmonfasani|2026-03-07|fix: stabilization and defensive branding\",\"86acf40|fmonfasani|2026-03-07|fix: defensive branding fetch in layouts to prevent Crashes on Vercel\",\"30bd374|fmonfasani|2026-03-06|fix: defensive branding fetch in layouts to prevent Crashes on Vercel\",\"9123e1d|fmonfasani|2026-03-06|fix(observability): wrap OTEL resource instantiation in try-catch to prevent server-side crash on Vercel\",\"2744579|fmonfasani|2026-03-06|chore: fix prisma lifecycle and type errors for production reliability\",\"796f0f1|fmonfasani|2026-03-06|fix(build): resolve tenantId type mismatch and metadata (restored from stash)\",\"c0eb770|fmonfasani|2026-03-06|feat: finalize reliability and build fixes (bypassing hooks for speed)\",\"23b34f5|fmonfasani|2026-03-06|fix(build): resolve Turbopack resolution errors \\u0026 feat: add WhatsApp alerting for system health\",\"d83b1f5|fmonfasani|2026-03-06|fix(observability): remove deprecated FID and standardize Resource imports to finalize build\",\"d35ac45|fmonfasani|2026-03-06|fix: implement robust dynamic imports for observability to resolve Turbopack build errors\",\"37d9582|fmonfasani|2026-03-06|fix: resolve module resolution and build errors for production\",\"2266c0b|fmonfasani|2026-03-06|feat: production ready codebase with white-labeling and launch setup\",\"32ee6e3|fmonfasani|2026-03-06|feat(observability): implement RUM Phase 3 (skip hooks)\",\"6bc3653|fmonfasani|2026-03-06|feat: implement AI Software Auditor module (Phase 2), update schema to Postgres, and add auditor service\",\"8d9b35d|fmonfasani|2026-03-06|feat: implement high-performance observability command center with distributed tracing\",\"1353370|fmonfasani|2026-03-06|fix: resolve Vercel 404 on root path and fix lint errors in middleware\",\"1f2b172|fmonfasani|2026-03-06|feat(sre): implement self-healing, business slis and dashboard visualization\",\"79c9831|fmonfasani|2026-03-05|feat: robust fallback for scraper credits\",\"d87bd9c|fmonfasani|2026-03-05|feat: include ScraperForm frontend, schedules API route and implementation plan\"]",
+    "env_keys":  "[\"OPENAI_API_KEY\",\"ASSISTANT_ID\",\"OLD_ASSISTANT_ID\",\"AUTH_GOOGLE_ID\",\"AUTH_GOOGLE_SECRET\",\"AUTH_SECRET\",\"NEXTAUTH_URL\",\"AUTH_TRUST_HOST\",\"NEXTAUTH_URL\",\"OPENAI_API_KEY\",\"ASSISTANT_ID\",\"OLD_ASSISTANT_ID\",\"AUTH_GOOGLE_ID\",\"AUTH_GOOGLE_SECRET\",\"AUTH_SECRET\",\"NEXTAUTH_URL\",\"AUTH_TRUST_HOST\",\"NEXTAUTH_URL\",\"DATABASE_URL\",\"POSTGRES_PRISMA_URL\",\"POSTGRES_URL_NON_POOLING\",\"ADMIN_SECRET\",\"AGENT_SERVICE_URL\",\"INTERNAL_API_SECRET\",\"NEXT_PUBLIC_SENTRY_DSN\",\"SENTRY_AUTH_TOKEN\"]",
+    "vps":  {
+                "compose_status":  {
+
+                                   },
+                "logs_recientes":  {
+
+                                   },
+                "disk":  {
+
+                         },
+                "docker_containers":  {
+
+                                      },
+                "load":  {
+
+                         },
+                "docker_stats":  {
+
+                                 },
+                "nginx":  {
+
+                          },
+                "memory":  {
+
+                           }
+            }
+}

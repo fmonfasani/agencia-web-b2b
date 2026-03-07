@@ -122,6 +122,7 @@ model Tenant {
   apiCostEvents    ApiCostEvent[]
   businessMetrics  BusinessMetric[]
   outreachCampaigns OutreachCampaign[]
+  scraperSchedules  ScraperSchedule[]
 }
 
 model PasswordResetToken {
@@ -814,5 +815,26 @@ model OutreachMessage {
   @@index([campaignId])
   @@index([leadId])
   @@index([status])
+}
+
+model ScraperSchedule {
+  id                String   @id @default(cuid())
+  tenantId          String
+  query             String
+  location          String
+  maxLeads          Int      @default(50) @map("max_leads")
+  provider          String   @default("google")
+  frequencyMinutes  Int?     @map("frequency_minutes")
+  specificTime      DateTime? @map("specific_time")
+  active            Boolean  @default(true)
+  neighborhoodIndex Int      @default(0) @map("neighborhood_index")
+  lastRunAt         DateTime? @map("last_run_at")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  tenant            Tenant?  @relation(fields: [tenantId], references: [id])
+
+  @@map("scraper_schedules")
+  @@index([tenantId])
 }
 

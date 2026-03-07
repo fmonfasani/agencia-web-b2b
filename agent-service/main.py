@@ -8,6 +8,9 @@ from core.rate_limit import limiter
 from core.scheduler import scraper_scheduler
 from core.observability import setup_observability
 from routers import chat, agents, keys, scraper, intelligence, schedules
+import logging
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Agent Service", version="1.0.0")
 
