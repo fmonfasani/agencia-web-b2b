@@ -1,6 +1,7 @@
 "use server";
 
 import { db } from "@/lib/scoped-prisma";
+import { requireTenantMembership } from "@/lib/authz";
 import { revalidatePath } from "next/cache";
 import { DealStage } from "@prisma/client";
 
@@ -8,7 +9,9 @@ import { DealStage } from "@prisma/client";
  * Updates a deal's stage.
  */
 export async function updateDealStageAction(dealId: string, newStage: DealStage) {
-    const scopedDb = await db();
+    const { user, tenantId } = await requireTenantMembership(["ADMIN", "SUPER_ADMIN"]);
+    const userId = user?.id ?? user?.userId;
+    const scopedDb = await db({ userId, tenantId });
 
     try {
         const updated = await scopedDb.deal.update({

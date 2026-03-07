@@ -1,19 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getScopedPrisma } from "../scoped-prisma";
-import { auth } from "../auth";
-import { requireAuth as requireCustomAuth } from "../auth/request-auth";
 import { getTenantPrisma } from "../prisma";
-
-vi.mock("../auth", () => ({
-  auth: vi.fn(),
-}));
-
-vi.mock("../auth/request-auth", () => ({
-  requireAuth: vi.fn(),
-}));
+import { logger } from "../logger";
 
 vi.mock("../prisma", () => ({
   getTenantPrisma: vi.fn(),
+}));
+
+vi.mock("../logger", () => ({
+  logger: {
+    warn: vi.fn(),
+  },
 }));
 
 describe("getScopedPrisma", () => {
@@ -21,21 +18,18 @@ describe("getScopedPrisma", () => {
     vi.clearAllMocks();
   });
 
-  it("returns tenant prisma from NextAuth session", async () => {
-    const scoped = { lead: { findMany: vi.fn() } };
-    (auth as any).mockResolvedValue({ user: { tenantId: "tenant-nextauth" } });
-    (getTenantPrisma as any).mockReturnValue(scoped);
-
-    const result = await getScopedPrisma();
-
-    expect(getTenantPrisma).toHaveBeenCalledWith("tenant-nextauth");
-    expect(result).toBe(scoped);
+  it("throws when context is missing", async () => {
+    await expect(getScopedPrisma()).rejects.toThrow("TENANT_CONTEXT_REQUIRED");
+    expect(logger.warn).toHaveBeenCalledTimes(1);
   });
 
-  it("throws when auth context is missing", async () => {
-    (auth as any).mockResolvedValue(null);
-    (requireCustomAuth as any).mockResolvedValue(null);
+  it("returns tenant prisma when context is valid", async () => {
+    const scopedClient = { lead: { findMany: vi.fn() } };
+    (getTenantPrisma as any).mockReturnValue(scopedClient);
 
-    await expect(getScopedPrisma()).rejects.toThrow("UNAUTHORIZED_SCOPED_PRISMA_CONTEXT");
+    const result = await getScopedPrisma({ userId: "user-1", tenantId: "tenant-1" });
+
+    expect(result).toBe(scopedClient);
+    expect(getTenantPrisma).toHaveBeenCalledWith("tenant-1");
   });
 });

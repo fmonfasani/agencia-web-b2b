@@ -15,8 +15,10 @@ export const dynamic = "force-dynamic";
 
 const OutreachDashboard = async ({ params }: { params: Promise<{ locale: string }> }) => {
     const { locale } = await params;
-    const { tenantId } = await requireTenantMembership(["ADMIN", "SUPER_ADMIN"]);
-    const scopedDb = await db();
+    const { user, tenantId } = await requireTenantMembership(["ADMIN", "SUPER_ADMIN"]);
+    const userId = (user as { id?: string; userId?: string })?.id ??
+        (user as { id?: string; userId?: string })?.userId;
+    const scopedDb = await db({ userId, tenantId });
 
     const campaigns = await (scopedDb as any).outreachCampaign.findMany({
         orderBy: { createdAt: "desc" },

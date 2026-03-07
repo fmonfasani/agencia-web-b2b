@@ -69,8 +69,10 @@ export default async function CommercialHubPage({
   const { locale } = await params;
   const { source } = await searchParams;
 
-  const { tenantId } = await requireTenantMembership(["ADMIN", "SUPER_ADMIN"]);
-  const scopedDb = await db();
+  const { user, tenantId } = await requireTenantMembership(["ADMIN", "SUPER_ADMIN"]);
+  const userId = (user as { id?: string; userId?: string })?.id ??
+    (user as { id?: string; userId?: string })?.userId;
+  const scopedDb = await db({ userId, tenantId });
 
   // 1. Fetch Leads with Intelligence
   const leadsRaw = await scopedDb.lead.findMany({

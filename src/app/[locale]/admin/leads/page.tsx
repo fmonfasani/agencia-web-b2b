@@ -11,7 +11,9 @@ export default async function LeadsPage() {
     const auth = await requireTenantMembership(["ADMIN", "SUPER_ADMIN"]);
     if (!auth) redirect("/auth/login");
 
-    const scopedDb = await db();
+    const userId = (auth.user as { id?: string; userId?: string })?.id ??
+        (auth.user as { id?: string; userId?: string })?.userId;
+    const scopedDb = await db({ userId, tenantId: auth.tenantId });
 
     const leads = await scopedDb.lead.findMany({
         orderBy: { createdAt: "desc" },
