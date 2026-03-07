@@ -74,8 +74,9 @@ export async function GET(
     });
 
     const buffer = await renderToBuffer(pdf);
+    const uint8Array = new Uint8Array(buffer);
 
-    return new NextResponse(buffer, {
+    return new NextResponse(uint8Array, {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="propuesta-${proposal.slug}.pdf"`,
