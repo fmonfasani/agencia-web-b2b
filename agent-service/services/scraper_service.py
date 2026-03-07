@@ -39,6 +39,7 @@ class ScraperJob:
 
 class BaseScraper:
     """Clase base con lógica común para todos los scrapers."""
+    _shared_client: httpx.AsyncClient | None = None
 
     def __init__(self):
         # URL interna de la app Next.js
@@ -48,6 +49,12 @@ class BaseScraper:
         self.internal_api_secret = getattr(settings, "internal_api_secret", None)
         # Semáforo para limitar concurrencia de ingesta/análisis (evita picos de CPU)
         self._ingest_semaphore = asyncio.Semaphore(5)
+
+    @classmethod
+    def _get_shared_client(cls) -> httpx.AsyncClient:
+        if cls._shared_client is None:
+            cls._shared_client = httpx.AsyncClient(timeout=30.0)
+        return cls._shared_client
 
     async def _ingest_lead(self, place: dict, tenant_id: str) -> bool:
         """Envía un lead al endpoint /api/leads/ingest de Next.js."""
@@ -75,14 +82,18 @@ class BaseScraper:
                 headers["X-Internal-Secret"] = self.internal_api_secret
             headers["X-Tenant-Id"] = tenant_id
 
-            # Usar un cliente temporal por ahora pero con timeout optimizado
-            async with httpx.AsyncClient(timeout=15.0) as client:
-                try:
-                    response = await client.post(self.ingest_url, json=lead_payload, headers=headers)
-                    return response.status_code in (200, 201)
-                except Exception as e:
-                    logger.warning(f"Error calling ingest: {e}")
-                    return False
+            client = self._get_shared_client()
+            try:
+                response = await client.post(
+                    self.ingest_url,
+                    json=lead_payload,
+                    headers=headers,
+                    timeout=15.0,
+                )
+                return response.status_code in (200, 201)
+            except Exception as e:
+                logger.warning(f"Error calling ingest: {e}")
+                return False
 
     async def _report_failure(self, tenant_id: str, error_msg: str, detail: Optional[str] = None):
         """Reporta un fallo crítico de negocio (402, 403, etc) al dashboard."""
@@ -101,12 +112,12 @@ class BaseScraper:
                 "timestamp": datetime.utcnow().isoformat()
             }
         }
-        async with httpx.AsyncClient(timeout=5.0) as client:
-            try:
-                await client.post(url, json=payload, headers=headers)
-                logger.info(f"[Scraper] Reported critical failure: {error_msg}")
-            except Exception as e:
-                logger.error(f"[Scraper] Failed to report failure to dashboard: {e}")
+        client = self._get_shared_client()
+        try:
+            await client.post(url, json=payload, headers=headers, timeout=5.0)
+            logger.info(f"[Scraper] Reported critical failure: {error_msg}")
+        except Exception as e:
+            logger.error(f"[Scraper] Failed to report failure to dashboard: {e}")
 
 
 class ApifyScraper(BaseScraper):
@@ -154,27 +165,28 @@ class ApifyScraper(BaseScraper):
             logger.error(f"[ApifyScraper] FAILED: {e}")
 
     async def _run_apify_actor(self, job: ScraperJob) -> list[dict]:
-        async with httpx.AsyncClient(timeout=180.0) as client:
-            actor_input = {
-                "searchStringsArray": [f"{job.query} {job.location}"],
-                "maxCrawledPlacesPerSearch": job.max_leads,
-                "language": "es",
-                "exportPlaceUrls": True,
-            }
-            try:
-                resp = await client.post(
-                    f"{APIFY_BASE_URL}/acts/{APIFY_ACTOR_ID}/run-sync-get-dataset-items",
-                    params={"token": self.api_token, "timeout": 120},
-                    json=actor_input,
-                )
-                if resp.status_code == 402:
-                    await self._report_failure(job.tenant_id, "APIFY_BILLING_ERROR", "402 Payment Required")
-                resp.raise_for_status()
-                return resp.json()
-            except httpx.HTTPStatusError as e:
-                if e.response.status_code == 402:
-                    raise Exception("Error de pago en Apify (402). Por favor revisa tu suscripción.")
-                raise
+        client = self._get_shared_client()
+        actor_input = {
+            "searchStringsArray": [f"{job.query} {job.location}"],
+            "maxCrawledPlacesPerSearch": job.max_leads,
+            "language": "es",
+            "exportPlaceUrls": True,
+        }
+        try:
+            resp = await client.post(
+                f"{APIFY_BASE_URL}/acts/{APIFY_ACTOR_ID}/run-sync-get-dataset-items",
+                params={"token": self.api_token, "timeout": 120},
+                json=actor_input,
+                timeout=180.0,
+            )
+            if resp.status_code == 402:
+                await self._report_failure(job.tenant_id, "APIFY_BILLING_ERROR", "402 Payment Required")
+            resp.raise_for_status()
+            return resp.json()
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 402:
+                raise Exception("Error de pago en Apify (402). Por favor revisa tu suscripción.")
+            raise
 
 
 class GoogleMapsScraper(BaseScraper):
@@ -238,13 +250,13 @@ class GoogleMapsScraper(BaseScraper):
             "languageCode": "es"
         }
 
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            resp = await client.post(url, json=payload, headers=headers)
-            if resp.status_code == 403:
-                await self._report_failure(job.tenant_id, "GOOGLE_AUTH_ERROR", "403 Forbidden - Check API Key restrictions")
-            resp.raise_for_status()
-            data = resp.json()
-            return data.get("places", [])
+        client = self._get_shared_client()
+        resp = await client.post(url, json=payload, headers=headers, timeout=30.0)
+        if resp.status_code == 403:
+            await self._report_failure(job.tenant_id, "GOOGLE_AUTH_ERROR", "403 Forbidden - Check API Key restrictions")
+        resp.raise_for_status()
+        data = resp.json()
+        return data.get("places", [])
 
 
 class FallbackScraper(BaseScraper):
