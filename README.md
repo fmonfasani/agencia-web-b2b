@@ -83,8 +83,9 @@ NEXT_PUBLIC_APP_URL="http://localhost:3001"
 
 ---
 
-## 🔐 Seguridad de secretos
+## 🔐 Security
 
+- Nunca se deben commitear secrets en el repositorio.
 - Revisá y ejecutá la rotación en [`docs/security/secret-rotation.md`](./docs/security/secret-rotation.md).
 
 ---
@@ -127,11 +128,11 @@ bash scripts/fix-pr-setup.sh git@github.com:<owner>/<repo>.git
 
 ## 🖥️ VPS — Comandos Esenciales
 
-> **Servidor:** `134.209.41.51` | **Usuario:** `root`
+> **Servidor:** `<REPLACE_WITH_ACTUAL_VALUE>` | **Usuario:** `<REPLACE_WITH_ACTUAL_VALUE>`
 
 ### 🔌 Conexión SSH
 ```bash
-ssh root@134.209.41.51
+ssh <REPLACE_WITH_ACTUAL_VALUE>@<REPLACE_WITH_ACTUAL_VALUE>
 ```
 
 ---
@@ -181,12 +182,12 @@ docker exec -it multidb-postgres psql -U postgres -d agencia_web_b2b -c \
 # Lanzar scraping puntual
 curl -X POST http://localhost:8000/scraper/run \
   -H "Content-Type: application/json" \
-  -H "x-admin-secret: <set-admin-secret>" \
-  -d '{"query":"personal trainer","location":"Buenos Aires, Argentina","max_leads":25,"tenant_id":"<tenant-id>","language":"es"}'
+  -H "x-admin-secret: <REPLACE_WITH_ACTUAL_VALUE>" \
+  -d '{"query":"personal trainer","location":"Buenos Aires, Argentina","max_leads":25,"tenant_id":"<REPLACE_WITH_ACTUAL_VALUE>","language":"es"}'
 
 # Verificar estado de un job
 curl http://localhost:8000/scraper/status/<JOB_ID> \
-  -H "x-admin-secret: <set-admin-secret>"
+  -H "x-admin-secret: <REPLACE_WITH_ACTUAL_VALUE>"
 
 # Test endpoint de health
 curl http://localhost:8000/health
@@ -204,8 +205,8 @@ TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
 echo "[$TIMESTAMP] Iniciando scraping..."
 curl -s -X POST http://localhost:8000/scraper/run \
   -H "Content-Type: application/json" \
-  -H "x-admin-secret: <set-admin-secret>" \
-  -d '{"query":"personal trainer","location":"Buenos Aires, Argentina","max_leads":25,"tenant_id":"<tenant-id>","language":"es"}'
+  -H "x-admin-secret: <REPLACE_WITH_ACTUAL_VALUE>" \
+  -d '{"query":"personal trainer","location":"Buenos Aires, Argentina","max_leads":25,"tenant_id":"<REPLACE_WITH_ACTUAL_VALUE>","language":"es"}'
 echo ""
 EOF
 chmod +x /opt/scrape-personal-trainer.sh
@@ -232,7 +233,7 @@ crontab -r
 npx tsx scripts/import-leads.ts "scraping download"
 
 # Desde Apify API (requiere token)
-APIFY_API_TOKEN=xxxx npx tsx scripts/import-leads.ts
+APIFY_API_TOKEN=<REPLACE_WITH_ACTUAL_VALUE> npx tsx scripts/import-leads.ts
 ```
 
 ---
