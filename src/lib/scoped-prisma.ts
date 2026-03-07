@@ -1,4 +1,4 @@
-import { getTenantPrisma, prisma } from "./prisma";
+import { getTenantPrisma } from "./prisma";
 import { auth } from "./auth";
 import { requireAuth as requireCustomAuth } from "./auth/request-auth";
 
@@ -11,24 +11,20 @@ import { requireAuth as requireCustomAuth } from "./auth/request-auth";
  * USE THIS in Server Components and Server Actions to ensure tenant isolation.
  */
 export async function getScopedPrisma() {
-    try {
-        // 1. Try NextAuth session
-        const session = await auth();
-        if (session?.user?.tenantId) {
-            return getTenantPrisma(session.user.tenantId);
-        }
-
-        // 2. Try Custom Session
-        const custom = await requireCustomAuth();
-        if (custom?.session?.tenantId) {
-            return getTenantPrisma(custom.session.tenantId);
-        }
-
-        // 3. Last fallback: return global prisma
-        return prisma;
-    } catch (error) {
-        return prisma;
+    // 1. Try NextAuth session
+    const session = await auth();
+    if (session?.user?.tenantId) {
+        return getTenantPrisma(session.user.tenantId);
     }
+
+    // 2. Try Custom Session
+    const custom = await requireCustomAuth();
+    if (custom?.session?.tenantId) {
+        return getTenantPrisma(custom.session.tenantId);
+    }
+
+    // Never fail open to global prisma; this would break tenant isolation.
+    throw new Error("UNAUTHORIZED_SCOPED_PRISMA_CONTEXT");
 }
 
 /**

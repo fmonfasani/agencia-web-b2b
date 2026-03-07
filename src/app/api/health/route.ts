@@ -1,20 +1,15 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { Redis } from "@upstash/redis"
-import OpenAI from "openai"
 
 const redis = Redis.fromEnv()
-
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY
-})
 
 export async function GET() {
 
     const checks = {
         database: false,
         redis: false,
-        openai: false
+        openai: "skipped"
     }
 
     try {
@@ -31,23 +26,15 @@ export async function GET() {
         console.error("Health Check Redis Error:", e)
     }
 
-    try {
-        await openai.models.list()
-        checks.openai = true
-    } catch (e) {
-        console.error("Health Check OpenAI Error:", e)
-    }
-
     const healthy =
         checks.database &&
-        checks.redis &&
-        checks.openai
+        checks.redis
 
     // Trigger WhatsApp Alert if unhealthy and not already alerted recently
     if (!healthy) {
         const { whatsapp } = await import("@/lib/whatsapp")
         const failedServices = Object.entries(checks)
-            .filter(([_, status]) => !status)
+            .filter(([name, status]) => name !== "openai" && !status)
             .map(([name]) => name.toUpperCase())
             .join(", ")
 

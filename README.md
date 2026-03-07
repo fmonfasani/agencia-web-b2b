@@ -175,12 +175,12 @@ docker exec -it multidb-postgres psql -U postgres -d agencia_web_b2b -c \
 # Lanzar scraping puntual
 curl -X POST http://localhost:8000/scraper/run \
   -H "Content-Type: application/json" \
-  -H "x-admin-secret: Karaoke27570Echeverria" \
-  -d '{"query":"personal trainer","location":"Buenos Aires, Argentina","max_leads":25,"tenant_id":"cmmb7uaqe0002js04qbetwu40","language":"es"}'
+  -H "x-admin-secret: <set-admin-secret>" \
+  -d '{"query":"personal trainer","location":"Buenos Aires, Argentina","max_leads":25,"tenant_id":"<tenant-id>","language":"es"}'
 
 # Verificar estado de un job
 curl http://localhost:8000/scraper/status/<JOB_ID> \
-  -H "x-admin-secret: Karaoke27570Echeverria"
+  -H "x-admin-secret: <set-admin-secret>"
 
 # Test endpoint de health
 curl http://localhost:8000/health
@@ -198,8 +198,8 @@ TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
 echo "[$TIMESTAMP] Iniciando scraping..."
 curl -s -X POST http://localhost:8000/scraper/run \
   -H "Content-Type: application/json" \
-  -H "x-admin-secret: Karaoke27570Echeverria" \
-  -d '{"query":"personal trainer","location":"Buenos Aires, Argentina","max_leads":25,"tenant_id":"cmmb7uaqe0002js04qbetwu40","language":"es"}'
+  -H "x-admin-secret: <set-admin-secret>" \
+  -d '{"query":"personal trainer","location":"Buenos Aires, Argentina","max_leads":25,"tenant_id":"<tenant-id>","language":"es"}'
 echo ""
 EOF
 chmod +x /opt/scrape-personal-trainer.sh
@@ -232,3 +232,4 @@ APIFY_API_TOKEN=xxxx npx tsx scripts/import-leads.ts
 ---
 
 _Desarrollado para Agencia Leads — Transformando Datos en Revenue._
+

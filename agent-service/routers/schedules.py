@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException, Depends
-from typing import List, Optional
+from typing import Optional
 from pydantic import BaseModel
-from datetime import time, datetime
-import uuid
+from datetime import time
 
+from core.auth import require_admin
 from core.database import get_conn
 from core.scheduler import scraper_scheduler
 
@@ -18,7 +18,7 @@ class ScheduleCreate(BaseModel):
     frequency_minutes: Optional[int] = None
     specific_time: Optional[str] = None # HH:MM format
 
-@router.post("/")
+@router.post("/", dependencies=[Depends(require_admin)])
 async def create_schedule(req: ScheduleCreate):
     # Validar que tenga frecuencia o tiempo específico
     if not req.frequency_minutes and not req.specific_time:
@@ -51,7 +51,7 @@ async def create_schedule(req: ScheduleCreate):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/")
+@router.get("/", dependencies=[Depends(require_admin)])
 async def list_schedules(tenant_id: Optional[str] = None):
     query = "SELECT * FROM scraper_schedules"
     params = []
@@ -64,7 +64,7 @@ async def list_schedules(tenant_id: Optional[str] = None):
             cur.execute(query, tuple(params))
             return cur.fetchall()
 
-@router.delete("/{schedule_id}")
+@router.delete("/{schedule_id}", dependencies=[Depends(require_admin)])
 async def delete_schedule(schedule_id: str):
     try:
         with get_conn() as conn:

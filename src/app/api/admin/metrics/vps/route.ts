@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Role } from "@prisma/client";
+import { AuthorizationError, requireRole } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(request: NextRequest) {
+    const internalSecret = request.headers.get("x-internal-secret");
+    const sharedSecret = process.env.INTERNAL_API_SECRET || "";
+
+    if (!internalSecret || internalSecret !== sharedSecret) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     try {
         const body = await request.json();
         const { cpuUsage, memUsage, diskUsage, netIn, netOut } = body;
@@ -24,6 +33,15 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+    try {
+        await requireRole(["ADMIN", "SUPER_ADMIN"] as Role[]);
+    } catch (error) {
+        if (error instanceof AuthorizationError) {
+            return NextResponse.json({ error: error.message }, { status: error.status });
+        }
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const searchParams = request.nextUrl.searchParams;
     const period = searchParams.get("period") || "1h"; // 1h, 3h, 6h, 24h, 7d, 14d, 3m
 

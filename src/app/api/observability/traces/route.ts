@@ -1,22 +1,26 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-// import { auth } from '@/auth'; // Assuming auth is needed later
+import { NextResponse } from "next/server";
+import { Role } from "@prisma/client";
+import { AuthorizationError, requireRole } from "@/lib/authz";
+import { prisma } from "@/lib/prisma";
 
 export async function GET() {
-    // TODO: Add Admin Authorization check here
-
     try {
+        await requireRole(["ADMIN", "SUPER_ADMIN"] as Role[]);
+
         const traces = await prisma.trace.findMany({
-            orderBy: { createdAt: 'desc' },
+            orderBy: { createdAt: "desc" },
             take: 50,
         });
 
         return NextResponse.json({
             success: true,
-            traces
+            traces,
         });
     } catch (error) {
-        console.error('[Observability:Traces] GET error:', error);
-        return NextResponse.json({ error: 'Failed to fetch traces' }, { status: 500 });
+        if (error instanceof AuthorizationError) {
+            return NextResponse.json({ error: error.message }, { status: error.status });
+        }
+        console.error("[Observability:Traces] GET error:", error);
+        return NextResponse.json({ error: "Failed to fetch traces" }, { status: 500 });
     }
 }

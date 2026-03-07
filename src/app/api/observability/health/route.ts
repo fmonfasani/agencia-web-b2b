@@ -1,8 +1,19 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextResponse } from "next/server";
+import { Role } from "@prisma/client";
+import { AuthorizationError, requireRole } from "@/lib/authz";
+import { prisma } from "@/lib/prisma";
 import { Redis } from "@upstash/redis";
 
 export async function GET() {
+    try {
+        await requireRole(["ADMIN", "SUPER_ADMIN"] as Role[]);
+    } catch (error) {
+        if (error instanceof AuthorizationError) {
+            return NextResponse.json({ error: error.message }, { status: error.status });
+        }
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const health: any = {
         status: 'ok',
         timestamp: new Date().toISOString(),

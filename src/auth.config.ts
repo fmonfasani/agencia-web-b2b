@@ -8,13 +8,13 @@ export const authConfig = {
         Google({
             clientId: process.env.AUTH_GOOGLE_ID,
             clientSecret: process.env.AUTH_GOOGLE_SECRET,
-            allowDangerousEmailAccountLinking: true,
+            allowDangerousEmailAccountLinking: false,
         }),
         MicrosoftEntraID({
             clientId: process.env.AUTH_MICROSOFT_ENTRA_ID_ID,
             clientSecret: process.env.AUTH_MICROSOFT_ENTRA_ID_SECRET,
             issuer: process.env.AUTH_MICROSOFT_ENTRA_ID_ISSUER,
-            allowDangerousEmailAccountLinking: true,
+            allowDangerousEmailAccountLinking: false,
         }),
         Credentials({
             name: "Internal credentials",
