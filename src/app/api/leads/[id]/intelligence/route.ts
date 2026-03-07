@@ -3,8 +3,8 @@ import { LeadIntelligenceService } from "@/lib/leads/intelligence-service";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(
-    req: NextRequest,
-    { params }: { params: { id: string } }
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
 ) {
     const { id } = await params;
 
@@ -24,8 +24,8 @@ export async function GET(
 }
 
 export async function POST(
-    req: NextRequest,
-    { params }: { params: { id: string } }
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
 ) {
     const { id } = await params;
 

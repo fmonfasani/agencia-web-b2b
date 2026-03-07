@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, use } from "react";
 import {
     Rocket,
     Target,
@@ -35,7 +35,9 @@ const STEPS = [
     }
 ];
 
-export default function OnboardingPage({ params }: { params: { locale: string } }) {
+export default function OnboardingPage({ params: paramsPromise }: { params: Promise<{ locale: string }> }) {
+    const params = use(paramsPromise);
+    const { locale } = params;
     const router = useRouter();
     const [currentStep, setCurrentStep] = useState(0);
     const [loading, setLoading] = useState(false);
