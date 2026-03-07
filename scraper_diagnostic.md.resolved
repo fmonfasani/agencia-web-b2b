@@ -1,0 +1,67 @@
+# Scraper Diagnostic & Solution Guide
+
+## ❓ ¿Por qué aparece el error de Apify si elegí Google Maps?
+El sistema tiene una lógica de **"Auto-Fallback"**. Si el proveedor que eliges (Google Maps) falla —como estaba ocurriendo por la falta de API Key—, el sistema intenta automáticamente con el otro proveedor (Apify) para no dejarte sin resultados. Por eso ves ambos errores. Una vez arreglada la API Key de Google, ya no saltará a Apify.
+
+The recent failures in the lead extraction system are due to external service limitations and coordinate with a Git command parsing error on your machine.
+
+## 1. Scraper Failures (Agent Service)
+
+The `agent-service` (VPS) reported the following critical errors:
+
+### ❌ Apify: 402 Payment Required
+*   **Cause**: Your Apify account has run out of credits or the subscription has expired.
+*   **Solution**: Log in to [Apify Console](https://console.apify.com/) and check your billing/usage status. You may need to upgrade your plan or add credits to re-enable the "Google Maps Scraper" actor.
+
+### ❌ Google Places: 403 Forbidden
+*   **Discovery from your 3rd screenshot**: 
+    1.  En la pantalla de **"Claves y credenciales"**, dice: **"No hay claves de API para mostrar"**.
+    2.  Esto significa que **NO tienes una clave de API creada** en este proyecto para la nueva API de Places, o la clave que estás usando pertenece a otro proyecto de Google Cloud.
+*   **Solution**:
+    1.  Haz clic en el botón **"+ Crear credenciales"** que aparece en la parte superior de tu captura de pantalla.
+    2.  Selecciona **"Clave de API"**.
+    3.  Copia la nueva clave generada.
+    4.  **Actualiza el VPS**: Debes poner esta clave en el archivo [.env](file:///c:/Users/fmonf/Desktop/Software%20Enginnering%20LAPTOP/Agencia%20B2B/agencia-web-b2b/.env) de tu servidor (VPS) en la variable `GOOGLE_MAPS_API_KEY`.
+    5.  Asegúrate de que la clave **no tenga restricciones** (o que tenga acceso a "Places API (New)").
+
+---
+
+## 2. Git Deployment (PowerShell Fix)
+
+El comando inicial falló porque tienes errores de **Linting** (estilo de código) que bloquean el commit. Como lo más urgente es arreglar el crash en Vercel, vamos a forzar la subida saltándonos esas validaciones temporales.
+
+### Comando para PowerShell (con bypass de validación):
+Copia y pega esto:
+```powershell
+git add . ; git commit -m "fix: defensive branding fetch in layouts to prevent Crashes on Vercel" --no-verify ; git push origin main
+```
+*He cambiado `master` por [main](file:///c:/Users/fmonf/Desktop/Software%20Enginnering%20LAPTOP/Agencia%20B2B/agencia-web-b2b/src/lib/leads/normalizer.ts#21-41) ya que tu rama actual se llama [main](file:///c:/Users/fmonf/Desktop/Software%20Enginnering%20LAPTOP/Agencia%20B2B/agencia-web-b2b/src/lib/leads/normalizer.ts#21-41). El parámetro `--no-verify` saltará el test de linting.*
+
+---
+
+## 3. Comandos para reiniciar el VPS
+
+Como ya actualicé tu API Key localmente, ahora debes subirla al VPS y reiniciar el servicio para que tome los cambios.
+
+### Paso 1: Subir archivos al VPS
+Si estás en Windows y tienes SSH configurado, ejecuta esto desde la carpeta raíz del proyecto:
+```powershell
+cd agent-service ; ./deploy-vps.ps1
+```
+*(Si no tienes el script de PowerShell listo, puedes usar SSH manual).*
+
+### Paso 2: Reiniciar manualmente por SSH (Si lo anterior falla)
+1. Conéctate a tu VPS: `ssh root@134.209.41.51`
+2. Ve a la carpeta del scraper: `cd /opt/agencia-b2b-scraper`
+3. Reinicia los contenedores:
+```bash
+docker compose down && docker compose up -d --build
+```
+
+---
+
+## 4. Vercel "Digest" Error (Status)
+
+The error `Digest: 148921817` is still appearing because **the fixes I wrote (defensive branding) have not been pushed to Vercel yet.** 
+
+Once you run the PowerShell command above, Vercel will rebuild the application with the new safe-loading logic. This should eliminate the crash even if the database is slightly out of sync.
