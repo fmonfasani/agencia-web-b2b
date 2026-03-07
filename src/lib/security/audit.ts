@@ -1,16 +1,5 @@
-import { Prisma } from "@prisma/client";
+import { Prisma, AuditEventType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-
-export type AuditEventType =
-  | "LOGIN_SUCCESS"
-  | "LOGIN_FAILED"
-  | "TENANT_SWITCH"
-  | "ADMIN_ACTION"
-  | "PASSWORD_CHANGED"
-  | "INVITATION_SENT"
-  | "INVITATION_ACCEPTED"
-  | "COMPANY_REGISTERED"
-  | "ONBOARDING_COMPLETED";
 
 export async function logAuditEvent(params: {
   eventType: AuditEventType;

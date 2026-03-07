@@ -78,15 +78,32 @@ model Session {
   createdAt    DateTime  @default(now())
 }
 
+enum AuditEventType {
+  LOGIN_SUCCESS
+  LOGIN_FAILED
+  LOGOUT
+  TENANT_SWITCH
+  ADMIN_ACTION
+  PASSWORD_CHANGED
+  INVITATION_SENT
+  INVITATION_ACCEPTED
+  COMPANY_REGISTERED
+  ONBOARDING_COMPLETED
+  LEAD_CREATED
+  DEAL_UPDATED
+  API_QUERY
+  SYSTEM_STATUS_CHANGE
+}
+
 model AuditEvent {
-  id        String   @id @default(cuid())
-  eventType String
+  id        String         @id @default(cuid())
+  eventType AuditEventType
   userId    String?
   tenantId  String?
   ipAddress String?
   metadata  Json
-  createdAt DateTime @default(now())
-  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt DateTime       @default(now())
+  user      User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([eventType])
   @@index([createdAt])
