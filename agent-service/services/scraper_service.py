@@ -46,11 +46,14 @@ class BaseScraper:
         self.ingest_url = f"{self.nextjs_url}/api/leads/ingest"
         # Token de autenticación de la API interna de Next.js
         self.internal_api_secret = getattr(settings, "internal_api_secret", None)
+        # Semáforo para limitar concurrencia de ingesta/análisis (evita picos de CPU)
+        self._ingest_semaphore = asyncio.Semaphore(5)
 
     async def _ingest_lead(self, place: dict, tenant_id: str) -> bool:
         """Envía un lead al endpoint /api/leads/ingest de Next.js."""
-        # Detectar si el payload viene de Apify o de Google Places API (New)
-        # Mapeo unificado de campos
+        async with self._ingest_semaphore:
+            # Detectar si el payload viene de Apify o de Google Places API (New)
+            # Mapeo unificado de campos
         lead_payload = {
             "sourceType": "SCRAPER",
             "name": place.get("title") or place.get("displayName", {}).get("text") or place.get("name"),

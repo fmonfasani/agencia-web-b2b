@@ -38,13 +38,20 @@ class ScraperScheduler:
                 with conn.cursor() as cur:
                     cur.execute("SELECT * FROM scraper_schedules WHERE active = true")
                     schedules = cur.fetchall()
-                    for sched in schedules:
-                        self.add_job_to_scheduler(sched)
-            logger.info(f"Cargados {len(schedules)} schedules activos")
+                    
+                    for i, sched in enumerate(schedules):
+                        # Escalonar el inicio de los jobs (30 segundos entre cada uno)
+                        # para evitar picos de CPU al reiniciar el servicio
+                        startup_delay = i * 30
+                        next_run = datetime.now() + timedelta(seconds=startup_delay)
+                        
+                        self.add_job_to_scheduler(sched, next_run=next_run)
+                        
+            logger.info(f"Cargados {len(schedules)} schedules activos con inicio escalonado")
         except Exception as e:
             logger.error(f"Error cargando schedules: {e}")
 
-    def add_job_to_scheduler(self, sched: dict):
+    def add_job_to_scheduler(self, sched: dict, next_run: Optional[datetime] = None):
         job_id = str(sched['id'])
         
         # Determinar el trigger
@@ -58,7 +65,10 @@ class ScraperScheduler:
 
         # Eliminar si ya existe
         if job_id in self._running_jobs:
-            self.scheduler.remove_job(job_id)
+            try:
+                self.scheduler.remove_job(job_id)
+            except Exception:
+                pass
 
         self.scheduler.add_job(
             self.run_scheduled_scrape,
@@ -66,7 +76,7 @@ class ScraperScheduler:
             id=job_id,
             args=[sched],
             replace_existing=True,
-            next_run_time=datetime.now()
+            next_run_time=next_run or datetime.now()
         )
         self._running_jobs[job_id] = True
 

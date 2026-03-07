@@ -18,7 +18,8 @@ class VpsMetricsCollector:
 
     def collect(self) -> Dict[str, Any]:
         """Collect current system metrics."""
-        cpu = psutil.cpu_percent(interval=1)
+        # interval=None is non-blocking, returns percentage since last call
+        cpu = psutil.cpu_percent(interval=None)
         mem = psutil.virtual_memory().percent
         disk = psutil.disk_usage('/').percent
         
