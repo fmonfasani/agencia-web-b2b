@@ -15,6 +15,11 @@ def setup_observability(app):
     """
     Sets up OpenTelemetry tracing for the FastAPI application.
     """
+    # Check if observability is explicitly enabled
+    if os.getenv("OTEL_ENABLED", "false").lower() != "true":
+        logger.info("--- [Observability] OpenTelemetry is disabled (default) ---")
+        return
+
     # 1. Setup Tracer Provider
     resource = Resource(attributes={
         ResourceAttributes.SERVICE_NAME: "agencia-web-b2b-agent-service",
@@ -22,7 +27,7 @@ def setup_observability(app):
     })
     
     provider = TracerProvider(resource=resource)
-    
+
     # 2. Setup OTLP Exporter (HTTP)
     # Default to local collector or a specific endpoint
     otlp_endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://otel-collector:4318/v1/traces")

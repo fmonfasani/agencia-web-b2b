@@ -111,19 +111,21 @@ class ScraperScheduler:
         try:
             # Re-instanciar el scraper adecuado
             if sched['provider'] == 'google':
-                from core.config import settings
-                scraper = GoogleMapsScraper(settings.google_maps_api_key)
+                scraper = GoogleMapsScraper()
             else:
-                from core.config import settings
-                scraper = ApifyScraper(settings.apify_api_token)
+                scraper = ApifyScraper()
 
             # Lanzar en background para no bloquear el scheduler
-            asyncio.create_task(scraper.run(
+            # run_and_ingest requiere (job, jobs_registry)
+            # Creamos un Job object ad-hoc
+            job = await scraper.create_job(
                 query=search_query,
                 location=location_with_neighborhood,
                 max_leads=sched['max_leads'],
                 tenant_id=sched['tenant_id']
-            ))
+            )
+            
+            asyncio.create_task(scraper.run_and_ingest(job, {}))
             
         except Exception as e:
             logger.error(f"Error en ejecución programada {sched['id']}: {e}")

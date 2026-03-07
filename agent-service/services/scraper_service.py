@@ -54,34 +54,35 @@ class BaseScraper:
         async with self._ingest_semaphore:
             # Detectar si el payload viene de Apify o de Google Places API (New)
             # Mapeo unificado de campos
-        lead_payload = {
-            "sourceType": "SCRAPER",
-            "name": place.get("title") or place.get("displayName", {}).get("text") or place.get("name"),
-            "phone": place.get("phone") or place.get("internationalPhoneNumber") or place.get("nationalPhoneNumber"),
-            "website": place.get("website") or place.get("websiteUri"),
-            "address": place.get("address") or place.get("formattedAddress") or place.get("location", {}).get("address"),
-            "category": place.get("categoryName") or (place.get("types", [None])[0] if place.get("types") else None),
-            "rating": place.get("totalScore") or place.get("rating"),
-            "reviewsCount": place.get("reviewsCount") or place.get("userRatingCount"),
-            "googlePlaceId": place.get("placeId") or place.get("id"),
-            "googleMapsUrl": place.get("url") or place.get("googleMapsUri"),
-            "rawMetadata": place,
-        }
+            lead_payload = {
+                "sourceType": "SCRAPER",
+                "name": place.get("title") or place.get("displayName", {}).get("text") or place.get("name"),
+                "phone": place.get("phone") or place.get("internationalPhoneNumber") or place.get("nationalPhoneNumber"),
+                "website": place.get("website") or place.get("websiteUri"),
+                "address": place.get("address") or place.get("formattedAddress") or place.get("location", {}).get("address"),
+                "category": place.get("categoryName") or (place.get("types", [None])[0] if place.get("types") else None),
+                "rating": place.get("totalScore") or place.get("rating"),
+                "reviewsCount": place.get("reviewsCount") or place.get("userRatingCount"),
+                "googlePlaceId": place.get("placeId") or place.get("id"),
+                "googleMapsUrl": place.get("url") or place.get("googleMapsUri"),
+                "rawMetadata": place,
+            }
 
-        lead_payload = {k: v for k, v in lead_payload.items() if v is not None}
+            lead_payload = {k: v for k, v in lead_payload.items() if v is not None}
 
-        headers = {"Content-Type": "application/json"}
-        if self.internal_api_secret:
-            headers["X-Internal-Secret"] = self.internal_api_secret
-        headers["X-Tenant-Id"] = tenant_id
+            headers = {"Content-Type": "application/json"}
+            if self.internal_api_secret:
+                headers["X-Internal-Secret"] = self.internal_api_secret
+            headers["X-Tenant-Id"] = tenant_id
 
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            try:
-                response = await client.post(self.ingest_url, json=lead_payload, headers=headers)
-                return response.status_code in (200, 201)
-            except Exception as e:
-                logger.warning(f"Error calling ingest: {e}")
-                return False
+            # Usar un cliente temporal por ahora pero con timeout optimizado
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                try:
+                    response = await client.post(self.ingest_url, json=lead_payload, headers=headers)
+                    return response.status_code in (200, 201)
+                except Exception as e:
+                    logger.warning(f"Error calling ingest: {e}")
+                    return False
 
     async def _report_failure(self, tenant_id: str, error_msg: str, detail: Optional[str] = None):
         """Reporta un fallo crítico de negocio (402, 403, etc) al dashboard."""
