@@ -260,6 +260,19 @@ enum BusinessType {
   OFICIO
 }
 
+enum PipelineStatus {
+  NUEVO
+  ENRIQUECIDO
+  SCORED
+  INVESTIGADO
+  CITADO
+  LLAMADO
+  PROPUESTA_ENVIADA
+  CERRADO_GANADO
+  CERRADO_PERDIDO
+  DESCARTADO
+}
+
 // Lead model for structured acquisition and intelligent classification
 model Lead {
   id               String         @id @default(cuid())
@@ -302,9 +315,25 @@ model Lead {
   topKeywords      String[]       // Frequency extraction
   budget           String?
   message          String?
+  technologies     Json?
+  websiteScore     Int?           // 1-10
+  socialPresence   Json?          // { instagram, facebook, linkedin, ... }
+  designQuality    String?        // modern | outdated | no-responsive
+  estimatedCompanySize String?
+  industry         String?
+  lastEnriched     DateTime?
+  enrichmentStatus String?        // pending | processing | done | failed
   
   // Scoring & Status
   status           String         @default("NEW") // NEW, CONTACTED, QUALIFIED, PROPOSAL_SENT, CONVERTED, LOST, DISQUALIFIED
+  pipelineStatus   PipelineStatus @default(NUEVO)
+  score            Int?
+  scoreReason      String?
+  recommendedService String?
+  urgency          String?
+  estimatedBudget  String?
+  bestTimeToCall   String?
+  brief            String?        @db.Text
   source           String         @default("manual") // Legacy compatibility
   potentialScore   Float          @default(0) // 0-100 calculation
   completeness     Float          @default(0) // 0-1 percentage
@@ -326,6 +355,8 @@ model Lead {
   @@index([email])
   @@index([status])
   @@index([createdAt])
+  @@unique([tenantId, website])
+  @@unique([tenantId, phone])
 }
 
 // Newsletter subscription model
