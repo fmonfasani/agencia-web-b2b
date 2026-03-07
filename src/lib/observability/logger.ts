@@ -32,4 +32,22 @@ export const info = (msg: string, meta?: any) => log('info', msg, meta);
 export const warn = (msg: string, meta?: any) => log('warn', msg, meta);
 export const error = (msg: string, meta?: any) => log('error', msg, meta);
 
-export default { info, warn, error };
+/**
+ * Business logic logger for high-level events (billing, onboarding, etc.)
+ */
+export const business = async (message: string, tenantId: string, eventType: string, payload?: any) => {
+    return log('info', `[BUSINESS:${eventType}] ${message}`, {
+        tenantId,
+        eventType,
+        ...payload,
+    });
+};
+
+export const SaaSLogger = {
+    info,
+    warn,
+    error,
+    business,
+};
+
+export default SaaSLogger;

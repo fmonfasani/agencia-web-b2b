@@ -1,0 +1,13 @@
+[ 4117167ms] [ERROR] Failed to load resource: net::ERR_INSUFFICIENT_RESOURCES @ https://agencia-web-b2b.vercel.app/es/admin/security/iam?_rsc=siq8p:0
+[ 4117168ms] [ERROR] Failed to fetch RSC payload for https://agencia-web-b2b.vercel.app/es/admin/security/iam. Falling back to browser navigation. TypeError: Failed to fetch
+    at R (https://agencia-web-b2b.vercel.app/_next/static/chunks/062fb6a3aa40d0dc.js:2:47089)
+    at b (https://agencia-web-b2b.vercel.app/_next/static/chunks/062fb6a3aa40d0dc.js:2:45899)
+    at M (https://agencia-web-b2b.vercel.app/_next/static/chunks/062fb6a3aa40d0dc.js:2:55038)
+    at w (https://agencia-web-b2b.vercel.app/_next/static/chunks/062fb6a3aa40d0dc.js:2:53919)
+    at p (https://agencia-web-b2b.vercel.app/_next/static/chunks/062fb6a3aa40d0dc.js:2:93502)
+    at d (https://agencia-web-b2b.vercel.app/_next/static/chunks/062fb6a3aa40d0dc.js:2:92484)
+    at y (https://agencia-web-b2b.vercel.app/_next/static/chunks/062fb6a3aa40d0dc.js:2:98057)
+    at c (https://agencia-web-b2b.vercel.app/_next/static/chunks/062fb6a3aa40d0dc.js:3:3636)
+    at Object.action (https://agencia-web-b2b.vercel.app/_next/static/chunks/062fb6a3aa40d0dc.js:3:6511)
+    at g (https://agencia-web-b2b.vercel.app/_next/static/chunks/062fb6a3aa40d0dc.js:3:5706) @ https://agencia-web-b2b.vercel.app/_next/static/chunks/062fb6a3aa40d0dc.js:1
+[ 4119040ms] [ERROR] Failed to load resource: net::ERR_INSUFFICIENT_RESOURCES @ https://agencia-web-b2b.vercel.app/_next/static/chunks/f16c94d7792a833b.js:0

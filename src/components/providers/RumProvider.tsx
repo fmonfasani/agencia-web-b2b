@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect } from 'react';
 import { rum } from '@/lib/observability/rum/rum-sdk';
-import { initWebVitals } from '@/lib/observability/rum/web-vitals';
+import { initWebVitals } from '@/lib/observability/rum/vitals-handler';
 
 const RumContext = createContext(rum);
 

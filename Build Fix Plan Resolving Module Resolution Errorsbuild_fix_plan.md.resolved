@@ -1,0 +1,32 @@
+# Build Fix Plan: Resolving Module Resolution Errors
+
+This plan addresses the Turbopack build failures reported during deployment.
+
+## Proposed Changes
+
+### 1. Observability Core Fixes
+
+#### [NEW] [FinOpsIntelligence.ts](file:///c:/Users/fmonf/Desktop/Software%20Enginnering%20LAPTOP/Agencia%20B2B/agencia-web-b2b/src/lib/observability/finops/FinOpsIntelligence.ts)
+- Re-implement the [FinOpsIntelligence](file:///c:/Users/fmonf/Desktop/Software%20Enginnering%20LAPTOP/Agencia%2520B2B/agencia-web-b2b/src/lib/observability/finops/FinOpsIntelligence.ts#28-156) class with methods: [detectAnomalies](file:///c:/Users/fmonf/Desktop/Software%20Enginnering%20LAPTOP/Agencia%2520B2B/agencia-web-b2b/src/lib/observability/finops/FinOpsIntelligence.ts#100-155), [getCostPerLead](file:///c:/Users/fmonf/Desktop/Software%20Enginnering%20LAPTOP/Agencia%2520B2B/agencia-web-b2b/src/lib/observability/finops/FinOpsIntelligence.ts#79-99), and [getIndustryROI](file:///c:/Users/fmonf/Desktop/Software%20Enginnering%20LAPTOP/Agencia%2520B2B/agencia-web-b2b/src/lib/observability/finops/FinOpsIntelligence.ts#29-78).
+
+#### [MODIFY] [logger.ts](file:///c:/Users/fmonf/Desktop/Software%20Enginnering%20LAPTOP/Agencia%20B2B/agencia-web-b2b/src/lib/observability/logger.ts)
+- Add `SaaSLogger` export as an alias for the default logger object to satisfy imports in other modules.
+
+### 2. Instrumentation & Dependencies
+
+#### [MODIFY] [instrumentation.ts](file:///c:/Users/fmonf/Desktop/Software%20Enginnering%20LAPTOP/Agencia%20B2B/agencia-web-b2b/src/instrumentation.ts) (if exists) or [otel.ts](file:///c:/Users/fmonf/Desktop/Software%20Enginnering%20LAPTOP/Agencia%20B2B/agencia-web-b2b/src/lib/observability/otel.ts)
+- Verify that `@opentelemetry/resources` and other SDK components are correctly imported and that the `NodeSDK` setup is valid for the build environment.
+
+### 3. Client-side Metrics
+
+#### [MODIFY] [web-vitals.ts](file:///c:/Users/fmonf/Desktop/Software%20Enginnering%20LAPTOP/Agencia%20B2B/agencia-web-b2b/src/lib/observability/rum/web-vitals.ts)
+- Ensure `web-vitals` is only imported or executed in the browser to avoid server-side resolution issues during build time.
+
+## Verification Plan
+
+### Automated Tests
+- Run `npm run build` locally to verify that all module resolution errors are resolved.
+- Verify that `prisma generate` has been run to ensure `apiCostEvent` and `logEntry` models are available.
+
+### Manual Verification
+- Check the `/api/finops/report` endpoint to ensure it returns valid data from the re-implemented [FinOpsIntelligence](file:///c:/Users/fmonf/Desktop/Software%20Enginnering%20LAPTOP/Agencia%2520B2B/agencia-web-b2b/src/lib/observability/finops/FinOpsIntelligence.ts#28-156) service.
