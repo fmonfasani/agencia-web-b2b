@@ -1,58 +1,45 @@
-import { prisma } from '@/lib/prisma';
-import { NextResponse } from 'next/server';
+import { prisma } from "@/lib/prisma";
+import { NextResponse } from "next/server";
+
+type RumSummaryRow = {
+  page: string;
+  metric: string;
+  count: bigint;
+  p50: number | null;
+  p75: number | null;
+  p95: number | null;
+};
 
 export async function GET() {
-    try {
-        const symbols = await prisma.rumEvent.groupBy({
-            by: ['page', 'metric'],
-            _count: {
-                _all: true,
-            },
-            where: {
-                createdAt: {
-                    gte: new Date(Date.now() - 24 * 60 * 60 * 1000), // Last 24h
-                },
-            },
-        });
+  try {
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-        // Helper to calculate percentiles (simplified for small datasets)
-        // In a real high-traffic app, we'd use a timeseries DB or pre-aggregated tables
-        const summary = await Promise.all(symbols.map(async (s: any) => {
-            const data = await prisma.rumEvent.findMany({
-                where: {
-                    page: s.page as string,
-                    metric: s.metric as string,
-                    createdAt: {
-                        gte: new Date(Date.now() - 24 * 60 * 60 * 1000),
-                    },
-                },
-                select: {
-                    value: true,
-                },
-                orderBy: {
-                    value: 'asc',
-                },
-            });
+    const rows = await prisma.$queryRaw<RumSummaryRow[]>`
+      SELECT
+        "page",
+        "metric",
+        COUNT(*) AS "count",
+        percentile_cont(0.50) WITHIN GROUP (ORDER BY "value") AS "p50",
+        percentile_cont(0.75) WITHIN GROUP (ORDER BY "value") AS "p75",
+        percentile_cont(0.95) WITHIN GROUP (ORDER BY "value") AS "p95"
+      FROM "RumEvent"
+      WHERE "createdAt" >= ${since}
+      GROUP BY "page", "metric"
+      ORDER BY "page" ASC, "metric" ASC
+    `;
 
-            const values = data.map((d: any) => d.value as number);
-            const getPercentile = (p: number) => {
-                const idx = Math.floor((p / 100) * values.length);
-                return values[idx] || 0;
-            };
+    const summary = rows.map((row) => ({
+      page: row.page,
+      metric: row.metric,
+      count: Number(row.count),
+      p50: row.p50 ?? 0,
+      p75: row.p75 ?? 0,
+      p95: row.p95 ?? 0,
+    }));
 
-            return {
-                page: s.page,
-                metric: s.metric,
-                count: values.length,
-                p50: getPercentile(50),
-                p75: getPercentile(75),
-                p95: getPercentile(95),
-            };
-        }));
-
-        return NextResponse.json(summary);
-    } catch (error) {
-        console.error('RUM: Failed to get summary', error);
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-    }
+    return NextResponse.json(summary);
+  } catch (error) {
+    console.error("RUM: Failed to get summary", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
