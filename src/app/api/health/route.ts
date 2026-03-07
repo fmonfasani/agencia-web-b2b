@@ -43,6 +43,30 @@ export async function GET() {
         checks.redis &&
         checks.openai
 
+    // Trigger WhatsApp Alert if unhealthy and not already alerted recently
+    if (!healthy) {
+        const { whatsapp } = await import("@/lib/whatsapp")
+        const failedServices = Object.entries(checks)
+            .filter(([_, status]) => !status)
+            .map(([name]) => name.toUpperCase())
+            .join(", ")
+
+        // Cooldown check (using Redis to persist state across serverless invocations if needed, 
+        // but for now simple in-memory or just log and send)
+        try {
+            const lastAlertKey = `health_alert_cooldown`
+            const lastAlert = await redis.get(lastAlertKey)
+
+            if (!lastAlert) {
+                await whatsapp.sendAlert(`CRITICAL SYSTEM FAILURE: ${failedServices} is DOWN on VPS production.`)
+                // Set cooldown for 1 hour
+                await redis.set(lastAlertKey, "active", { ex: 3600 })
+            }
+        } catch (alertError) {
+            console.error("Failed to trigger health alert:", alertError)
+        }
+    }
+
     return NextResponse.json({
         status: healthy ? "ok" : "degraded",
         checks,
