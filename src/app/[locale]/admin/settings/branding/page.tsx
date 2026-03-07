@@ -12,12 +12,7 @@ export default async function BrandingSettingsPage() {
         return <div>No tenant context found.</div>;
     }
 
-    const tenant = await (prisma.tenant as any).findUnique({
-        where: { id: tenantId },
-        select: { branding: true },
-    });
-
-    const branding = (tenant?.branding as any) || {
+    let branding = {
         primaryColor: "#4a7fa5",
         sidebarColor: "#2c3e55",
         accentColor: "#3b82f6",
@@ -27,6 +22,19 @@ export default async function BrandingSettingsPage() {
         fontFamily: "DM Sans",
         brandingEnabled: false,
     };
+
+    try {
+        const tenant = await (prisma.tenant as any).findUnique({
+            where: { id: tenantId },
+            select: { branding: true },
+        });
+
+        if (tenant?.branding) {
+            branding = { ...branding, ...(tenant.branding as any) };
+        }
+    } catch (error) {
+        console.error("Branding settings fetch error:", error);
+    }
 
     return (
         <div className="p-8 max-w-7xl mx-auto space-y-8">

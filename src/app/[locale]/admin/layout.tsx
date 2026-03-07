@@ -39,15 +39,26 @@ export default async function AdminLayout({
     redirect(`/${locale}/auth/sign-in?error=no_membership`);
   }
 
-  const tenant = await (prisma.tenant as any).findUnique({
-    where: { id: auth.session.tenantId || "" },
-    select: { branding: true, name: true },
-  });
+  let branding: any = {};
+  let tenantName = "Revenue OS";
 
-  const branding: any = tenant?.branding || {};
+  try {
+    const tenant = await (prisma.tenant as any).findUnique({
+      where: { id: auth.session.tenantId || "" },
+      select: { branding: true, name: true },
+    });
+
+    if (tenant) {
+      branding = tenant.branding || {};
+      tenantName = tenant.name || tenantName;
+    }
+  } catch (error) {
+    console.error("Admin layout branding fetch error:", error);
+  }
+
   const primaryColor = branding.primaryColor || "#4a7fa5";
   const sidebarColor = branding.sidebarColor || "#2c3e55";
-  const appName = branding.appName || "Revenue OS";
+  const appName = branding.appName || tenantName;
   const logoUrl = branding.logoUrl;
 
   return (
