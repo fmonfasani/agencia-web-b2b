@@ -22,7 +22,7 @@ const MULTI_TENANT_MODELS = [
   "Customer", "Lead", "Activity", "Task", "Project",
   "UserDailyMetrics", "Membership", "Invitation",
   "InvitationAudit", "Subscription", "BusinessEvent", "ApiCostEvent",
-  "OutreachCampaign", "OutreachMessage"
+  "OutreachCampaign", "OutreachMessage", "Appointment"
 ];
 
 /**
