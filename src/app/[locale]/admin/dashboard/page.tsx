@@ -72,6 +72,9 @@ export default async function CommercialHubPage({
   const { user, tenantId } = await requireTenantMembership(["ADMIN", "SUPER_ADMIN"]);
   const userId = (user as { id?: string; userId?: string })?.id ??
     (user as { id?: string; userId?: string })?.userId;
+  if (!userId || !tenantId) {
+    throw new Error("TENANT_CONTEXT_REQUIRED");
+  }
   const scopedDb = await db({ userId, tenantId });
 
   // 1. Fetch Leads with Intelligence

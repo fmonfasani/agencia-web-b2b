@@ -11,6 +11,9 @@ import { DealStage } from "@prisma/client";
 export async function updateDealStageAction(dealId: string, newStage: DealStage) {
     const { user, tenantId } = await requireTenantMembership(["ADMIN", "SUPER_ADMIN"]);
     const userId = user?.id ?? user?.userId;
+    if (!userId || !tenantId) {
+        throw new Error("TENANT_CONTEXT_REQUIRED");
+    }
     const scopedDb = await db({ userId, tenantId });
 
     try {

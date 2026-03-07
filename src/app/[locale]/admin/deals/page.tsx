@@ -16,6 +16,9 @@ export default async function DealsPage({
     const { user, tenantId } = await requireTenantMembership();
     const userId = (user as { id?: string; userId?: string })?.id ??
         (user as { id?: string; userId?: string })?.userId;
+    if (!userId || !tenantId) {
+        throw new Error("TENANT_CONTEXT_REQUIRED");
+    }
     const scopedDb = await db({ userId, tenantId });
 
     // 2. Data Fetching (Scoped) - Now including the 'lead' relation

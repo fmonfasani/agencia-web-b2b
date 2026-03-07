@@ -13,6 +13,9 @@ export default async function LeadsPage() {
 
     const userId = (auth.user as { id?: string; userId?: string })?.id ??
         (auth.user as { id?: string; userId?: string })?.userId;
+    if (!userId || !auth.tenantId) {
+        throw new Error("TENANT_CONTEXT_REQUIRED");
+    }
     const scopedDb = await db({ userId, tenantId: auth.tenantId });
 
     const leads = await scopedDb.lead.findMany({

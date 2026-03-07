@@ -18,6 +18,9 @@ const OutreachDashboard = async ({ params }: { params: Promise<{ locale: string 
     const { user, tenantId } = await requireTenantMembership(["ADMIN", "SUPER_ADMIN"]);
     const userId = (user as { id?: string; userId?: string })?.id ??
         (user as { id?: string; userId?: string })?.userId;
+    if (!userId || !tenantId) {
+        throw new Error("TENANT_CONTEXT_REQUIRED");
+    }
     const scopedDb = await db({ userId, tenantId });
 
     const campaigns = await (scopedDb as any).outreachCampaign.findMany({
