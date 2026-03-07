@@ -12,7 +12,7 @@ export default async function NewOutreachPage({
     return (
         <div className="min-h-screen bg-[#f8fafc] p-8 md:p-12">
             <div className="max-w-4xl mx-auto">
-                <OutreachNewCampaign locale={locale} tenantId={tenantId} />
+                <OutreachNewCampaign locale={locale} tenantId={tenantId ?? ""} />
             </div>
         </div>
     );
