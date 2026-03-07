@@ -273,6 +273,21 @@ enum PipelineStatus {
   DESCARTADO
 }
 
+enum AppointmentType {
+  CALL
+  VIDEO_CALL
+  IN_PERSON
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  NO_SHOW
+  RESCHEDULED
+  CANCELLED
+}
+
 // Lead model for structured acquisition and intelligent classification
 model Lead {
   id               String         @id @default(cuid())
@@ -315,13 +330,22 @@ model Lead {
   topKeywords      String[]       // Frequency extraction
   budget           String?
   message          String?
-  technologies     Json?
+  technologies     String[]       @default([])
   websiteScore     Int?           // 1-10
+  hasAnalytics     Boolean?
+  hasPixel         Boolean?
+  hasSEO           Boolean?
+  isResponsive     Boolean?
+  websiteAge       String?        // "viejo" | "moderno" | "sin sitio"
   socialPresence   Json?          // { instagram, facebook, linkedin, ... }
   designQuality    String?        // modern | outdated | no-responsive
   estimatedCompanySize String?
+  companySize      String?        // "personal" | "pyme" | "empresa"
   industry         String?
+  mainProducts     String[]       @default([])
+  competitors      Json?          // array de {name, url, score}
   lastEnriched     DateTime?
+  lastEnrichedAt   DateTime?
   enrichmentStatus String?        // pending | processing | done | failed
   
   // Scoring & Status
@@ -348,6 +372,7 @@ model Lead {
   // Lead Intelligence (1:1)
   intelligence     LeadIntelligence?
   outreachMessages OutreachMessage[]
+  appointments     Appointment[]
 
   @@index([tenantId])
   @@index([tenantId, sourceType, status])
@@ -893,4 +918,23 @@ model ScraperSchedule {
 
   @@map("scraper_schedules")
   @@index([tenantId])
+}
+
+model Appointment {
+  id          String            @id @default(cuid())
+  leadId      String
+  tenantId    String
+  scheduledAt DateTime
+  duration    Int               @default(30) // minutos
+  type        AppointmentType   @default(CALL)
+  status      AppointmentStatus @default(PENDING)
+  notes       String?
+  outcome     String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  lead        Lead              @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([tenantId, scheduledAt])
+  @@index([leadId])
 }
