@@ -83,6 +83,8 @@ enum AuditEventType {
   LOGIN_FAILED
   LOGOUT
   TENANT_SWITCH
+  TENANT_SWITCH_DENIED
+  UNAUTHORIZED_ACCESS
   ADMIN_ACTION
   PASSWORD_CHANGED
   INVITATION_SENT
@@ -861,4 +863,3 @@ model ScraperSchedule {
   @@map("scraper_schedules")
   @@index([tenantId])
 }
-
