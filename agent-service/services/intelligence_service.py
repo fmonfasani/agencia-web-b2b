@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 
 import httpx
 from bs4 import BeautifulSoup
-from services.ai_service import generate_outreach_messages
+from services.ai_service import generate_outreach_messages, generate_strategic_brief
 
 logger = logging.getLogger(__name__)
 
@@ -94,6 +94,10 @@ class IntelligenceResult:
     whatsapp_msg: Optional[str] = None
     email_subject: Optional[str] = None
     email_body: Optional[str] = None
+    strategic_brief: Optional[str] = None
+    market_analysis: Optional[str] = None
+    niche_analysis: Optional[str] = None
+    interview_guide: Optional[str] = None
 
 
 # ─── Análisis de Website (HTTP-only, sin Playwright) ──────────────────────────
@@ -337,6 +341,31 @@ async def analyze_lead(lead: dict) -> IntelligenceResult:
             )
             result.whatsapp_msg = ai_msgs.get("whatsapp")
             result.email_subject = ai_msgs.get("email_subject")
+            result.email_subject = ai_msgs.get("email_subject")
             result.email_body = ai_msgs.get("email_body")
+
+        # 6. Generar Brief Estratégico para ventas
+        result.strategic_brief = await generate_strategic_brief(
+            lead_name=lead.get("name", "Negocio"),
+            category=lead.get("category", "General"),
+            website=lead.get("website", ""),
+            problems=result.detected_problems
+        )
+
+        # 7. Revenue OS: Mercado, Nicho, Entrevista
+        from services.ai_service import generate_market_analysis, generate_niche_analysis, generate_interview_guide
+        
+        result.market_analysis = await generate_market_analysis(
+            category=lead.get("category", "Negocio")
+        )
+        result.niche_analysis = await generate_niche_analysis(
+            lead_name=lead.get("name", "Negocio"),
+            category=lead.get("category", "Negocio"),
+            website=lead.get("website", "")
+        )
+        result.interview_guide = await generate_interview_guide(
+            lead_name=lead.get("name", "Negocio"),
+            brief=result.strategic_brief
+        )
 
     return result

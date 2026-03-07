@@ -20,6 +20,10 @@ export interface IntelligenceResult {
     whatsappMsg?: string;
     emailSubject?: string;
     emailBody?: string;
+    strategicBrief?: string;
+    marketAnalysis?: string;
+    nicheAnalysis?: string;
+    interviewGuide?: string;
 }
 
 export class LeadIntelligenceService {
@@ -78,7 +82,11 @@ export class LeadIntelligenceService {
         "bestChannel": "whatsapp" | "email" | "instagram",
         "whatsappMsg": string,
         "emailSubject": string,
-        "emailBody": string
+        "emailBody": string,
+        "strategicBrief": string,
+        "marketAnalysis": string,
+        "nicheAnalysis": string,
+        "interviewGuide": string
       }
     `;
 

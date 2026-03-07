@@ -618,6 +618,13 @@ model LeadIntelligence {
   emailSubject        String?
   emailBody           String?  @db.Text
 
+  // Investigación Estratégica
+  strategicBrief      String?  @db.Text
+  marketAnalysis      String?  @db.Text
+  nicheAnalysis       String?  @db.Text
+  interviewGuide      String?  @db.Text
+  enrichmentData      Json?    // Datos adicionales recolectados (competidores, tech stack, etc.)
+
   // Meta
   modelVersion        String   @default("1.0")
   analyzedAt          DateTime @default(now())

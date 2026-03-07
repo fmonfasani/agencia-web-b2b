@@ -8,6 +8,7 @@ import {
     Square, CheckSquare, Layers
 } from "lucide-react";
 import OutreachEnrollmentModal from "./OutreachEnrollmentModal";
+import { IntelligenceMarkdown } from "./IntelligenceMarkdown";
 
 // Social media icons (SVG inline)
 const IgIcon = () => <svg viewBox="0 0 24 24" className="w-4 h-4 fill-[#E1306C]"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" /></svg>;
@@ -63,6 +64,10 @@ interface Lead {
         whatsappMsg?: string | null;
         emailSubject?: string | null;
         emailBody?: string | null;
+        strategicBrief?: string | null;
+        marketAnalysis?: string | null;
+        nicheAnalysis?: string | null;
+        interviewGuide?: string | null;
     } | null;
 }
 
@@ -180,7 +185,10 @@ export default function LeadsDataTable({ leads, tenantId, locale }: { leads: Lea
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
     const [isEnrollModalOpen, setIsEnrollModalOpen] = useState(false);
+    const [drawerTab, setDrawerTab] = useState<"AUDITORÍA" | "ESTRATEGIA" | "MERCADO" | "VENTAS">("AUDITORÍA");
     const PAGE_SIZE = 50;
+
+    // ... (rest of the component logic)
 
     function toggleLeadSelection(id: string) {
         setSelectedLeadIds(prev =>
@@ -724,143 +732,193 @@ export default function LeadsDataTable({ leads, tenantId, locale }: { leads: Lea
                             </button>
                         </div>
 
+                        {/* Tab Navigation */}
+                        <div className="px-6 border-b border-slate-100 bg-white sticky top-0 z-10 flex gap-1 pt-2">
+                            {(["AUDITORÍA", "ESTRATEGIA", "MERCADO", "VENTAS"] as const).map((tab) => (
+                                <button
+                                    key={tab}
+                                    onClick={() => setDrawerTab(tab)}
+                                    className={`relative px-4 py-3 text-[10px] font-black uppercase tracking-widest transition-all ${drawerTab === tab
+                                        ? "text-blue-600"
+                                        : "text-slate-400 hover:text-slate-600"
+                                        }`}
+                                >
+                                    {tab}
+                                    {drawerTab === tab && (
+                                        <div className="absolute bottom-0 left-0 right-0 h-1 bg-blue-600 rounded-t-full" />
+                                    )}
+                                </button>
+                            ))}
+                        </div>
+
                         {/* Content */}
                         <div className="flex-1 overflow-y-auto p-6 space-y-8">
-                            {/* Summary Cards */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="p-4 rounded-2xl bg-blue-50 border border-blue-100">
-                                    <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-1">Opportunity Score</p>
-                                    <div className="flex items-end gap-2">
-                                        <span className="text-3xl font-black text-blue-900">{selectedLead.intelligence?.opportunityScore ?? 0}</span>
-                                        <span className="text-sm font-medium text-blue-700/60 mb-1">/ 100</span>
-                                    </div>
-                                    <div className="mt-3 h-1.5 w-full bg-blue-200/50 rounded-full overflow-hidden">
-                                        <div className="h-full bg-blue-600 rounded-full" style={{ width: `${selectedLead.intelligence?.opportunityScore ?? 0}%` }} />
-                                    </div>
-                                </div>
-                                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Mejor Canal</p>
-                                    <div className="flex items-center gap-2 mt-1">
-                                        {selectedLead.intelligence?.bestChannel === "whatsapp" ? (
-                                            <>
-                                                <div className="p-2 bg-emerald-100 rounded-lg text-emerald-600">
-                                                    <WaIcon />
-                                                </div>
-                                                <span className="font-bold text-slate-700 uppercase text-xs">WhatsApp</span>
-                                            </>
-                                        ) : selectedLead.intelligence?.bestChannel === "email" ? (
-                                            <>
-                                                <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
-                                                    <Mail className="w-4 h-4" />
-                                                </div>
-                                                <span className="font-bold text-slate-700 uppercase text-xs">Email</span>
-                                            </>
-                                        ) : (
-                                            <span className="text-slate-400 font-medium italic">Sin definir</span>
-                                        )}
-                                    </div>
-                                    <p className="text-[10px] text-slate-400 mt-2 italic">Basado en datos disponibles</p>
-                                </div>
-                            </div>
-
-                            {/* Detailed Scores */}
-                            <div className="space-y-4">
-                                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                    <Info className="w-3 h-3" />
-                                    Digital Analysis Breakdown
-                                </h3>
-                                <div className="grid grid-cols-3 gap-2">
-                                    <div className="p-3 border border-slate-100 rounded-xl bg-white shadow-sm flex flex-col items-center text-center">
-                                        <span className="text-lg font-bold text-slate-800">{selectedLead.intelligence?.demandScore ?? 0}</span>
-                                        <span className="text-[10px] text-slate-400 font-medium">Demand</span>
-                                    </div>
-                                    <div className="p-3 border border-slate-100 rounded-xl bg-white shadow-sm flex flex-col items-center text-center">
-                                        <span className="text-lg font-bold text-slate-800">{selectedLead.intelligence?.digitalGapScore ?? 0}</span>
-                                        <span className="text-[10px] text-slate-400 font-medium">Digital Gap</span>
-                                    </div>
-                                    <div className="p-3 border border-slate-100 rounded-xl bg-white shadow-sm flex flex-col items-center text-center">
-                                        <span className="text-lg font-bold text-slate-800">{selectedLead.intelligence?.outreachScore ?? 0}</span>
-                                        <span className="text-[10px] text-slate-400 font-medium">Outreach</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Detected Problems */}
-                            <div className="space-y-4">
-                                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                    <AlertCircle className="w-3 h-3 text-red-400" />
-                                    Problemas y Oportunidades
-                                </h3>
-                                <div className="space-y-3">
-                                    {selectedLead.intelligence?.detectedProblems && (selectedLead.intelligence.detectedProblems as any[]).length > 0 ? (
-                                        (selectedLead.intelligence.detectedProblems as any[]).map((prob, i) => (
-                                            <div key={i} className="flex gap-4 p-4 rounded-2xl border border-slate-100 bg-white hover:border-blue-200 transition-colors group/item shadow-sm">
-                                                <div className="shrink-0 w-10 h-10 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center text-orange-500 font-bold">
-                                                    {i + 1}
-                                                </div>
-                                                <div className="flex-1 space-y-1">
-                                                    <div className="flex items-center justify-between">
-                                                        <h4 className="font-bold text-slate-800 text-sm">{prob.problem}</h4>
-                                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${prob.urgency >= 4 ? "bg-red-50 text-red-600" : "bg-blue-50 text-blue-600"
-                                                            }`}>
-                                                            {prob.urgency >= 4 ? "CRÍTICO" : "ALTO VESTA"}
-                                                        </span>
-                                                    </div>
-                                                    <p className="text-xs text-slate-500">{prob.pain}</p>
-                                                    <div className="pt-2 flex items-center gap-2">
-                                                        <div className="flex-1 h-px bg-slate-100" />
-                                                        <span className="text-[10px] font-black text-blue-600 uppercase tracking-tighter">Solución Recomendada</span>
-                                                        <div className="flex-1 h-px bg-slate-100" />
-                                                    </div>
-                                                    <p className="text-[11px] font-bold text-blue-700 bg-blue-50/50 p-2 rounded-lg border border-blue-100/50">
-                                                        ✨ {prob.service}
-                                                    </p>
-                                                </div>
+                            {drawerTab === "AUDITORÍA" && (
+                                <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+                                    {/* Summary Cards */}
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="p-4 rounded-2xl bg-blue-50 border border-blue-100">
+                                            <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-1">Opportunity Score</p>
+                                            <div className="flex items-end gap-2">
+                                                <span className="text-3xl font-black text-blue-900">{selectedLead.intelligence?.opportunityScore ?? 0}</span>
+                                                <span className="text-sm font-medium text-blue-700/60 mb-1">/ 100</span>
                                             </div>
-                                        ))
-                                    ) : (
-                                        <div className="p-8 text-center border-2 border-dashed border-slate-100 rounded-3xl">
-                                            <CheckCircle2 className="w-10 h-10 text-emerald-100 mx-auto mb-3" />
-                                            <p className="text-sm text-slate-400">No se detectaron brechas digitales críticas</p>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* AI Generated Message */}
-                            <div className="space-y-4">
-                                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                    <MessageSquare className="w-3 h-3 text-blue-400" />
-                                    Outreach Automatizado (IA)
-                                </h3>
-                                <div className="p-5 rounded-3xl bg-slate-900 text-slate-100 relative overflow-hidden group/box shadow-xl border border-slate-800">
-                                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover/box:opacity-10 transition-opacity">
-                                        <Zap className="w-32 h-32 text-blue-400" />
-                                    </div>
-
-                                    <div className="relative space-y-4">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2 px-2 py-1 bg-blue-500/10 rounded-lg border border-blue-500/20">
-                                                <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                                                <span className="text-[10px] font-bold text-blue-400 uppercase">WhatsApp Personalizado</span>
+                                            <div className="mt-3 h-1.5 w-full bg-blue-200/50 rounded-full overflow-hidden">
+                                                <div className="h-full bg-blue-600 rounded-full" style={{ width: `${selectedLead.intelligence?.opportunityScore ?? 0}%` }} />
                                             </div>
-                                            <button
-                                                onClick={() => {
-                                                    navigator.clipboard.writeText(selectedLead.intelligence?.whatsappMsg || "");
-                                                    alert("Copiado al portapapeles");
-                                                }}
-                                                className="text-[10px] font-bold hover:text-blue-400 transition-colors uppercase"
-                                            >
-                                                Copiar Texto
-                                            </button>
                                         </div>
+                                        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Mejor Canal</p>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                {selectedLead.intelligence?.bestChannel === "whatsapp" ? (
+                                                    <>
+                                                        <div className="p-2 bg-emerald-100 rounded-lg text-emerald-600">
+                                                            <WaIcon />
+                                                        </div>
+                                                        <span className="font-bold text-slate-700 uppercase text-xs">WhatsApp</span>
+                                                    </>
+                                                ) : selectedLead.intelligence?.bestChannel === "email" ? (
+                                                    <>
+                                                        <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
+                                                            <Mail className="w-4 h-4" />
+                                                        </div>
+                                                        <span className="font-bold text-slate-700 uppercase text-xs">Email</span>
+                                                    </>
+                                                ) : (
+                                                    <span className="text-slate-400 font-medium italic text-xs">Sin definir</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
 
-                                        <p className="text-xs leading-relaxed text-slate-300 italic">
-                                            {selectedLead.intelligence?.whatsappMsg || "Selecciona un lead con análisis completo para generar el mensaje automático."}
-                                        </p>
+                                    {/* Detailed Scores */}
+                                    <div className="space-y-4">
+                                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                            <Info className="w-3 h-3" />
+                                            Digital Analysis Breakdown
+                                        </h3>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            <div className="p-3 border border-slate-100 rounded-xl bg-white shadow-sm flex flex-col items-center text-center">
+                                                <span className="text-lg font-bold text-slate-800">{selectedLead.intelligence?.demandScore ?? 0}</span>
+                                                <span className="text-[10px] text-slate-400 font-medium">Demand</span>
+                                            </div>
+                                            <div className="p-3 border border-slate-100 rounded-xl bg-white shadow-sm flex flex-col items-center text-center">
+                                                <span className="text-lg font-bold text-slate-800">{selectedLead.intelligence?.digitalGapScore ?? 0}</span>
+                                                <span className="text-[10px] text-slate-400 font-medium">Digital Gap</span>
+                                            </div>
+                                            <div className="p-3 border border-slate-100 rounded-xl bg-white shadow-sm flex flex-col items-center text-center">
+                                                <span className="text-lg font-bold text-slate-800">{selectedLead.intelligence?.outreachScore ?? 0}</span>
+                                                <span className="text-[10px] text-slate-400 font-medium">Outreach</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Detected Problems */}
+                                    <div className="space-y-4">
+                                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                            <AlertCircle className="w-3 h-3 text-red-400" />
+                                            Brechas Detectadas
+                                        </h3>
+                                        <div className="space-y-3">
+                                            {selectedLead.intelligence?.detectedProblems && (selectedLead.intelligence.detectedProblems as any[]).length > 0 ? (
+                                                (selectedLead.intelligence.detectedProblems as any[]).map((prob, i) => (
+                                                    <div key={i} className="flex gap-4 p-4 rounded-2xl border border-slate-100 bg-white hover:border-blue-200 transition-colors group/item shadow-sm">
+                                                        <div className="shrink-0 w-8 h-8 rounded-lg bg-orange-50 border border-orange-100 flex items-center justify-center text-orange-500 font-black text-xs">
+                                                            {i + 1}
+                                                        </div>
+                                                        <div className="flex-1 space-y-1">
+                                                            <div className="flex items-center justify-between">
+                                                                <h4 className="font-bold text-slate-800 text-sm">{prob.problem}</h4>
+                                                            </div>
+                                                            <p className="text-xs text-slate-500 leading-relaxed">{prob.pain}</p>
+                                                            <div className="pt-2">
+                                                                <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                                                                    ✨ {prob.service}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <div className="p-8 text-center border-2 border-dashed border-slate-100 rounded-3xl">
+                                                    <CheckCircle2 className="w-10 h-10 text-emerald-100 mx-auto mb-3" />
+                                                    <p className="text-sm text-slate-400">No se detectaron brechas digitales críticas</p>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            )}
+
+                            {drawerTab === "ESTRATEGIA" && (
+                                <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+                                    <IntelligenceMarkdown
+                                        title="Strategic Brief"
+                                        icon="🚀"
+                                        content={selectedLead.intelligence?.strategicBrief}
+                                    />
+                                </div>
+                            )}
+
+                            {drawerTab === "MERCADO" && (
+                                <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+                                    <IntelligenceMarkdown
+                                        title="Análisis de Mercado"
+                                        icon="📈"
+                                        content={selectedLead.intelligence?.marketAnalysis}
+                                    />
+                                    <IntelligenceMarkdown
+                                        title="Posicionamiento y Nicho"
+                                        icon="🎯"
+                                        content={selectedLead.intelligence?.nicheAnalysis}
+                                    />
+                                </div>
+                            )}
+
+                            {drawerTab === "VENTAS" && (
+                                <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+                                    <IntelligenceMarkdown
+                                        title="Guía de Entrevista"
+                                        icon="🗣️"
+                                        content={selectedLead.intelligence?.interviewGuide}
+                                    />
+
+                                    {/* AI Generated Message */}
+                                    <div className="space-y-4">
+                                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                            <MessageSquare className="w-3 h-3 text-blue-400" />
+                                            Outreach IA
+                                        </h3>
+                                        <div className="p-5 rounded-3xl bg-slate-900 text-slate-100 relative overflow-hidden group/box shadow-xl border border-slate-800">
+                                            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover/box:opacity-10 transition-opacity">
+                                                <Zap className="w-32 h-32 text-blue-400" />
+                                            </div>
+
+                                            <div className="relative space-y-4">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-2 px-2 py-1 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                                                        <span className="text-[9px] font-bold text-blue-400 uppercase tracking-tighter">WhatsApp Personalizado</span>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => {
+                                                            navigator.clipboard.writeText(selectedLead.intelligence?.whatsappMsg || "");
+                                                            alert("Copiado al portapapeles");
+                                                        }}
+                                                        className="text-[9px] font-bold hover:text-blue-400 transition-colors uppercase tracking-widest text-white/40"
+                                                    >
+                                                        Copiar
+                                                    </button>
+                                                </div>
+
+                                                <p className="text-xs leading-relaxed text-slate-300 italic">
+                                                    {selectedLead.intelligence?.whatsappMsg || "No hay mensaje generado."}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Footer Actions */}

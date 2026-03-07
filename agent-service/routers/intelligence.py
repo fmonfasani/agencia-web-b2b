@@ -71,6 +71,7 @@ async def save_intelligence_to_vercel(lead_id: str, result) -> bool:
         "whatsappMsg":       result.whatsapp_msg,
         "emailSubject":      result.email_subject,
         "emailBody":         result.email_body,
+        "strategicBrief":    result.strategic_brief,
         "modelVersion":      "1.0",
     }
 
