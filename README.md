@@ -67,7 +67,7 @@ El proyecto sigue una metodología de documentación profesional ubicada en `/do
 
 ## ⚙️ Configuración del Entorno (.env)
 
-Para habilitar todas las funcionalidades, asegúrate de configurar:
+Para habilitar todas las funcionalidades, usa `.env.example` como base y configurá secretos reales fuera del repo.
 
 ```bash
 # DB Sync
@@ -80,6 +80,12 @@ RESEND_API_KEY="re_..."
 # App URL (Para links de invitación)
 NEXT_PUBLIC_APP_URL="http://localhost:3001"
 ```
+
+---
+
+## 🔐 Seguridad de secretos
+
+- Revisá y ejecutá la rotación en [`docs/security/secret-rotation.md`](./docs/security/secret-rotation.md).
 
 ---
 
