@@ -11,6 +11,14 @@ const nextConfig: NextConfig = {
       fullUrl: true,
     },
   },
+  serverExternalPackages: [
+    "@opentelemetry/sdk-node",
+    "@opentelemetry/auto-instrumentations-node",
+    "@opentelemetry/exporter-trace-otlp-http",
+    "@opentelemetry/resources",
+    "@opentelemetry/semantic-conventions",
+    "winston",
+  ],
 };
 
 const sentryOptions = {

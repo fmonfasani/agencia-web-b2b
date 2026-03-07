@@ -4,7 +4,7 @@ export async function register() {
         const { default: sdk } = await import('./lib/observability/otel');
 
         try {
-            sdk.start();
+            await sdk.start();
             console.log('--- [Observability] OpenTelemetry SDK Started (Node.js) ---');
         } catch (error) {
             console.error('--- [Observability] Failed to start OpenTelemetry SDK:', error);

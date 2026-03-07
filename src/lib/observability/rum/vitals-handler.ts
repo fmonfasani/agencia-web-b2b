@@ -1,16 +1,22 @@
-import { onCLS, onFID, onLCP, onTTFB, onINP, Metric } from 'web-vitals';
-import { rum } from './rum-sdk';
-
-const sendToRum = (metric: Metric) => {
-    rum.track(metric.name, metric.value);
-};
-
-export const initWebVitals = () => {
+export const initWebVitals = async () => {
     if (typeof window === 'undefined') return;
 
-    onCLS(sendToRum);
-    onFID(sendToRum);
-    onLCP(sendToRum);
-    onTTFB(sendToRum);
-    onINP(sendToRum);
+    try {
+        const vitals: any = await import('web-vitals');
+        const { rum } = await import('./rum-sdk');
+
+        const sendToRum = (metric: any) => {
+            rum.track(metric.name, metric.value);
+        };
+
+        // Use safe access as web-vitals API might vary between versions
+        if (vitals.onCLS) vitals.onCLS(sendToRum);
+        if (vitals.onLCP) vitals.onLCP(sendToRum);
+        if (vitals.onTTFB) vitals.onTTFB(sendToRum);
+        if (vitals.onINP) vitals.onINP(sendToRum);
+        if (vitals.onFCP) vitals.onFCP(sendToRum);
+        if (vitals.onFID) vitals.onFID(sendToRum);
+    } catch (error) {
+        console.warn('[Rum:WebVitals] Failed to load web-vitals library:', error);
+    }
 };
