@@ -1,0 +1,55 @@
+# Walkthrough: Automated Outreach & Lead Intelligence
+
+This walkthrough demonstrates the implementation of the AI-driven Outreach and Lead Intelligence system for **Agencia B2B**.
+
+## 🚀 Key Achievements
+
+### 1. Premium Outreach Dashboard
+A dedicated, high-performance dashboard for managing cold outreach campaigns with real-time analytics.
+- **Conversion Funnel**: Visual tracking from Leads -> Contacted -> Qualified -> Won.
+- **Campaign Management**: Overview of active, draft, and completed campaigns.
+- **Micro-interactions**: Glassmorphic stats cards and animated progress indicators.
+
+### 2. Intelligent Lead Enrollment
+Integrated bulk actions in the [LeadsDataTable](file:///c:/Users/fmonf/Desktop/Software%20Enginnering%20LAPTOP/Agencia%20B2B/agencia-web-b2b/src/components/admin/LeadsDataTable.tsx#173-887) allow for seamless enrollment of high-potential leads into outreach sequences.
+- **Multi-selection**: Checkbox-based lead selection with global "Select All" functionality.
+- **Floating Bulk Actions Bar**: A sleek, sticky action bar that appears when leads are selected.
+- **Enrollment Modal**: Campaign selection and enrollment summary with impact estimation.
+
+### 3. AI Lead Scoring & Personalization
+Every lead is analyzed using an AI intelligence engine to determine their "Digital Gap" and "Opportunity Score".
+- **Dynamic Tiering**: Leads are categorized as HOT, WARM, COOL, or COLD.
+- **Automatic Message Generation**: Personalized WhatsApp and Email templates generated based on lead-specific problems.
+
+## 🛠️ Technical Implementation
+
+### Database Schema (Prisma)
+New models added to [schema.prisma](file:///c:/Users/fmonf/Desktop/Software%20Enginnering%20LAPTOP/Agencia%20B2B/agencia-web-b2b/prisma/schema.prisma) to support complex outreach workflows:
+- `OutreachCampaign`: Stores metadata, channel, and overall campaign status.
+- `OutreachCampaignLead`: Connects leads to campaigns with status tracking (ENROLLED, SENT, REPLIED, etc.).
+- `OutreachMessage`: Tracks every communication attempt and response.
+
+### API Infrastructure
+Standardized Next.js API routes for high-performance data retrieval:
+- `GET /api/outreach/stats`: Aggregated metrics for the dashboard.
+- `GET /api/outreach/campaigns`: Multi-tenant campaign listing.
+- `POST /api/outreach/campaigns/[id]/enroll`: Bulk lead enrollment logic.
+
+## 📸 Core Components
+
+### Outreach Dashboard
+Located at `/admin/outreach`. It providing a command-center view of all outreach activities.
+
+### New Campaign Wizard
+Found at `/admin/outreach/new`. A step-by-step process for launching new sequences.
+
+### Bulk Actions Integration
+Integrated directly into the Lead Management view at `/admin/dashboard`.
+
+---
+
+> [!IMPORTANT]
+> The system is fully integrated with the multi-tenant architecture, ensuring each agency only sees and manages their own campaigns and leads.
+
+> [!TIP]
+> Use the **Opportunity Score** filter in the Lead Management table to identify the best candidates for your next outreach campaign.

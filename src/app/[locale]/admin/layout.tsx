@@ -39,12 +39,23 @@ export default async function AdminLayout({
     redirect(`/${locale}/auth/sign-in?error=no_membership`);
   }
 
+  const tenant = await (prisma.tenant as any).findUnique({
+    where: { id: auth.session.tenantId || "" },
+    select: { branding: true, name: true },
+  });
+
+  const branding: any = tenant?.branding || {};
+  const primaryColor = branding.primaryColor || "#4a7fa5";
+  const sidebarColor = branding.sidebarColor || "#2c3e55";
+  const appName = branding.appName || "Revenue OS";
+  const logoUrl = branding.logoUrl;
+
   return (
-    <div className="min-h-screen bg-[#f7f7f7] flex overflow-hidden" style={{ fontFamily: "'DM Sans', 'Nunito', sans-serif" }}>
+    <div className="min-h-screen bg-[#f7f7f7] flex overflow-hidden" style={{ fontFamily: branding.fontFamily ? `'${branding.fontFamily}', sans-serif` : "'DM Sans', 'Nunito', sans-serif" }}>
       {/* Sidebar — Revenue OS Design System */}
       <aside className="w-[220px] text-white hidden md:flex flex-col relative z-50 shrink-0"
         style={{
-          background: "linear-gradient(180deg, #2c3e55 0%, #34495e 60%, #2c3e55 100%)",
+          background: branding.brandingEnabled ? sidebarColor : "linear-gradient(180deg, #2c3e55 0%, #34495e 60%, #2c3e55 100%)",
           boxShadow: "2px 0 20px rgba(0,0,0,0.12)",
           borderRight: "1px solid rgba(255,255,255,0.06)",
         }}>
@@ -54,18 +65,23 @@ export default async function AdminLayout({
           <div className="flex items-center gap-3">
             <div style={{
               width: 36, height: 36, borderRadius: 10,
-              background: "#4a7fa5",
-              boxShadow: "0 4px 12px rgba(59,130,246,0.40)",
+              background: branding.brandingEnabled ? primaryColor : "#4a7fa5",
+              boxShadow: branding.brandingEnabled ? `0 4px 12px ${primaryColor}66` : "0 4px 12px rgba(59,130,246,0.40)",
               display: "flex", alignItems: "center", justifyContent: "center",
+              overflow: "hidden"
             }}>
-              <Zap size={18} className="text-white fill-white" />
+              {logoUrl ? (
+                <img src={logoUrl} alt={appName} className="w-full h-full object-cover" />
+              ) : (
+                <Zap size={18} className="text-white fill-white" />
+              )}
             </div>
             <div className="flex flex-col">
               <span style={{ fontSize: 13, fontWeight: 800, color: "#ffffff", lineHeight: 1.2 }}>
-                Revenue OS
+                {appName}
               </span>
               <span style={{ fontSize: 10, fontWeight: 500, color: "#c8daea", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-                Agencia Leads
+                {branding.subName || (branding.brandingEnabled ? "" : "Agencia Leads")}
               </span>
             </div>
           </div>
@@ -96,7 +112,7 @@ export default async function AdminLayout({
 
           {/* 4. MARKETING */}
           <SidebarCategory label="Marketing" iconName="Megaphone">
-            <SidebarNavItem href="#" iconName="Search" label="Campañas Ads" isLocked />
+            <SidebarNavItem href={`/${locale}/admin/outreach`} iconName="Target" label="Campañas Outreach" />
             <SidebarNavItem href="#" iconName="Target" label="ROI por Canal" isLocked />
             <SidebarNavItem href="#" iconName="Search" label="SEO / SEM" isLocked />
           </SidebarCategory>
@@ -127,6 +143,7 @@ export default async function AdminLayout({
           {/* 8. SETTINGS */}
           <SidebarCategory label="Settings" iconName="Settings">
             <SidebarNavItem href="#" iconName="Settings" label="General" isLocked />
+            <SidebarNavItem href={`/${locale}/admin/settings/branding`} iconName="Palette" label="Identidad Visual" />
             <SidebarNavItem href="#" iconName="CreditCard" label="Suscripción Pro" isLocked />
           </SidebarCategory>
         </div>

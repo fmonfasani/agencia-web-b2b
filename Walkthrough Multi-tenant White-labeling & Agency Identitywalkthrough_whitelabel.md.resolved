@@ -1,0 +1,41 @@
+# Walkthrough: Multi-tenant White-labeling & Agency Identity
+
+I have successfully implemented the white-labeling engine, allowing each agency (tenant) to personalize the entire platform with their own brand identity.
+
+## Key Accomplishments
+
+### 1. Database & Schema
+- Added a `branding` JSON field to the [Tenant](file:///c:/Users/fmonf/Desktop/Software%20Enginnering%20LAPTOP/Agencia%20B2B/agencia-web-b2b/src/lib/tenant-context.ts#12-19) model in Prisma.
+- Successfully migrated the database and updated Prisma Client types.
+
+### 2. Global Branding Provider
+- Implemented [BrandingProvider](file:///c:/Users/fmonf/Desktop/Software%20Enginnering%20LAPTOP/Agencia%20B2B/agencia-web-b2b/src/components/BrandingProvider.tsx#23-75) in `src/providers/BrandingProvider.tsx`.
+- Automatically injects CSS variables (`--primary-brand`, `--sidebar-brand`, etc.) and Google Fonts into the root layout based on the current tenant's settings.
+
+### 3. Responsive Admin Sidebar
+- Updated the admin sidebar in [src/app/[locale]/admin/layout.tsx](file:///c:/Users/fmonf/Desktop/Software%20Enginnering%20LAPTOP/Agencia%20B2B/agencia-web-b2b/src/app/%5Blocale%5D/admin/layout.tsx) to dynamically use:
+    - **Logo**: Custom image or fallback `Zap` icon.
+    - **App Name**: The agency's platform name (e.g., "AgencyX OS").
+    - **Sidebar Colors**: Custom background and accent colors.
+    - **Fonts**: Dynamic font family loading.
+
+### 4. Self-Service Settings UI
+- Created a premium **Identidad Visual** page in the settings section.
+- Features:
+    - **Live Preview Mockup**: Admins can see changes in a simulated UI before saving.
+    - **Color Pickers**: Intuitive selection for primary and sidebar colors.
+    - **Font Selection**: Integration with Google Fonts.
+    - **Identity Toggle**: Easy switch between custom branding and platform defaults.
+
+## Verification
+
+### Manual Test Steps
+1. Navigate to **Settings > Identidad Visual**.
+2. Change the **App Name** and **Primary Color**.
+3. Observe the **Live Preview** update instantly.
+4. Click **Guardar Cambios**.
+5. Refresh the page to see the new branding applied to the entire layout and sidebar.
+
+## Technical Details
+- **Architecture**: The branding state is resolved server-side in the root layout to prevent "flash of unstyled content" (FOUC).
+- **Performance**: Uses standard CSS variables for maximum performance and compatibility with existing Tailwind/Vanilla CSS styles.

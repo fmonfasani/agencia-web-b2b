@@ -1,0 +1,35 @@
+# Walkthrough - Phase 6: Advanced AI Lead Scoring
+
+This phase completes the intelligent core of the platform, enabling automated, AI-driven prospect analysis and personalized outreach.
+
+## Changes Made
+
+### 1. Lead Intelligence Engine
+*   **Implemented [LeadIntelligenceService](file:///c:/Users/fmonf/Desktop/Software%20Enginnering%20LAPTOP/Agencia%20B2B/agencia-web-b2b/src/lib/leads/intelligence-service.ts#25-130)**: A new service that sends lead data to OpenAI to perform:
+    *   **Digital Gap Detection**: Identifying if a business lacks SSL, a chatbot, or has a poor web presence.
+    *   **Tier Classification**: Automatically categorizing leads into `HOT`, `WARM`, `COOL`, or `COLD` based on opportunity potential.
+    *   **Revenue Optimization**: Identifying the "top problem" and estimating the monthly revenue potential.
+    *   **Automated Outreach**: Generating personalized WhatsApp and Email scripts tailored to the lead's specific pain points.
+
+### 2. Standardized API
+*   **Created `POST /api/leads/[id]/intelligence`**: Triggers a fresh AI analysis and updates the database.
+*   **Created `GET /api/leads/[id]/intelligence`**: Retrieves the current intelligence report.
+
+### 3. Integrated UI
+*   **Enhanced Lead Table**: Added columns for Tier, Top Problem, and Opportunity Score.
+*   **Intelligence Drawer**: Integrated the analysis trigger directly into the lead detail view. Users can now click "Re-Analizar" to see live AI insights.
+*   **Copy-to-Clipboard**: Quick outreach with one-click copying of AI-generated messages.
+
+## Verification Results
+
+### Backend Logic
+*   The [LeadIntelligenceService](file:///c:/Users/fmonf/Desktop/Software%20Enginnering%20LAPTOP/Agencia%20B2B/agencia-web-b2b/src/lib/leads/intelligence-service.ts#25-130) correctly handles cases where lead data is sparse, providing reasonable defaults and intelligent guesses.
+*   AI responses are validated as JSON before being stored in Prisma.
+
+### UI Interaction
+*   Clicking the **Zap** (Re-Analizar) button triggers the [POST](file:///c:/Users/fmonf/Desktop/Software%20Enginnering%20LAPTOP/Agencia%20B2B/agencia-web-b2b/src/app/api/finops/budget/route.ts#4-29) request.
+*   The UI indicates a loading state during analysis.
+*   The drawer updates immediately with the fresh AI insights once the analysis is complete.
+
+---
+![Lead Intelligence UI Placeholder](https://placehold.co/800x400/0f172a/white?text=AI+Lead+Intelligence+Drawer+Demo)

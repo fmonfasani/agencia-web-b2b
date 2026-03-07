@@ -1,0 +1,38 @@
+# Walkthrough: Launch Readiness & Production Hardening
+
+The platform is now fully prepared for a robust and secure public launch.
+
+## Final Milestone Achievements
+
+### 1. Security & Resilience
+- **Upstash Rate Limiting**: Implemented a sliding window (50 requests/10s) to protect the API layer from brute-force and scraping abuse.
+- **Header Hardening**: Added critical security headers:
+    - `X-Content-Type-Options: nosniff` (Prevents MIME sniffing)
+    - `X-Frame-Options: DENY` (Anti-Clickjacking)
+    - `Strict-Transport-Security` (Enforces HTTPS)
+    - `Referrer-Policy: strict-origin-when-cross-origin`
+
+### 2. SEO & indexing Mastery
+- **Dynamic Meta Tags**: The root layout now automatically generates SEO titles and descriptions based on the tenant's brand identity.
+- **Sitemap & Robots**:
+    - `sitemap.xml`: Automatically lists all public localized routes.
+    - `robots.txt`: Prevents crawlers from accessing `/admin`, `/onboarding`, and internal APIs.
+
+### 3. Production Deployment Audit
+- **Verification Script**: Created [scripts/verify-env.mjs](file:///c:/Users/fmonf/Desktop/Software%20Enginnering%20LAPTOP/Agencia%20B2B/agencia-web-b2b/scripts/verify-env.mjs) which acts as a "pre-flight check" to ensure all 20+ critical environment variables are present and valid before the app starts.
+
+## How to Verify Before Deployment
+
+### 1. Run environment check
+```bash
+node scripts/verify-env.mjs
+```
+
+### 2. Verify Headers
+Run `curl -I https://your-production-url.com` and verify the security headers are present.
+
+### 3. Inspect SEO
+Visit `https://your-production-url.com/sitemap.xml` to see the generated entries.
+
+---
+**Status**: The codebase is now officially **Launch Ready**.

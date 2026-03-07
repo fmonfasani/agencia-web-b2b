@@ -107,6 +107,7 @@ model Tenant {
   invitations      Invitation[]
   invitationAudits InvitationAudit[]
   subscription     Subscription?
+  branding         Json?             // { primaryColor, sidebarColor, logoUrl, appName, brandingEnabled }
   agents           Agent[]
   products         Product[]
   services         Service[]
@@ -120,6 +121,7 @@ model Tenant {
   userDailyMetrics UserDailyMetrics[]
   apiCostEvents    ApiCostEvent[]
   businessMetrics  BusinessMetric[]
+  outreachCampaigns OutreachCampaign[]
 }
 
 model PasswordResetToken {
@@ -296,6 +298,7 @@ model Lead {
 
   // Lead Intelligence (1:1)
   intelligence     LeadIntelligence?
+  outreachMessages OutreachMessage[]
 
   @@index([tenantId])
   @@index([tenantId, sourceType, status])
@@ -751,3 +754,65 @@ model RumEvent {
 
   @@index([page, metric, createdAt])
 }
+
+model OperationEvent {
+  id          String   @id @default(uuid())
+  location    String?
+  industry    String?
+  provider    String
+  operation   String
+  success     Boolean
+  latencyMs   Int
+  errorCode   String?
+  createdAt   DateTime @default(now())
+
+  @@index([provider, createdAt])
+  @@index([location, industry])
+}
+
+model BudgetConfig {
+  id       String @id @default(uuid())
+  provider String @unique
+  monthly  Float
+  warning  Float @default(0.8)
+  critical Float @default(0.95)
+}
+
+model OutreachCampaign {
+  id          String   @id @default(cuid())
+  tenantId    String
+  name        String
+  channel     String   // EMAIL, WHATSAPP
+  status      String   @default("DRAFT") // DRAFT, SCHEDULED, ACTIVE, COMPLETED, PAUSED
+  template    String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant      Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  messages    OutreachMessage[]
+
+  @@index([tenantId])
+}
+
+model OutreachMessage {
+  id          String   @id @default(cuid())
+  campaignId  String
+  leadId      String
+  status      String   @default("PENDING") // PENDING, SENT, DELIVERED, READ, FAILED
+  content     String   @db.Text
+  error       String?
+  externalId  String?  // Message ID from Resend/WhatsApp
+  sentAt      DateTime?
+  deliveredAt DateTime?
+  readAt      DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  campaign    OutreachCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  lead        Lead             @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
+  @@index([leadId])
+  @@index([status])
+}
+

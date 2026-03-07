@@ -1,0 +1,55 @@
+# Implementation Plan: Multi-tenant White-labeling (Phase 8)
+
+This phase focuses on allowing each agency (tenant) to customize the platform's look and feel, enabling a true white-label experience for their clients.
+
+## Proposed Changes
+
+### 1. Database Schema Updates
+Add a flexible `branding` JSON field to the [Tenant](file:///c:/Users/fmonf/Desktop/Software%20Enginnering%20LAPTOP/Agencia%20B2B/agencia-web-b2b/src/lib/prisma.ts#25-82) model to store colors, logos, and other UI configurations without requiring frequent schema migrations.
+
+#### [MODIFY] [schema.prisma](file:///c:/Users/fmonf/Desktop/Software%20Enginnering%20LAPTOP/Agencia%20B2B/agencia-web-b2b/prisma/schema.prisma)
+- Add `branding Json?` field to the [Tenant](file:///c:/Users/fmonf/Desktop/Software%20Enginnering%20LAPTOP/Agencia%20B2B/agencia-web-b2b/src/lib/prisma.ts#25-82) model.
+- Typical structure: `{ "primaryColor": "#135bec", "sidebarColor": "#2c3e55", "logoUrl": "...", "fontFamily": "...", "appName": "..." }`.
+
+---
+
+### 2. Dynamic Theme System
+Implement a system to inject CSS variables into the application root based on the active tenant's branding configuration.
+
+#### [NEW] [branding-provider.tsx](file:///c:/Users/fmonf/Desktop/Software%20Enginnering%20LAPTOP/Agencia%20B2B/agencia-web-b2b/src/components/BrandingProvider.tsx)
+- A server component that fetches tenant branding and renders a `<style>` tag containing CSS variable overrides.
+- Overrides variables like `--color-accent-1`, `--color-sidebar-top`, etc.
+
+#### [MODIFY] [layout.tsx](file:///c:/Users/fmonf/Desktop/Software%20Enginnering%20LAPTOP/Agencia%20B2B/agencia-web-b2b/src/app/[locale]/layout.tsx)
+- Integrate the `BrandingProvider` to ensure every page respects the tenant's brand.
+
+---
+
+### 3. Branding Configuration UI
+Create a premium settings interface for agency administrators to manage their platform identity.
+
+#### [NEW] [branding-settings-form.tsx](file:///c:/Users/fmonf/Desktop/Software%20Enginnering%20LAPTOP/Agencia%20B2B/agencia-web-b2b/src/components/admin/BrandingSettingsForm.tsx)
+- Color picker for primary and accent colors.
+- Logo upload (URL input for now) and preview.
+- Dynamic preview (Mockup) of how the dashboard looks with the new colors.
+
+#### [NEW] [branding page](file:///c:/Users/fmonf/Desktop/Software%20Enginnering%20LAPTOP/Agencia%20B2B/agencia-web-b2b/src/app/[locale]/admin/settings/branding/page.tsx)
+- The page hosting the branding settings.
+
+---
+
+### 4. Component Updates
+Update key components to use the new branding variables instead of hardcoded tailwind classes where necessary.
+
+- **Sidebar**: Use `--color-sidebar-top` and logo from tenant config.
+- **Buttons**: Use base accent variables.
+
+## Verification Plan
+
+### Automated Tests
+- Verify that CSS variables are correctly injected into the DOM for a given tenant.
+- Test the API endpoint for saving branding configuration.
+
+### Manual Verification
+- Change the primary color in settings and verify the entire dashboard updates instantly.
+- Verify that different tenants see their own unique branding when switching accounts.

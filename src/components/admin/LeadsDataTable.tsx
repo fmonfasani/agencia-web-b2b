@@ -4,8 +4,10 @@ import { useState, useMemo } from "react";
 import {
     ExternalLink, Search, Download, Zap, AlertCircle,
     CheckCircle2, XCircle, Clock, MessageSquare, Mail,
-    ChevronRight, Info, MapPin, Phone, Globe, ChevronDown, ChevronUp
+    ChevronRight, Info, MapPin, Phone, Globe, ChevronDown, ChevronUp,
+    Square, CheckSquare, Layers
 } from "lucide-react";
+import OutreachEnrollmentModal from "./OutreachEnrollmentModal";
 
 // Social media icons (SVG inline)
 const IgIcon = () => <svg viewBox="0 0 24 24" className="w-4 h-4 fill-[#E1306C]"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" /></svg>;
@@ -168,14 +170,33 @@ function TruncateText({ text, maxLength = 40 }: { text?: string | null; maxLengt
     );
 }
 
-export default function LeadsDataTable({ leads }: { leads: Lead[] }) {
+export default function LeadsDataTable({ leads, tenantId, locale }: { leads: Lead[], tenantId?: string, locale?: string }) {
     const [activeTab, setActiveTab] = useState<Tab>("overview");
     const [search, setSearch] = useState("");
     const [sortField, setSortField] = useState<any>("potentialScore");
     const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
     const [page, setPage] = useState(1);
     const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
+    const [isEnrollModalOpen, setIsEnrollModalOpen] = useState(false);
     const PAGE_SIZE = 50;
+
+    function toggleLeadSelection(id: string) {
+        setSelectedLeadIds(prev =>
+            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+        );
+    }
+
+    function toggleAllOnPage() {
+        const pageIds = paginated.map(l => l.id);
+        const allSelected = pageIds.every(id => selectedLeadIds.includes(id));
+        if (allSelected) {
+            setSelectedLeadIds(prev => prev.filter(id => !pageIds.includes(id)));
+        } else {
+            setSelectedLeadIds(prev => [...new Set([...prev, ...pageIds])]);
+        }
+    }
 
     const filtered = useMemo(() => {
         const q = search.toLowerCase();
@@ -196,6 +217,26 @@ export default function LeadsDataTable({ leads }: { leads: Lead[] }) {
 
     const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
     const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+
+    async function handleAnalyze(leadId: string) {
+        setIsAnalyzing(true);
+        try {
+            const res = await fetch(`/api/leads/${leadId}/intelligence`, {
+                method: "POST",
+            });
+            if (!res.ok) throw new Error("Analysis failed");
+            const data = await res.json();
+
+            // Update local state
+            setSelectedLead(prev => prev ? { ...prev, intelligence: data.data } : null);
+            // Optionally refresh the whole page or list here if needed
+        } catch (error) {
+            console.error(error);
+            alert("Error al analizar el lead con IA");
+        } finally {
+            setIsAnalyzing(false);
+        }
+    }
 
     function toggleSort(field: typeof sortField) {
         if (sortField === field) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -286,9 +327,21 @@ export default function LeadsDataTable({ leads }: { leads: Lead[] }) {
             <div className="overflow-x-auto rounded-2xl border border-slate-200 shadow-sm">
                 <table className="w-full bg-white text-sm">
                     <thead>
-                        <tr>
+                        <tr className="bg-slate-50/50">
+                            <th className="px-3 py-2.5 bg-slate-50 border-b border-slate-200 w-10">
+                                <button
+                                    onClick={toggleAllOnPage}
+                                    className="text-slate-400 hover:text-blue-600 transition-colors"
+                                >
+                                    {paginated.every(l => selectedLeadIds.includes(l.id)) && selectedLeadIds.length > 0 ? (
+                                        <CheckSquare className="w-5 h-5 text-blue-600" />
+                                    ) : (
+                                        <Square className="w-5 h-5" />
+                                    )}
+                                </button>
+                            </th>
                             <Th className="w-8">#</Th>
-                            <Th field="name">Nombre</Th>
+                            <Th field="name">Nombre / Empresa</Th>
 
                             {activeTab === "overview" && (
                                 <>
@@ -366,9 +419,28 @@ export default function LeadsDataTable({ leads }: { leads: Lead[] }) {
                             return (
                                 <tr
                                     key={lead.id}
-                                    className={`${rowClass} hover:bg-blue-50/30 transition-colors cursor-pointer group`}
-                                    onClick={() => setSelectedLead(lead)}
+                                    className={`${rowClass} ${selectedLeadIds.includes(lead.id) ? "bg-blue-50/40" : ""} hover:bg-blue-50/30 transition-colors cursor-pointer group`}
+                                    onClick={(e) => {
+                                        // Prevents row click if clicking checkbox specifically
+                                        if ((e.target as any).closest('.selection-checkbox')) return;
+                                        setSelectedLead(lead);
+                                    }}
                                 >
+                                    <td className="px-3 py-3 border-b border-slate-100 selection-checkbox">
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                toggleLeadSelection(lead.id);
+                                            }}
+                                            className="text-slate-300 hover:text-blue-600 transition-colors"
+                                        >
+                                            {selectedLeadIds.includes(lead.id) ? (
+                                                <CheckSquare className="w-5 h-5 text-blue-600" />
+                                            ) : (
+                                                <Square className="w-5 h-5" />
+                                            )}
+                                        </button>
+                                    </td>
                                     <Cell className="text-slate-400 tabular-nums w-8">
                                         {(page - 1) * PAGE_SIZE + idx + 1}
                                     </Cell>
@@ -579,6 +651,48 @@ export default function LeadsDataTable({ leads }: { leads: Lead[] }) {
                     </div>
                 </div>
             )}
+            {/* Multi-Selection Bulk Actions Bar */}
+            {selectedLeadIds.length > 0 && (
+                <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] bg-slate-900 text-white px-8 py-4 rounded-[2.5rem] shadow-2xl flex items-center gap-8 border border-white/10 backdrop-blur-md animate-in slide-in-from-bottom-10 duration-500">
+                    <div className="flex items-center gap-4 border-r border-white/10 pr-8">
+                        <div className="size-10 bg-blue-600 rounded-2xl flex items-center justify-center font-black text-sm shadow-xl shadow-blue-500/20">
+                            {selectedLeadIds.length}
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Leads Seleccionados</span>
+                            <span className="text-xs font-bold leading-none">Acción Masiva Activa</span>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setIsEnrollModalOpen(true)}
+                            className="bg-white text-slate-900 px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all flex items-center gap-2"
+                        >
+                            <Layers size={14} /> Inscribir en Outreach
+                        </button>
+                        <button
+                            onClick={() => setSelectedLeadIds([])}
+                            className="text-white/40 hover:text-white px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-colors"
+                        >
+                            Descartar
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Outreach Enrollment Modal */}
+            <OutreachEnrollmentModal
+                isOpen={isEnrollModalOpen}
+                onClose={() => {
+                    setIsEnrollModalOpen(false);
+                    setSelectedLeadIds([]);
+                }}
+                leadIds={selectedLeadIds}
+                locale={locale || "es"}
+                tenantId={tenantId}
+            />
+
             {/* Intelligence Drawer */}
             {selectedLead && (
                 <div className="fixed inset-0 z-50 flex justify-end">
@@ -755,9 +869,13 @@ export default function LeadsDataTable({ leads }: { leads: Lead[] }) {
                                 <MessageSquare className="w-4 h-4" />
                                 Abrir WhatsApp
                             </button>
-                            <button className="flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-700 p-3 rounded-2xl hover:bg-slate-100 transition-all font-bold text-sm">
-                                <Zap className="w-4 h-4 text-amber-500" />
-                                Re-Analizar
+                            <button
+                                onClick={() => handleAnalyze(selectedLead.id)}
+                                disabled={isAnalyzing}
+                                className="flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-700 p-3 rounded-2xl hover:bg-slate-100 transition-all font-bold text-sm disabled:opacity-50"
+                            >
+                                <Zap className={`w-4 h-4 text-amber-500 ${isAnalyzing ? "animate-spin" : ""}`} />
+                                {isAnalyzing ? "Analizando..." : "Re-Analizar"}
                             </button>
                         </div>
                     </div>
