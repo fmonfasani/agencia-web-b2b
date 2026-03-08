@@ -5,7 +5,7 @@ from datetime import datetime
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from core.config import settings
-from core.job_store import ensure_scraper_jobs_table, mark_inflight_jobs_interrupted
+from core.job_store import ensure_scraper_jobs_table, ensure_scraper_schedules_table, mark_inflight_jobs_interrupted
 from core.rate_limit import limiter
 from core.scheduler import scraper_scheduler
 from core.observability import setup_observability
@@ -22,6 +22,7 @@ setup_observability(app)
 @app.on_event("startup")
 async def startup_event():
     ensure_scraper_jobs_table()
+    ensure_scraper_schedules_table()
     interrupted = mark_inflight_jobs_interrupted()
     if interrupted:
         logger.warning("[Jobs] Marked %s in-flight jobs as interrupted after restart.", interrupted)

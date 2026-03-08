@@ -5,7 +5,7 @@ const AGENT_SERVICE_URL =
   process.env.AGENT_SERVICE_URL || "http://localhost:8000";
 
 export async function POST(request: NextRequest) {
-  const ADMIN_SECRET = process.env.AGENT_SERVICE_ADMIN_SECRET || "";
+  const ADMIN_SECRET = process.env.ADMIN_SECRET || "";
   const auth = await requireAuth();
   if (!auth)
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  const ADMIN_SECRET = process.env.AGENT_SERVICE_ADMIN_SECRET || "";
+  const ADMIN_SECRET = process.env.ADMIN_SECRET || "";
   const auth = await requireAuth();
   if (!auth)
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });

@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/request-auth";
 
 const AGENT_SERVICE_URL = process.env.AGENT_SERVICE_URL || "http://localhost:8000";
-const ADMIN_SECRET = process.env.AGENT_SERVICE_ADMIN_SECRET || "";
 
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ jobId: string }> }
 ) {
+    const ADMIN_SECRET = process.env.ADMIN_SECRET || "";
     const auth = await requireAuth();
     if (!auth) {
         return NextResponse.json({ error: "No autorizado" }, { status: 401 });

@@ -1,6 +1,7 @@
 import hashlib
 import secrets
 
+from typing import Optional
 from fastapi import Header, HTTPException
 
 from core.config import settings
@@ -28,6 +29,12 @@ def require_admin(x_admin_secret: str = Header(...)):
         raise HTTPException(status_code=403, detail="Forbidden")
 
 
-def require_internal_secret(x_internal_secret: str = Header(...)):
-    if x_internal_secret != settings.internal_api_secret:
-        raise HTTPException(status_code=401, detail="Unauthorized")
+def require_internal_secret(
+    x_internal_secret: Optional[str] = Header(None),
+    x_admin_secret: Optional[str] = Header(None)
+):
+    if x_internal_secret == settings.internal_api_secret:
+        return
+    if x_admin_secret == settings.admin_secret:
+        return
+    raise HTTPException(status_code=401, detail="Unauthorized")

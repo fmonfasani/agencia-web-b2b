@@ -5,7 +5,7 @@ const AGENT_SERVICE_URL = process.env.AGENT_SERVICE_URL || "http://localhost:800
 
 export async function POST(request: NextRequest) {
     // Read secret at runtime (not cached at module level)
-    const ADMIN_SECRET = process.env.AGENT_SERVICE_ADMIN_SECRET || "";
+    const ADMIN_SECRET = process.env.ADMIN_SECRET || "";
 
     console.log("[SCRAPER_PROXY] Request received");
     console.log("[SCRAPER_PROXY] AGENT_SERVICE_URL:", AGENT_SERVICE_URL);

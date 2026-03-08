@@ -44,6 +44,36 @@ def ensure_scraper_jobs_table() -> None:
             conn.commit()
 
 
+def ensure_scraper_schedules_table() -> None:
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS scraper_schedules (
+                    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                    tenant_id text NOT NULL,
+                    query text NOT NULL,
+                    location text NOT NULL,
+                    max_leads integer NOT NULL DEFAULT 50,
+                    provider text NOT NULL DEFAULT 'google',
+                    frequency_minutes integer NULL,
+                    specific_time time NULL,
+                    is_active boolean NOT NULL DEFAULT true,
+                    last_run timestamptz NULL,
+                    created_at timestamptz NOT NULL DEFAULT now(),
+                    updated_at timestamptz NOT NULL DEFAULT now()
+                )
+            """
+            )
+            cur.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_scraper_schedules_tenant
+                ON scraper_schedules (tenant_id)
+            """
+            )
+            conn.commit()
+
+
 def mark_inflight_jobs_interrupted() -> int:
     with get_conn() as conn:
         with conn.cursor() as cur:

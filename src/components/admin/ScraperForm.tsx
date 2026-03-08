@@ -73,10 +73,10 @@ export default function ScraperForm({
           setJob((prev) =>
             prev
               ? {
-                  ...prev,
-                  status: "FAILED",
-                  message: "Timeout: el scraping tardó demasiado.",
-                }
+                ...prev,
+                status: "FAILED",
+                message: "Timeout: el scraping tardó demasiado.",
+              }
               : prev,
           );
           return;
@@ -93,8 +93,9 @@ export default function ScraperForm({
               clearInterval(pollingRef.current!);
             }
           }
-        } catch {
-          // Ignorar errores de polling silenciosamente
+        } catch (err) {
+          // Ignorar errores de polling si son temporales, pero avisar si es fatal
+          console.error("Polling error:", err);
         }
       }, 10000); // 10 segundos
     }
@@ -175,7 +176,15 @@ export default function ScraperForm({
         });
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Error desconocido";
+      let message = err instanceof Error ? err.message : "Error desconocido";
+
+      // Mejorar mensajes específicos
+      if (message.includes("401") || message.includes("403")) {
+        message = "Error de autenticación: Verifica las claves (ADMIN_SECRET) en el servidor.";
+      } else if (message.includes("fetch failed") || message.includes("ECONNREFUSED")) {
+        message = "No se pudo conectar con el servicio de scraping. Asegúrate de que el backend de Python esté corriendo.";
+      }
+
       setError(message);
     } finally {
       setLoading(false);
@@ -197,13 +206,12 @@ export default function ScraperForm({
 
     return (
       <div
-        className={`rounded-3xl border-2 p-6 space-y-4 transition-all ${
-          isRunning
+        className={`rounded-3xl border-2 p-6 space-y-4 transition-all ${isRunning
             ? "border-blue-200 bg-blue-50"
             : isCompleted
               ? "border-emerald-200 bg-emerald-50"
               : "border-rose-200 bg-rose-50"
-        }`}
+          }`}
       >
         {/* Header del estado */}
         <div className="flex items-center gap-3">
@@ -224,13 +232,12 @@ export default function ScraperForm({
           )}
           <div>
             <p
-              className={`font-black text-sm ${
-                isRunning
+              className={`font-black text-sm ${isRunning
                   ? "text-blue-700"
                   : isCompleted
                     ? "text-emerald-700"
                     : "text-rose-700"
-              }`}
+                }`}
             >
               {isRunning
                 ? "Scraping en progreso..."
@@ -239,13 +246,12 @@ export default function ScraperForm({
                   : "Error en el scraping"}
             </p>
             <p
-              className={`text-xs ${
-                isRunning
+              className={`text-xs ${isRunning
                   ? "text-blue-500"
                   : isCompleted
                     ? "text-emerald-500"
                     : "text-rose-500"
-              }`}
+                }`}
             >
               {job.message}
             </p>
@@ -374,11 +380,10 @@ export default function ScraperForm({
               <button
                 type="button"
                 onClick={() => setProvider("google")}
-                className={`flex flex-col p-4 rounded-2xl border-2 transition-all text-left ${
-                  provider === "google"
+                className={`flex flex-col p-4 rounded-2xl border-2 transition-all text-left ${provider === "google"
                     ? "border-slate-900 bg-slate-900 text-white shadow-xl shadow-slate-900/20"
                     : "border-slate-100 bg-slate-50 text-slate-600 hover:border-slate-200"
-                }`}
+                  }`}
               >
                 <span className="text-sm font-black">Google Maps Direct</span>
                 <span
@@ -390,11 +395,10 @@ export default function ScraperForm({
               <button
                 type="button"
                 onClick={() => setProvider("apify")}
-                className={`flex flex-col p-4 rounded-2xl border-2 transition-all text-left ${
-                  provider === "apify"
+                className={`flex flex-col p-4 rounded-2xl border-2 transition-all text-left ${provider === "apify"
                     ? "border-slate-900 bg-slate-900 text-white shadow-xl shadow-slate-900/20"
                     : "border-slate-100 bg-slate-50 text-slate-600 hover:border-slate-200"
-                }`}
+                  }`}
               >
                 <span className="text-sm font-black">Apify Cloud</span>
                 <span className="text-[10px]">
@@ -415,11 +419,10 @@ export default function ScraperForm({
                   key={preset.query}
                   type="button"
                   onClick={() => setQuery(preset.query)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
-                    query === preset.query
+                  className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${query === preset.query
                       ? "bg-slate-900 text-white border-slate-900"
                       : "bg-white text-slate-500 border-slate-200 hover:border-slate-400"
-                  }`}
+                    }`}
                 >
                   {preset.label}
                 </button>
@@ -491,14 +494,12 @@ export default function ScraperForm({
               <button
                 type="button"
                 onClick={() => setIsScheduled(!isScheduled)}
-                className={`w-12 h-6 rounded-full transition-all relative ${
-                  isScheduled ? "bg-slate-900" : "bg-slate-200"
-                }`}
+                className={`w-12 h-6 rounded-full transition-all relative ${isScheduled ? "bg-slate-900" : "bg-slate-200"
+                  }`}
               >
                 <div
-                  className={`absolute top-1 size-4 bg-white rounded-full transition-all ${
-                    isScheduled ? "left-7" : "left-1"
-                  }`}
+                  className={`absolute top-1 size-4 bg-white rounded-full transition-all ${isScheduled ? "left-7" : "left-1"
+                    }`}
                 />
               </button>
             </div>
