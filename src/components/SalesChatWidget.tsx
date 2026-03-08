@@ -11,6 +11,7 @@ interface Message {
 
 export default function SalesChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -30,6 +31,9 @@ export default function SalesChatWidget() {
   useEffect(() => {
     const savedThread = localStorage.getItem("sales_agent_thread_id");
     if (savedThread) setThreadId(savedThread);
+
+    const dismissed = localStorage.getItem("sales_agent_dismissed");
+    if (dismissed === "true") setIsDismissed(true);
 
     // Si no hay mensajes, añadir bienvenida inicial
     setMessages((prev) => {
@@ -93,8 +97,10 @@ export default function SalesChatWidget() {
     }
   };
 
+  if (isDismissed) return null;
+
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
+    <div className="fixed bottom-6 left-6 z-50 flex flex-col items-start px-4">
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -137,11 +143,10 @@ export default function SalesChatWidget() {
                   className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                 >
                   <div
-                    className={`max-w-[80%] p-3 rounded-2xl text-sm ${
-                      msg.role === "user"
+                    className={`max-w-[80%] p-3 rounded-2xl text-sm ${msg.role === "user"
                         ? "bg-blue-600 text-white rounded-tr-none"
                         : "bg-neutral-800 text-neutral-200 rounded-tl-none border border-neutral-700"
-                    }`}
+                      }`}
                   >
                     {msg.content}
                   </div>
@@ -198,11 +203,24 @@ export default function SalesChatWidget() {
 
         {/* Tooltip */}
         {!isOpen && (
-          <span className="absolute right-full mr-4 px-3 py-1 bg-neutral-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-neutral-700">
+          <span className="absolute left-full ml-4 px-3 py-1 bg-neutral-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-neutral-700">
             ¿Dudas sobre Revenue OS?
           </span>
         )}
       </motion.button>
+
+      {/* Dismiss Button */}
+      {!isOpen && (
+        <button
+          onClick={() => {
+            setIsDismissed(true);
+            localStorage.setItem("sales_agent_dismissed", "true");
+          }}
+          className="mt-2 text-[10px] text-neutral-500 hover:text-neutral-300 transition-colors uppercase font-bold tracking-widest pl-2"
+        >
+          Ocultar Asistente
+        </button>
+      )}
     </div>
   );
 }
