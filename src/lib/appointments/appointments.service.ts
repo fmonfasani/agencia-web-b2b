@@ -1,15 +1,23 @@
-import { AppointmentStatus, AppointmentType, PipelineStatus } from "@prisma/client";
+import {
+  AppointmentStatus,
+  AppointmentType,
+  PipelineStatus,
+} from "@prisma/client";
 import { Resend } from "resend";
 import { getTenantPrisma } from "@/lib/prisma";
 import { requireTenantId } from "@/lib/tenant-context";
 import { LeadPipelineService } from "@/lib/leads/pipeline/pipeline.service";
 
 function getResendClient(): Resend | null {
-  return process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+  return process.env.RESEND_API_KEY
+    ? new Resend(process.env.RESEND_API_KEY)
+    : null;
 }
 
 export interface CreateAppointmentInput {
-  tenantId: string;
+  tenantId?: string | null;
+  headers?: { get(name: string): string | null };
+  sessionTenantId?: string | null;
   leadId: string;
   scheduledAt: Date | string;
   duration?: number;
@@ -17,14 +25,25 @@ export interface CreateAppointmentInput {
   notes?: string;
 }
 
+const TENANT_HEADER = "x-tenant-id";
+
+function resolveAppointmentTenantId(input: CreateAppointmentInput) {
+  const candidate =
+    input.tenantId ??
+    input.headers?.get(TENANT_HEADER) ??
+    input.sessionTenantId;
+  return requireTenantId(candidate);
+}
+
 export const AppointmentsService = {
   async createAppointment(input: CreateAppointmentInput) {
-    const tenantId = requireTenantId(input.tenantId);
+    const tenantId = resolveAppointmentTenantId(input);
     const tPrisma = getTenantPrisma(tenantId);
 
-    const scheduledAt = input.scheduledAt instanceof Date
-      ? input.scheduledAt
-      : new Date(input.scheduledAt);
+    const scheduledAt =
+      input.scheduledAt instanceof Date
+        ? input.scheduledAt
+        : new Date(input.scheduledAt);
 
     if (Number.isNaN(scheduledAt.getTime())) {
       throw new Error("Invalid scheduledAt date.");
@@ -69,7 +88,9 @@ export const AppointmentsService = {
     });
 
     if (!appointment) {
-      throw new Error(`Appointment ${id} not found for tenant ${activeTenantId}.`);
+      throw new Error(
+        `Appointment ${id} not found for tenant ${activeTenantId}.`,
+      );
     }
 
     await LeadPipelineService.advancePipeline(
@@ -140,7 +161,9 @@ export const AppointmentsService = {
     });
 
     if (!appointment) {
-      throw new Error(`Appointment ${appointmentId} not found for tenant ${activeTenantId}.`);
+      throw new Error(
+        `Appointment ${appointmentId} not found for tenant ${activeTenantId}.`,
+      );
     }
     if (!appointment.lead.email) {
       throw new Error("Lead has no email for reminder.");
@@ -150,12 +173,14 @@ export const AppointmentsService = {
       throw new Error("Resend API Key missing.");
     }
 
-    const fromEmail = process.env.SMTP_FROM_EMAIL || "no-reply@agencialeads.com";
+    const fromEmail =
+      process.env.SMTP_FROM_EMAIL || "no-reply@agencialeads.com";
     const dateLabel = appointment.scheduledAt.toLocaleString("es-AR", {
       dateStyle: "medium",
       timeStyle: "short",
     });
-    const company = appointment.lead.companyName ?? appointment.lead.name ?? "tu empresa";
+    const company =
+      appointment.lead.companyName ?? appointment.lead.name ?? "tu empresa";
 
     const { data, error } = await resend.emails.send({
       from: fromEmail,

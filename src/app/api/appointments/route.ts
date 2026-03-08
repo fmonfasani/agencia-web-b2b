@@ -13,7 +13,8 @@ export async function GET(req: NextRequest) {
   try {
     tenantId = resolveTenantId(req);
   } catch (error) {
-    const message = error instanceof TenantContextError ? error.message : "Missing tenantId";
+    const message =
+      error instanceof TenantContextError ? error.message : "Missing tenantId";
     return NextResponse.json({ error: message }, { status: 400 });
   }
 
@@ -68,7 +69,8 @@ export async function POST(req: NextRequest) {
   try {
     tenantId = resolveTenantId(req);
   } catch (error) {
-    const message = error instanceof TenantContextError ? error.message : "Missing tenantId";
+    const message =
+      error instanceof TenantContextError ? error.message : "Missing tenantId";
     return NextResponse.json({ error: message }, { status: 400 });
   }
 
@@ -86,24 +88,35 @@ export async function POST(req: NextRequest) {
   const payload = body as Record<string, unknown>;
   const leadId = typeof payload.leadId === "string" ? payload.leadId : null;
   const scheduledAt = payload.scheduledAt;
-  const duration = typeof payload.duration === "number" ? payload.duration : undefined;
+  const duration =
+    typeof payload.duration === "number" ? payload.duration : undefined;
   const notes = typeof payload.notes === "string" ? payload.notes : undefined;
   const type = typeof payload.type === "string" ? payload.type : undefined;
 
-  if (!leadId || (typeof scheduledAt !== "string" && !(scheduledAt instanceof Date))) {
+  if (
+    !leadId ||
+    (typeof scheduledAt !== "string" && !(scheduledAt instanceof Date))
+  ) {
     return NextResponse.json(
       { error: "Body must include leadId and scheduledAt." },
       { status: 400 },
     );
   }
 
-  if (type && !Object.values(AppointmentType).includes(type as AppointmentType)) {
-    return NextResponse.json({ error: `Invalid appointment type '${type}'.` }, { status: 400 });
+  if (
+    type &&
+    !Object.values(AppointmentType).includes(type as AppointmentType)
+  ) {
+    return NextResponse.json(
+      { error: `Invalid appointment type '${type}'.` },
+      { status: 400 },
+    );
   }
 
   try {
     const appointment = await AppointmentsService.createAppointment({
       tenantId,
+      headers: req.headers,
       leadId,
       scheduledAt,
       duration,

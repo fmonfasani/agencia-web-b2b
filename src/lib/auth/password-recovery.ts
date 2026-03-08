@@ -1,3 +1,4 @@
+import { AuditEventType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
 import { hashPassword } from "@/lib/auth/password";
@@ -39,7 +40,8 @@ export const PasswordRecovery = {
       user.id,
       user.id,
       "SYSTEM",
-      "PASSWORD_RESET_REQUESTED",
+      AuditEventType.ADMIN_ACTION,
+      { action: "PASSWORD_RESET_REQUESTED" },
     );
   },
 
@@ -87,7 +89,8 @@ export const PasswordRecovery = {
       tokenRecord.userId,
       tokenRecord.userId,
       "SYSTEM",
-      "PASSWORD_RESET_COMPLETED",
+      AuditEventType.ADMIN_ACTION,
+      { action: "PASSWORD_RESET_COMPLETED" },
     );
   },
 };

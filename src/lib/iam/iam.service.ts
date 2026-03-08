@@ -21,8 +21,7 @@ export const IAMService = {
       where: { id: membershipId },
     });
 
-    if (!target)
-      throw new Error("Membership not found");
+    if (!target) throw new Error("Membership not found");
     if (!canModifyRole(actor.role as Role, target.role as Role)) {
       throw new Error("Insufficient privileges to delete this user");
     }
@@ -66,7 +65,8 @@ export const IAMService = {
       actorId,
       target.userId,
       tenantId,
-      `STATUS_CHANGE_${newStatus}`,
+      AuditEventType.ADMIN_ACTION,
+      { action: `STATUS_CHANGE_${newStatus}` },
     );
 
     return result;
@@ -79,17 +79,16 @@ export const IAMService = {
     actorId: string,
     targetId: string | null,
     tenantId: string,
-    action: string,
+    eventType: AuditEventType,
     metadata: Record<string, unknown> = {},
   ) {
     const tPrisma = getTenantPrisma(tenantId);
     return await tPrisma.auditEvent.create({
       data: {
-        eventType: AuditEventType.ADMIN_ACTION,
+        eventType,
         userId: actorId, // Who did it
         tenantId, // Explicitly included for schema compliance
         metadata: {
-          action,
           targetUserId: targetId,
           ...metadata,
         },
