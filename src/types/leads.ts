@@ -24,7 +24,7 @@ export interface Lead {
     tenantId?: string | null;
     lastEnrichedAt?: Date | string | null;
     createdAt: string | Date;
-    rawMetadata?: any;
+    rawMetadata?: Record<string, unknown> | null;
     intelligence?: IntelligenceResult | null;
 }
 
@@ -33,7 +33,7 @@ export interface IntelligenceResult {
     updatedAt?: string | Date;
     leadId?: string;
     analyzedAt?: string | Date;
-    tier: "HOT" | "WARM" | "COOL" | "COLD";
+    tier: string; // "HOT" | "WARM" | "COOL" | "COLD" or serialized string
     opportunityScore: number;
     demandScore: number;
     digitalGapScore: number;

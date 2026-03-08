@@ -103,7 +103,8 @@ export default async function LeadsPage() {
 
                 {/* Table */}
                 <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
-                    <LeadsDataTable leads={serialized} />
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                    <LeadsDataTable leads={serialized as any} />
                 </div>
             </div>
         </div>
