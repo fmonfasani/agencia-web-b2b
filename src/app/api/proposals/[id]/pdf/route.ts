@@ -5,17 +5,22 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const tenantId = req.headers.get("x-tenant-id");
     if (!tenantId) {
-      return NextResponse.json({ error: "Tenant ID is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Tenant ID is required" },
+        { status: 400 },
+      );
     }
+
+    const { id } = await params;
 
     const tPrisma = getTenantPrisma(tenantId);
     const proposal = await tPrisma.proposal.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         lead: {
           select: {
@@ -27,7 +32,10 @@ export async function GET(
     });
 
     if (!proposal) {
-      return NextResponse.json({ error: "Proposal not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Proposal not found" },
+        { status: 404 },
+      );
     }
 
     const tenant = await tPrisma.tenant.findUnique({
@@ -43,7 +51,12 @@ export async function GET(
       return NextResponse.json({ error: "Tenant not found" }, { status: 404 });
     }
 
-    const branding = (tenant.branding as any) || {};
+    const branding =
+      (tenant.branding as {
+        logoUrl?: string;
+        logo?: string;
+        supportEmail?: string;
+      } | null) || {};
 
     // Prepare data for the PDF component
     const pdfData = {
@@ -57,7 +70,8 @@ export async function GET(
       companyName: proposal.lead.companyName || proposal.lead.name || "Cliente",
       tenantName: tenant.name,
       tenantLogoUrl: branding.logoUrl || branding.logo || null,
-      contactEmail: branding.supportEmail || tenant.whatsapp || "contacto@agencia.com",
+      contactEmail:
+        branding.supportEmail || tenant.whatsapp || "contacto@agencia.com",
     };
 
     const pdfBuffer = await renderToBuffer(ProposalPdfDocument(pdfData));
@@ -70,6 +84,9 @@ export async function GET(
     });
   } catch (error) {
     console.error("[PROPOSAL_PDF_ERROR]", error);
-    return NextResponse.json({ error: "Failed to generate PDF" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to generate PDF" },
+      { status: 500 },
+    );
   }
 }

@@ -4,30 +4,34 @@ import { requireTenantId } from "@/lib/tenant-context";
 
 const LINEAR_FLOW: PipelineStatus[] = [
   PipelineStatus.NUEVO,
-  PipelineStatus.CALIFICADO,
-  PipelineStatus.ELEGIDO,
-  PipelineStatus.ENTREVISTA,
+  PipelineStatus.ENRIQUECIDO,
+  PipelineStatus.SCORED,
+  PipelineStatus.INVESTIGADO,
+  PipelineStatus.CITADO,
+  PipelineStatus.LLAMADO,
   PipelineStatus.PROPUESTA_ENVIADA,
 ];
 
 const TERMINAL_FLOW: PipelineStatus[] = [
-  PipelineStatus.GANADA,
-  PipelineStatus.PERDIDA,
+  PipelineStatus.CERRADO_GANADO,
+  PipelineStatus.CERRADO_PERDIDO,
   PipelineStatus.DESCARTADO,
 ];
 
 const VALID_TRANSITIONS: Record<PipelineStatus, PipelineStatus[]> = {
-  NUEVO: [PipelineStatus.CALIFICADO, PipelineStatus.DESCARTADO],
-  CALIFICADO: [PipelineStatus.ELEGIDO, PipelineStatus.DESCARTADO],
-  ELEGIDO: [PipelineStatus.ENTREVISTA, PipelineStatus.DESCARTADO],
-  ENTREVISTA: [PipelineStatus.PROPUESTA_ENVIADA, PipelineStatus.DESCARTADO],
+  NUEVO: [PipelineStatus.ENRIQUECIDO, PipelineStatus.DESCARTADO],
+  ENRIQUECIDO: [PipelineStatus.SCORED, PipelineStatus.DESCARTADO],
+  SCORED: [PipelineStatus.INVESTIGADO, PipelineStatus.DESCARTADO],
+  INVESTIGADO: [PipelineStatus.CITADO, PipelineStatus.DESCARTADO],
+  CITADO: [PipelineStatus.LLAMADO, PipelineStatus.DESCARTADO],
+  LLAMADO: [PipelineStatus.PROPUESTA_ENVIADA, PipelineStatus.DESCARTADO],
   PROPUESTA_ENVIADA: [
-    PipelineStatus.GANADA,
-    PipelineStatus.PERDIDA,
+    PipelineStatus.CERRADO_GANADO,
+    PipelineStatus.CERRADO_PERDIDO,
     PipelineStatus.DESCARTADO,
   ],
-  GANADA: [PipelineStatus.DESCARTADO],
-  PERDIDA: [PipelineStatus.DESCARTADO],
+  CERRADO_GANADO: [PipelineStatus.DESCARTADO],
+  CERRADO_PERDIDO: [PipelineStatus.DESCARTADO],
   DESCARTADO: [],
 };
 
@@ -63,7 +67,10 @@ function buildTransitionMetadata(
   };
 }
 
-function assertValidTransition(current: PipelineStatus, next: PipelineStatus): void {
+function assertValidTransition(
+  current: PipelineStatus,
+  next: PipelineStatus,
+): void {
   if (current === next) return;
 
   const allowed = VALID_TRANSITIONS[current] ?? [];
@@ -148,18 +155,20 @@ export const LeadPipelineService = {
       byStatus[row.pipelineStatus] = row._count._all;
     }
 
-    const total = Object.values(byStatus).reduce((sum, count) => sum + count, 0);
+    const total = Object.values(byStatus).reduce(
+      (sum, count) => sum + count,
+      0,
+    );
     const activeStatuses = [...LINEAR_FLOW, ...TERMINAL_FLOW];
-    const active = activeStatuses.reduce((sum, status) => sum + byStatus[status], 0);
+    const active = activeStatuses.reduce(
+      (sum, status) => sum + byStatus[status],
+      0,
+    );
 
     return { total, byStatus, active };
   },
 
-  async getLeadsByStatus(
-    tenantId: string,
-    status: PipelineStatus,
-    limit = 50,
-  ) {
+  async getLeadsByStatus(tenantId: string, status: PipelineStatus, limit = 50) {
     const activeTenantId = requireTenantId(tenantId);
     const tPrisma = getTenantPrisma(activeTenantId);
     const safeLimit = Math.max(1, Math.min(limit, 200));

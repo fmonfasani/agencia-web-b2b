@@ -71,3 +71,7 @@ save_intelligence.js
 tmp_*.js
 scripts/inject-test-lead.ts
 
+node_modules/
+.env
+.next
+fix-*.js
