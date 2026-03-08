@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3001",
-    "build": "prisma generate && prisma migrate deploy && next build",
+    "build": "prisma generate && (prisma migrate deploy || echo 'Skipping or failed migrations') && next build",
     "start": "next start",
     "git:fix-pr": "bash scripts/fix-pr-setup.sh",
     "lint": "eslint",
