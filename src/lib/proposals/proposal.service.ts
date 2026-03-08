@@ -254,16 +254,32 @@ export const ProposalService = {
     const fromEmail = process.env.SMTP_FROM_EMAIL || "no-reply@agencialeads.com";
     const company = proposal.lead.companyName ?? proposal.lead.name ?? "tu empresa";
 
+    const baseUrl = process.env.NEXTAUTH_URL?.includes("localhost")
+      ? "https://agencia-web-b2b.vercel.app"
+      : process.env.NEXTAUTH_URL || "https://agencia-web-b2b.vercel.app";
+
+    const proposalUrl = `${baseUrl}/p/${proposal.slug}`;
+
     const { data, error } = await resend.emails.send({
       from: fromEmail,
       to: proposal.lead.email,
-      subject: `Propuesta lista para ${company}`,
-      html: `<div style="font-family: sans-serif; line-height: 1.5;">
-        <h2>${proposal.title}</h2>
-        <p>Hola, compartimos tu propuesta comercial personalizada.</p>
-        <p><strong>Template:</strong> proposal-ready</p>
-        <p>Resumen: ${proposal.problem}</p>
-      </div>`,
+      subject: `Propuesta Estratégica para ${company}`,
+      html: `
+        <div style="font-family: sans-serif; line-height: 1.6; color: #111827; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 12px;">
+          <h2 style="color: #4f46e5;">Hola ${proposal.lead.name},</h2>
+          <p>Es un gusto saludarte. Hemos preparado la propuesta comercial personalizada para <strong>${company}</strong> basándonos en nuestra última conversación y el análisis de mercado realizado.</p>
+          
+          <div style="background-color: #f9fafb; padding: 20px; border-radius: 8px; margin: 24px 0;">
+            <h3 style="margin-top: 0; font-size: 16px;">${proposal.title}</h3>
+            <p style="font-size: 14px; color: #4b5563;">${proposal.problem}</p>
+            <a href="${proposalUrl}" style="display: inline-block; background-color: #4f46e5; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; margin-top: 10px;">Ver Propuesta Online</a>
+          </div>
+          
+          <p style="font-size: 14px; color: #6b7280;">Si tienes alguna duda o quieres realizar ajustes, puedes responder directamente a este correo.</p>
+          <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+          <p style="font-size: 12px; color: #9ca3af; text-align: center;">Revenue OS • Agencia de Crecimiento Estratégico</p>
+        </div>
+      `,
       tags: [{ name: "template", value: "proposal-ready" }],
     });
 

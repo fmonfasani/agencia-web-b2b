@@ -13,7 +13,30 @@ const PROBLEM_SERVICES_MAP: Record<string, string> = {
     "Missing social media": "Estrategia de Contenidos & RRSS"
 };
 
-export class IntelligenceService {
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === "object" && value !== null;
+}
+
+function parseJsonObject(raw: string): Record<string, unknown> {
+    const jsonStart = raw.indexOf("{");
+    const jsonEnd = raw.lastIndexOf("}");
+    if (jsonStart < 0 || jsonEnd < 0 || jsonEnd <= jsonStart) {
+        throw new Error("AI response did not contain a valid JSON object.");
+    }
+
+    const parsed: unknown = JSON.parse(raw.slice(jsonStart, jsonEnd + 1));
+    if (!isRecord(parsed)) {
+        throw new Error("AI response JSON was not an object.");
+    }
+
+    return parsed;
+}
+
+export class LeadIntelligenceService {
+    static async analyzeLead(leadId: string): Promise<IntelligenceResult> {
+        return this.getLeadIntelligence(leadId, true);
+    }
+
     static async getLeadIntelligence(leadId: string, force: boolean = false): Promise<IntelligenceResult> {
         if (!force) {
             const existing = await prisma.leadIntelligence.findUnique({
@@ -43,8 +66,7 @@ export class IntelligenceService {
             metadata: lead.rawMetadata
         };
 
-        const result = await aiEngine.generate({
-            prompt: `Realiza un análisis profundo de este Lead de negocio. 
+        const prompt = `Realiza un análisis profundo de este Lead de negocio. 
             Lead: ${JSON.stringify(context)}
             
             Usa el Pensamiento de Cadena (CoT) para:
@@ -52,40 +74,34 @@ export class IntelligenceService {
             2. Evaluar la Demanda del Mercado en su zona.
             3. Proyectar un Revenue Estimado de servicios b2b que podemos venderle.
             4. Generar una Estrategia de Cierre (Brief y Preguntas de entrevista).
-            5. Redactar mensajes CORE para WhatsApp y Email.`,
-            schema: {
-                type: "object",
-                properties: {
-                    tier: { enum: ["HOT", "WARM", "COOL", "COLD"] },
-                    opportunityScore: { type: "number" },
-                    demandScore: { type: "number" },
-                    digitalGapScore: { type: "number" },
-                    outreachScore: { type: "number" },
-                    topProblem: { type: "string" },
-                    revenueEstimate: { type: "number" },
-                    bestChannel: { type: "string" },
-                    whatsappMsg: { type: "string" },
-                    emailSubject: { type: "string" },
-                    emailBody: { type: "string" },
-                    strategicBrief: { type: "string" },
-                    marketAnalysis: { type: "string" },
-                    nicheAnalysis: { type: "string" },
-                    interviewGuide: { type: "string" },
-                    detectedProblems: {
-                        type: "array",
-                        items: {
-                            type: "object",
-                            properties: {
-                                problem: { type: "string" },
-                                pain: { type: "string" },
-                                service: { type: "string" }
-                            }
-                        }
-                    }
-                },
-                required: ["tier", "opportunityScore", "strategicBrief", "whatsappMsg", "emailBody"]
-            }
-        });
+            5. Redactar mensajes CORE para WhatsApp y Email.
+            
+            OUTPUT ONLY VALID JSON according to the schema below:
+            {
+                tier: "HOT" | "WARM" | "COOL" | "COLD",
+                opportunityScore: number,
+                demandScore: number,
+                digitalGapScore: number,
+                outreachScore: number,
+                topProblem: string,
+                revenueEstimate: number,
+                bestChannel: string,
+                whatsappMsg: string,
+                emailSubject: string,
+                emailBody: string,
+                strategicBrief: string,
+                marketAnalysis: string,
+                nicheAnalysis: string,
+                interviewGuide: string,
+                detectedProblems: [{ problem: string, pain: string, service: string }]
+            }`;
+
+        const aiResponse = await aiEngine.generateWithFallback([
+            { role: "system", content: "You are a professional B2B Sales Engineer analyzing leads. Output ONLY JSON." },
+            { role: "user", content: prompt }
+        ]);
+
+        const result = parseJsonObject(aiResponse) as any;
 
         // Save result
         return await prisma.leadIntelligence.upsert({
