@@ -124,15 +124,8 @@ export const ProposalService = {
 
     const lead = await tPrisma.lead.findFirst({
       where: { id: leadId },
-      select: {
-        id: true,
-        tenantId: true,
-        name: true,
-        companyName: true,
-        industry: true,
-        estimatedCompanySize: true,
-        pipelineStatus: true,
-        brief: true,
+      include: {
+        intelligence: true,
       },
     });
 
@@ -140,21 +133,26 @@ export const ProposalService = {
       throw new Error(`Lead ${leadId} not found for tenant ${activeTenantId}.`);
     }
 
-    if (lead.pipelineStatus !== PipelineStatus.LLAMADO) {
+    const allowedStatuses = ["ELEGIDO", "ENTREVISTA", "CALIFICADO"] as string[];
+    if (!allowedStatuses.includes(lead.pipelineStatus as string)) {
       throw new Error(
-        `Lead ${leadId} must be in LLAMADO status to generate a proposal. Current status: ${lead.pipelineStatus}.`,
+        `Lead ${leadId} debe estar en estado ELEGIDO o ENTREVISTA para generar una propuesta. Estado actual: ${lead.pipelineStatus}.`,
       );
     }
 
-    if (!lead.brief || lead.brief.trim().length === 0) {
-      throw new Error(`Lead ${leadId} has no brief to build a proposal.`);
-    }
+    const intelligence = lead.intelligence;
+    const strategicContext = `
+      AUDITORÍA: ${intelligence?.strategicBrief || "No disponible"}
+      MERCADO: ${intelligence?.marketAnalysis || "No disponible"}
+      VENTAS SUGERIDAS: ${intelligence?.interviewGuide || "No disponible"}
+      NICHO: ${intelligence?.nicheAnalysis || "No disponible"}
+    `;
 
     const prompt = PROPOSAL_USER_PROMPT({
       companyName: lead.companyName ?? lead.name ?? "Empresa",
       industry: lead.industry ?? "servicios",
       employeeRange: lead.estimatedCompanySize ?? "No especificado",
-      brief: lead.brief,
+      brief: strategicContext,
       callNotes,
     });
 

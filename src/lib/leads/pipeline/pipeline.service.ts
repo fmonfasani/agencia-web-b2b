@@ -4,33 +4,30 @@ import { requireTenantId } from "@/lib/tenant-context";
 
 const LINEAR_FLOW: PipelineStatus[] = [
   PipelineStatus.NUEVO,
-  PipelineStatus.ENRIQUECIDO,
-  PipelineStatus.SCORED,
-  PipelineStatus.INVESTIGADO,
-  PipelineStatus.CITADO,
-  PipelineStatus.LLAMADO,
+  PipelineStatus.CALIFICADO,
+  PipelineStatus.ELEGIDO,
+  PipelineStatus.ENTREVISTA,
   PipelineStatus.PROPUESTA_ENVIADA,
 ];
 
 const TERMINAL_FLOW: PipelineStatus[] = [
-  PipelineStatus.CERRADO_GANADO,
-  PipelineStatus.CERRADO_PERDIDO,
+  PipelineStatus.GANADA,
+  PipelineStatus.PERDIDA,
+  PipelineStatus.DESCARTADO,
 ];
 
 const VALID_TRANSITIONS: Record<PipelineStatus, PipelineStatus[]> = {
-  NUEVO: [PipelineStatus.ENRIQUECIDO, PipelineStatus.DESCARTADO],
-  ENRIQUECIDO: [PipelineStatus.SCORED, PipelineStatus.DESCARTADO],
-  SCORED: [PipelineStatus.INVESTIGADO, PipelineStatus.DESCARTADO],
-  INVESTIGADO: [PipelineStatus.CITADO, PipelineStatus.DESCARTADO],
-  CITADO: [PipelineStatus.LLAMADO, PipelineStatus.DESCARTADO],
-  LLAMADO: [PipelineStatus.PROPUESTA_ENVIADA, PipelineStatus.DESCARTADO],
+  NUEVO: [PipelineStatus.CALIFICADO, PipelineStatus.DESCARTADO],
+  CALIFICADO: [PipelineStatus.ELEGIDO, PipelineStatus.DESCARTADO],
+  ELEGIDO: [PipelineStatus.ENTREVISTA, PipelineStatus.DESCARTADO],
+  ENTREVISTA: [PipelineStatus.PROPUESTA_ENVIADA, PipelineStatus.DESCARTADO],
   PROPUESTA_ENVIADA: [
-    PipelineStatus.CERRADO_GANADO,
-    PipelineStatus.CERRADO_PERDIDO,
+    PipelineStatus.GANADA,
+    PipelineStatus.PERDIDA,
     PipelineStatus.DESCARTADO,
   ],
-  CERRADO_GANADO: [PipelineStatus.DESCARTADO],
-  CERRADO_PERDIDO: [PipelineStatus.DESCARTADO],
+  GANADA: [PipelineStatus.DESCARTADO],
+  PERDIDA: [PipelineStatus.DESCARTADO],
   DESCARTADO: [],
 };
 
@@ -169,6 +166,9 @@ export const LeadPipelineService = {
 
     return tPrisma.lead.findMany({
       where: { pipelineStatus: status },
+      include: {
+        intelligence: true,
+      },
       orderBy: { updatedAt: "desc" },
       take: safeLimit,
     });

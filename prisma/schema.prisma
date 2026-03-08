@@ -281,6 +281,7 @@ model Lead {
   deals                Deal[]
   intelligence         LeadIntelligence?
   outreachMessages     OutreachMessage[]
+  proposal             Proposal?
 
   @@unique([tenantId, website])
   @@unique([tenantId, phone])
@@ -829,14 +830,12 @@ enum BusinessType {
 
 enum PipelineStatus {
   NUEVO
-  ENRIQUECIDO
-  SCORED
-  INVESTIGADO
-  CITADO
-  LLAMADO
+  CALIFICADO
+  ELEGIDO
+  ENTREVISTA
   PROPUESTA_ENVIADA
-  CERRADO_GANADO
-  CERRADO_PERDIDO
+  GANADA
+  PERDIDA
   DESCARTADO
 }
 
@@ -881,4 +880,37 @@ enum DealStage {
   NEGOTIATION
   CLOSED_WON
   CLOSED_LOST
+}
+
+enum ProposalStatus {
+  DRAFT
+  SENT
+  VIEWED
+  ACCEPTED
+  REJECTED
+}
+
+model Proposal {
+  id           String         @id @default(cuid())
+  leadId       String         @unique
+  tenantId     String
+  title        String
+  problem      String
+  solution     String
+  deliverables Json
+  timeline     String
+  investment   String
+  roi          String?
+  content      String         @db.Text
+  slug         String         @unique
+  viewedAt     DateTime?
+  viewCount    Int            @default(0)
+  sentAt       DateTime?
+  status       ProposalStatus @default(DRAFT)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  lead         Lead           @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([status])
 }

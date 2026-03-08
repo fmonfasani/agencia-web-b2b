@@ -109,8 +109,8 @@ export default async function AdminLayout({
 
           {/* 2. COMERCIAL */}
           <SidebarCategory label="Comercial" iconName="Briefcase" defaultOpen={true}>
-            <SidebarNavItem href={`/${locale}/admin/dashboard`} iconName="Zap" label="Terminal Comercial" />
-            <SidebarNavItem href={`/${locale}/admin/deals`} iconName="Layers" label="Pipeline Kanban" />
+            <SidebarNavItem href={`/${locale}/admin/dashboard`} iconName="Zap" label="Prospecting IA" />
+            <SidebarNavItem href={`/${locale}/admin/pipeline`} iconName="Layers" label="Lead Pipeline IA" />
             <SidebarNavItem href="#" iconName="Target" label="Oportunidades" isLocked />
           </SidebarCategory>
 

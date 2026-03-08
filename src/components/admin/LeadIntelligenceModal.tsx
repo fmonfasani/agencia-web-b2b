@@ -23,6 +23,9 @@ export default function LeadIntelligenceModal({
     isAnalyzing
 }: LeadIntelligenceModalProps) {
     const [activeTab, setActiveTab] = useState<"AUDITORÍA" | "ESTRATEGIA" | "MERCADO" | "VENTAS">("AUDITORÍA");
+    const [isGeneratingProposal, setIsGeneratingProposal] = useState(false);
+    const [isPromoting, setIsPromoting] = useState(false);
+    const [callNotes, setCallNotes] = useState("");
     const intel = lead.intelligence;
 
     if (!lead) return null;
@@ -62,8 +65,8 @@ export default function LeadIntelligenceModal({
                                 <h2 className="text-2xl font-black text-slate-900 tracking-tight">{lead.name}</h2>
                                 {intel?.tier && (
                                     <span className={`px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase border ${intel.tier === 'HOT' ? 'bg-red-50 text-red-600 border-red-100' :
-                                            intel.tier === 'WARM' ? 'bg-orange-50 text-orange-600 border-orange-100' :
-                                                'bg-slate-50 text-slate-600 border-slate-200'
+                                        intel.tier === 'WARM' ? 'bg-orange-50 text-orange-600 border-orange-100' :
+                                            'bg-slate-50 text-slate-600 border-slate-200'
                                         }`}>
                                         {intel.tier}
                                     </span>
@@ -77,15 +80,44 @@ export default function LeadIntelligenceModal({
                         <button
                             onClick={onReAnalyze}
                             disabled={isAnalyzing}
-                            className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-slate-900 text-white text-sm font-black hover:bg-indigo-600 transition-all shadow-lg active:scale-95 disabled:opacity-50"
+                            className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-slate-100 text-slate-900 text-sm font-black hover:bg-slate-200 transition-all active:scale-95 disabled:opacity-50"
                         >
                             {isAnalyzing ? (
                                 <RefreshCw className="animate-spin" size={18} />
                             ) : (
                                 <Sparkles size={18} />
                             )}
-                            Re-analizar con IA
+                            Re-analizar
                         </button>
+
+                        {(lead.pipelineStatus === "NUEVO" || lead.pipelineStatus === "CALIFICADO") && (
+                            <button
+                                onClick={async () => {
+                                    setIsPromoting(true);
+                                    try {
+                                        const nextStatus = lead.pipelineStatus === "NUEVO" ? "CALIFICADO" : "ELEGIDO";
+                                        const res = await fetch("/api/leads/pipeline", {
+                                            method: "PATCH",
+                                            headers: { "Content-Type": "application/json" },
+                                            body: JSON.stringify({ leadId: lead.id, status: nextStatus })
+                                        });
+                                        if (!res.ok) throw new Error("Error al promover lead");
+                                        alert(`Lead movido a ${nextStatus}`);
+                                        onClose();
+                                    } catch (err) {
+                                        alert("Error al mover el lead en el pipeline.");
+                                    } finally {
+                                        setIsPromoting(false);
+                                    }
+                                }}
+                                disabled={isPromoting}
+                                className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-indigo-600 text-white text-sm font-black hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 active:scale-95 disabled:opacity-50"
+                            >
+                                {isPromoting ? <RefreshCw className="animate-spin" size={18} /> : <TrendingUp size={18} />}
+                                {lead.pipelineStatus === "NUEVO" ? "Calificar Lead" : "Elegir para Pipeline"}
+                            </button>
+                        )}
+
                         <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full text-slate-400">
                             <X size={24} />
                         </button>
@@ -124,8 +156,8 @@ export default function LeadIntelligenceModal({
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id as any)}
                                 className={`flex items-center gap-2 py-4 border-b-2 font-black text-xs uppercase tracking-widest transition-all ${activeTab === tab.id
-                                        ? "border-indigo-600 text-indigo-600"
-                                        : "border-transparent text-slate-400 hover:text-slate-600"
+                                    ? "border-indigo-600 text-indigo-600"
+                                    : "border-transparent text-slate-400 hover:text-slate-600"
                                     }`}
                             >
                                 <tab.icon size={16} />
@@ -234,6 +266,62 @@ export default function LeadIntelligenceModal({
                                             </div>
                                         </div>
                                     </div>
+
+                                    {/* Proposal Generation Section */}
+                                    <div className="bg-indigo-900 rounded-[2.5rem] p-8 text-white shadow-2xl shadow-indigo-500/20">
+                                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                                            <div className="space-y-2">
+                                                <h4 className="text-2xl font-black flex items-center gap-3">
+                                                    <Sparkles className="text-indigo-400" />
+                                                    Generar Propuesta con IA
+                                                </h4>
+                                                <p className="text-indigo-200 text-sm max-w-lg">
+                                                    Utilizaremos toda la inteligencia recolectada más tus notas de la llamada para redactar una propuesta comercial premium personalizada.
+                                                </p>
+                                            </div>
+                                            <div className="flex-1 w-full max-w-md">
+                                                <textarea
+                                                    value={callNotes}
+                                                    onChange={(e) => setCallNotes(e.target.value)}
+                                                    placeholder="Notas de la llamada (dolores, objetivos, presupuesto mencionado)..."
+                                                    className="w-full bg-white/10 border border-white/20 rounded-2xl p-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-indigo-400 min-h-[120px]"
+                                                />
+                                                <button
+                                                    onClick={async () => {
+                                                        if (!callNotes.trim()) {
+                                                            alert("Por favor, ingresa notas de la llamada primero.");
+                                                            return;
+                                                        }
+                                                        setIsGeneratingProposal(true);
+                                                        try {
+                                                            const res = await fetch("/api/proposals", {
+                                                                method: "POST",
+                                                                headers: { "Content-Type": "application/json" },
+                                                                body: JSON.stringify({ leadId: lead.id, callNotes })
+                                                            });
+                                                            if (!res.ok) throw new Error("Error al generar propuesta");
+                                                            alert("¡Propuesta generada con éxito!");
+                                                            onClose();
+                                                        } catch (err) {
+                                                            alert("Error al generar propuesta. Verifica que el lead esté en estado 'LLAMADO'.");
+                                                        } finally {
+                                                            setIsGeneratingProposal(false);
+                                                        }
+                                                    }}
+                                                    disabled={isGeneratingProposal}
+                                                    className="mt-4 w-full bg-white text-indigo-900 font-black py-4 rounded-2xl hover:bg-slate-100 transition-all flex items-center justify-center gap-3 shadow-xl disabled:opacity-50"
+                                                >
+                                                    {isGeneratingProposal ? (
+                                                        <RefreshCw className="animate-spin" />
+                                                    ) : (
+                                                        <ArrowRight />
+                                                    )}
+                                                    {isGeneratingProposal ? "REDACTANDO PROPUESTA..." : "GENERAR Y ENVIAR PROPUESTA"}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <div className="bg-amber-50 rounded-3xl p-6 border border-amber-100">
                                         <h4 className="text-sm font-black uppercase text-amber-600 tracking-widest mb-4 flex items-center gap-2">
                                             <BookOpen size={16} /> Discovery Guide
