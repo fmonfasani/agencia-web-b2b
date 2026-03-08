@@ -1,137 +1,104 @@
 import { prisma } from "@/lib/prisma";
 import { aiEngine } from "@/lib/ai/engine";
+import { IntelligenceResult } from "@/types/leads";
 
-export interface IntelligenceResult {
-    tier: "HOT" | "WARM" | "COOL" | "COLD";
-    opportunityScore: number;
-    demandScore: number;
-    digitalGapScore: number;
-    outreachScore: number;
-    websiteLoads?: boolean;
-    hasSSL?: boolean;
-    hasContactForm?: boolean;
-    hasBookingSystem?: boolean;
-    hasChatbot?: boolean;
-    hasWhatsappLink?: boolean;
-    topProblem?: string;
-    revenueEstimate?: number;
-    bestChannel?: string;
-    channelScores?: Record<string, number>;
-    whatsappMsg?: string;
-    emailSubject?: string;
-    emailBody?: string;
-    strategicBrief?: string;
-    marketAnalysis?: string;
-    nicheAnalysis?: string;
-    interviewGuide?: string;
-}
+const PROBLEM_SERVICES_MAP: Record<string, string> = {
+    "No tiene WhatsApp": "Automatización de WhatsApp & CRM",
+    "Velocidad lenta": "Optimización Performance",
+    "Sin certificado SSL": "Seguridad & Confianza Digital",
+    "SEO pobre": "SEO Avanzado & Captación Orgánica",
+    "No tiene formulario": "Optimización de Conversión (CRO)",
+    "Baja tasa de reviews": "Gestión de Reputación Online",
+    "Diseño anticuado": "Rediseño Web UX/UI",
+    "Missing social media": "Estrategia de Contenidos & RRSS"
+};
 
-export class LeadIntelligenceService {
-    /**
-     * Performs AI-driven analysis on a specific lead.
-     */
-    static async analyzeLead(leadId: string): Promise<IntelligenceResult> {
-        const lead = await prisma.lead.findUnique({
-            where: { id: leadId },
-            include: { intelligence: true },
-        });
+export class IntelligenceService {
+    static async getLeadIntelligence(leadId: string, force: boolean = false): Promise<IntelligenceResult> {
+        if (!force) {
+            const existing = await prisma.leadIntelligence.findUnique({
+                where: { leadId }
+            });
 
-        if (!lead) {
-            throw new Error(`Lead with ID ${leadId} not found.`);
+            if (existing && existing.analyzedAt &&
+                (Date.now() - new Date(existing.analyzedAt).getTime() < 1000 * 60 * 60 * 24 * 7)) {
+                return existing as any as IntelligenceResult;
+            }
         }
 
-        // Preparation for AI Prompt
-        const leadData = {
+        const lead = await prisma.lead.findUnique({
+            where: { id: leadId }
+        });
+
+        if (!lead) throw new Error("Lead not found");
+
+        const context = {
             name: lead.name,
-            company: lead.companyName,
             category: lead.category,
-            rating: lead.rating,
-            reviews: lead.reviewsCount,
             website: lead.website,
             address: lead.address,
+            description: lead.description,
+            rating: lead.rating,
+            reviewsCount: lead.reviewsCount,
+            metadata: lead.rawMetadata
         };
 
-        const prompt = `
-      Act as an expert B2B Sales Intel Agent. Analyze the following lead and provide structured intelligence.
-      Lead Data: ${JSON.stringify(leadData)}
-
-      Instructions:
-      1. Evaluate "Digital Gaps": Check if based on the data provided, they likely lack a chatbot, booking system, or have a poor web presence.
-      2. Score from 0-100:
-         - opportunityScore: Overall potential for our B2B services.
-         - demandScore: Based on ratings and popularity.
-         - digitalGapScore: Higher if they have more visible technical needs.
-      3. Classify Tier: HOT (high need, high value), WARM, COOL, or COLD.
-      4. Identify "topProblem": The single most urgent thing we can fix for them.
-      5. Revenue Estimate: Estimated monthly revenue we could generate for them in USD.
-      6. Craft Outreach:
-         - whatsappMsg: A short, non-pushy, personalized message focusing on the topProblem.
-         - emailSubject/emailBody: A more formal/professional reaching out.
-
-      Response MUST be a valid JSON object matching this schema:
-      {
-        "tier": "HOT" | "WARM" | "COOL" | "COLD",
-        "opportunityScore": number,
-        "demandScore": number,
-        "digitalGapScore": number,
-        "outreachScore": number,
-        "websiteLoads": boolean,
-        "hasSSL": boolean,
-        "topProblem": string,
-        "revenueEstimate": number,
-        "bestChannel": "whatsapp" | "email" | "instagram",
-        "whatsappMsg": string,
-        "emailSubject": string,
-        "emailBody": string,
-        "strategicBrief": string,
-        "marketAnalysis": string,
-        "nicheAnalysis": string,
-        "interviewGuide": string
-      }
-    `;
-
-        const aiResponse = await aiEngine.generateWithFallback([
-            { role: "system", content: "You are a specialized lead enrichment assistant. You only output valid JSON." },
-            { role: "user", content: prompt }
-        ], lead.tenantId ?? undefined);
-
-        let parsedResult: IntelligenceResult;
-        try {
-            // Basic sanitization in case of extra markdown text
-            const jsonStart = aiResponse.indexOf('{');
-            const jsonEnd = aiResponse.lastIndexOf('}') + 1;
-            parsedResult = JSON.parse(aiResponse.slice(jsonStart, jsonEnd));
-        } catch (e) {
-            console.error("[Intelligence Service] AI Response was not valid JSON:", aiResponse);
-            throw new Error("Failed to parse AI intelligence result.");
-        }
-
-        // Persist to Database
-        await prisma.leadIntelligence.upsert({
-            where: { leadId },
-            update: {
-                ...parsedResult,
-                analyzedAt: new Date(),
-                updatedAt: new Date(),
-            },
-            create: {
-                leadId,
-                ...parsedResult,
-                analyzedAt: new Date(),
-            },
+        const result = await aiEngine.generate({
+            prompt: `Realiza un análisis profundo de este Lead de negocio. 
+            Lead: ${JSON.stringify(context)}
+            
+            Usa el Pensamiento de Cadena (CoT) para:
+            1. Evaluar el Gap Digital (qué le falta vs competencia).
+            2. Evaluar la Demanda del Mercado en su zona.
+            3. Proyectar un Revenue Estimado de servicios b2b que podemos venderle.
+            4. Generar una Estrategia de Cierre (Brief y Preguntas de entrevista).
+            5. Redactar mensajes CORE para WhatsApp y Email.`,
+            schema: {
+                type: "object",
+                properties: {
+                    tier: { enum: ["HOT", "WARM", "COOL", "COLD"] },
+                    opportunityScore: { type: "number" },
+                    demandScore: { type: "number" },
+                    digitalGapScore: { type: "number" },
+                    outreachScore: { type: "number" },
+                    topProblem: { type: "string" },
+                    revenueEstimate: { type: "number" },
+                    bestChannel: { type: "string" },
+                    whatsappMsg: { type: "string" },
+                    emailSubject: { type: "string" },
+                    emailBody: { type: "string" },
+                    strategicBrief: { type: "string" },
+                    marketAnalysis: { type: "string" },
+                    nicheAnalysis: { type: "string" },
+                    interviewGuide: { type: "string" },
+                    detectedProblems: {
+                        type: "array",
+                        items: {
+                            type: "object",
+                            properties: {
+                                problem: { type: "string" },
+                                pain: { type: "string" },
+                                service: { type: "string" }
+                            }
+                        }
+                    }
+                },
+                required: ["tier", "opportunityScore", "strategicBrief", "whatsappMsg", "emailBody"]
+            }
         });
 
-        // Update Lead status if high potential
-        if (parsedResult.opportunityScore > 75) {
-            await prisma.lead.update({
-                where: { id: leadId },
-                data: {
-                    status: "QUALIFIED",
-                    priority: "HIGH"
-                },
-            });
-        }
-
-        return parsedResult;
+        // Save result
+        return await prisma.leadIntelligence.upsert({
+            where: { leadId },
+            create: {
+                leadId,
+                analyzedAt: new Date(),
+                ...result
+            },
+            update: {
+                analyzedAt: new Date(),
+                ...result
+            }
+        }) as any as IntelligenceResult;
     }
 }
