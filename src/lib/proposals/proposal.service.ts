@@ -278,7 +278,10 @@ export const ProposalService = {
     });
 
     if (!success) {
-      const msg = error instanceof Error ? error.message : "Failed to send proposal email.";
+      const errorObj = error as unknown as Record<string, unknown>;
+      const msg = typeof errorObj?.message === "string"
+        ? errorObj.message
+        : "Failed to send proposal email.";
       throw new Error(msg);
     }
 
