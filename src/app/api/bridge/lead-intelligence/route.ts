@@ -18,7 +18,12 @@ export async function POST(request: NextRequest) {
     const token = authHeader?.startsWith("Bearer ") ? authHeader.substring(7) : internalSecret;
     const expected = process.env.INTERNAL_API_SECRET || "366bbcdceecb8723e8de206c2e0cc7b5";
 
-    if (!token || token !== expected) {
+    if (!token) {
+        console.error(`[INGEST_AUTH_FAILURE] No token provided.`);
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (token !== expected) {
+        console.error(`[INGEST_AUTH_FAILURE] Mismatch. Received: ${token?.substring(0, 4)}..., Expected (prefix): ${expected.substring(0, 4)}...`);
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
