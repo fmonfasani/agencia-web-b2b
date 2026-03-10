@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { BridgeClient } from "@/lib/bridge-client";
 
 /**
  * Internal endpoint for agent-service to report business metrics and failures.
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
         }
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const metric = await (prisma as any).businessMetric.create({
+        const metric = await BridgeClient.query("businessMetric", "create", {
             data: {
                 tenantId,
                 type,

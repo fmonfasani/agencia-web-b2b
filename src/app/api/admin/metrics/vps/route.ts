@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Role } from "@prisma/client";
 import { AuthorizationError, requireRole } from "@/lib/authz";
-import { prisma } from "@/lib/prisma";
+import { BridgeClient } from "@/lib/bridge-client";
 
 export async function POST(request: NextRequest) {
     const internalSecret = request.headers.get("x-internal-secret");
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
         const body = await request.json();
         const { cpuUsage, memUsage, diskUsage, netIn, netOut } = body;
 
-        const metric = await prisma.vpsMetric.create({
+        const metric = await BridgeClient.query("vpsMetric", "create", {
             data: {
                 cpuUsage: parseFloat(cpuUsage),
                 memUsage: parseFloat(memUsage),
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({ success: true, id: metric.id });
     } catch (error) {
-        console.error("Error ingesting VPS metrics:", error);
+        console.error("Error ingesting VPS metrics (Bridge):", error);
         return NextResponse.json({ success: false, error: "Internal Server Error" }, { status: 500 });
     }
 }
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-        const metrics = await prisma.vpsMetric.findMany({
+        const metrics = await BridgeClient.query("vpsMetric", "findMany", {
             where: {
                 timestamp: {
                     gte: timeFrom,
@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
 
         return NextResponse.json(metrics);
     } catch (error) {
-        console.error("Error fetching VPS metrics:", error);
+        console.error("Error fetching VPS metrics (Bridge):", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

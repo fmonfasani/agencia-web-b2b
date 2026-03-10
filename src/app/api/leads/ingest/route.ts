@@ -9,6 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { withSpan } from "@/lib/observability/tracing";
 import { incrementCounter } from "@/lib/observability/metrics";
 import { info, error as logError } from "@/lib/observability/logger";
+import { BridgeClient } from "@/lib/bridge-client";
 
 const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET ?? "";
 
@@ -59,16 +60,11 @@ export async function POST(req: NextRequest) {
             ?? (body.rating ? Math.min(100, Math.round(body.rating * 20)) : 80);
 
         try {
-            // Deduplicar
-            const existing = googlePlaceId
-                ? await prisma.lead.findFirst({
-                    where: { tenantId, googlePlaceId },
-                    select: { id: true },
-                })
-                : await prisma.lead.findFirst({
-                    where: { tenantId, name },
-                    select: { id: true },
-                });
+            // Deduplicar usando el Bridge
+            const existing = await BridgeClient.query("lead", "findFirst", {
+                where: googlePlaceId ? { tenantId, googlePlaceId } : { tenantId, name },
+                select: { id: true },
+            });
 
             if (existing) {
                 incrementCounter("lead.ingest.skipped", { reason: "duplicate", tenantId });
@@ -78,7 +74,7 @@ export async function POST(req: NextRequest) {
                 );
             }
 
-            const lead = await prisma.lead.create({
+            const lead = await BridgeClient.query("lead", "create", {
                 data: {
                     tenantId,
                     name,
@@ -106,14 +102,14 @@ export async function POST(req: NextRequest) {
             });
 
             await incrementCounter("lead.ingest.success", { tenantId });
-            await info(`Lead ingested: ${name}`, { leadId: lead.id, tenantId });
+            await info(`Lead ingested via Bridge: ${name}`, { leadId: lead.id, tenantId });
 
             return NextResponse.json(
                 { status: "created", id: lead.id, name: lead.name },
                 { status: 201 }
             );
         } catch (e: any) {
-            await logError(`Ingest failure: ${e.message}`, { tenantId, name });
+            await logError(`Ingest failure (Bridge): ${e.message}`, { tenantId, name });
             span.recordException(e);
             return NextResponse.json({ error: e.message }, { status: 500 });
         }
