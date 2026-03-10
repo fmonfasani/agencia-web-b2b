@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { aiEngine } from "@/lib/ai/engine";
 import { IntelligenceResult } from "@/types/leads";
+import { BridgeClient } from "@/lib/bridge-client";
 
 const PROBLEM_SERVICES_MAP: Record<string, string> = {
     "No tiene WhatsApp": "Automatización de WhatsApp & CRM",
@@ -39,7 +40,7 @@ export class LeadIntelligenceService {
 
     static async getLeadIntelligence(leadId: string, force: boolean = false): Promise<IntelligenceResult> {
         if (!force) {
-            const existing = await prisma.leadIntelligence.findUnique({
+            const existing = await BridgeClient.query('leadIntelligence', 'findUnique', {
                 where: { leadId }
             });
 
@@ -49,7 +50,7 @@ export class LeadIntelligenceService {
             }
         }
 
-        const lead = await prisma.lead.findUnique({
+        const lead = await BridgeClient.query('lead', 'findUnique', {
             where: { id: leadId }
         });
 
@@ -103,8 +104,8 @@ export class LeadIntelligenceService {
 
         const result = parseJsonObject(aiResponse) as any;
 
-        // Save result
-        return await prisma.leadIntelligence.upsert({
+        // Proxy via Bridge
+        return await BridgeClient.query('leadIntelligence', 'upsert', {
             where: { leadId },
             create: {
                 leadId,
@@ -115,6 +116,6 @@ export class LeadIntelligenceService {
                 analyzedAt: new Date(),
                 ...result
             }
-        }) as any as IntelligenceResult;
+        });
     }
 }

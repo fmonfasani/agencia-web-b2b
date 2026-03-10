@@ -18,11 +18,19 @@ class VpsMetricsCollector:
 
     def collect(self) -> Dict[str, Any]:
         """Collect current system metrics."""
+        import os
         # interval=None is non-blocking, returns percentage since last call
         cpu = psutil.cpu_percent(interval=None)
         mem = psutil.virtual_memory().percent
         disk = psutil.disk_usage('/').percent
         
+        # System Load Average
+        try:
+            load1, load5, load15 = os.getloadavg()
+        except AttributeError:
+            # Fallback for systems where getloadavg is not available
+            load1, load5, load15 = 0, 0, 0
+
         # Calculate network speed (bytes/s)
         current_net_io = psutil.net_io_counters()
         current_time = time.time()
@@ -39,7 +47,10 @@ class VpsMetricsCollector:
             "memUsage": mem,
             "diskUsage": disk,
             "netIn": net_in,
-            "netOut": net_out
+            "netOut": net_out,
+            "loadAvg1": load1,
+            "loadAvg5": load5,
+            "loadAvg15": load15
         }
 
     async def push_metrics(self):

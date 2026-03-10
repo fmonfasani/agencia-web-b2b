@@ -6,7 +6,6 @@ const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
 
-// Configuración de SMTP (Fallback o Alternativa)
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: Number(process.env.SMTP_PORT),
@@ -16,6 +15,65 @@ const transporter = nodemailer.createTransport({
     pass: process.env.SMTP_PASS,
   },
 });
+
+export interface SendEmailOptions {
+  to: string;
+  subject: string;
+  html: string;
+  fromName?: string;
+  fromEmail?: string;
+  tags?: { name: string; value: string }[];
+}
+
+export async function sendEmail({
+  to,
+  subject,
+  html,
+  fromName,
+  fromEmail,
+  tags,
+}: SendEmailOptions) {
+  const finalFromName = fromName || process.env.SMTP_FROM_NAME || "Revenue OS";
+  const finalFromEmail =
+    fromEmail || process.env.SMTP_FROM_EMAIL || "no-reply@agencialeads.com";
+
+  // 1. Intentar con Resend si está configurado
+  if (resend) {
+    try {
+      const { data, error } = await resend.emails.send({
+        from: `"${finalFromName}" <${finalFromEmail}>`,
+        to,
+        subject,
+        html,
+        tags,
+      });
+
+      if (!error) {
+        console.log("✅ Email enviado vía Resend:", data?.id);
+        return { success: true, data };
+      }
+      console.error("❌ ERROR RESEND:", error);
+    } catch (err) {
+      console.error("❌ EXCEPCIÓN RESEND:", err);
+    }
+  }
+
+  // 2. Fallback a Nodemailer (SMTP)
+  try {
+    const info = await transporter.sendMail({
+      from: `"${finalFromName}" <${finalFromEmail}>`,
+      to,
+      subject,
+      html,
+    });
+
+    console.log("✅ Email enviado vía SMTP:", info.messageId);
+    return { success: true, data: info };
+  } catch (err) {
+    console.error("❌ ERROR NODEMAILER (FALLBACK):", err);
+    return { success: false, error: err };
+  }
+}
 
 export async function sendInvitationEmail({
   to,
@@ -28,46 +86,11 @@ export async function sendInvitationEmail({
   inviteUrl: string;
   role: string;
 }) {
-  const fromName = process.env.SMTP_FROM_NAME || "Revenue OS";
-  const fromEmail = process.env.SMTP_FROM_EMAIL || "no-reply@agencialeads.com";
-
-  // 1. Intentar con Resend si está configurado
-  if (resend) {
-    try {
-      const { data, error } = await resend.emails.send({
-        from: `"${fromName}" <${fromEmail}>`,
-        to,
-        subject: `Invitación Prioritaria: Revenue OS - ${tenantName}`,
-        html: generateInviteTemplate(tenantName, role, inviteUrl),
-      });
-
-      if (error) {
-        console.error("❌ ERROR RESEND:", error);
-        // No retornamos aquí, intentamos fallback si hay SMTP
-      } else {
-        console.log("✅ Email enviado vía Resend:", data?.id);
-        return { success: true, data };
-      }
-    } catch (err) {
-      console.error("❌ EXCEPCIÓN RESEND:", err);
-    }
-  }
-
-  // 2. Fallback a Nodemailer (SMTP)
-  try {
-    const info = await transporter.sendMail({
-      from: `"${fromName}" <${fromEmail}>`,
-      to,
-      subject: `Invitación Prioritaria: Revenue OS - ${tenantName}`,
-      html: generateInviteTemplate(tenantName, role, inviteUrl),
-    });
-
-    console.log("✅ Email enviado vía SMTP:", info.messageId);
-    return { success: true, data: info };
-  } catch (err) {
-    console.error("❌ ERROR NODEMAILER (FALLBACK):", err);
-    return { success: false, error: err };
-  }
+  return sendEmail({
+    to,
+    subject: `Invitación Prioritaria: Revenue OS - ${tenantName}`,
+    html: generateInviteTemplate(tenantName, role, inviteUrl),
+  });
 }
 
 function generateInviteTemplate(

@@ -5,9 +5,10 @@ import { BridgeClient } from "@/lib/bridge-client";
 
 export async function POST(request: NextRequest) {
     const internalSecret = request.headers.get("x-internal-secret");
-    const sharedSecret = process.env.INTERNAL_API_SECRET || "";
+    const sharedSecret = process.env.INTERNAL_API_SECRET || "04618765-a83a-4467-bc22-8356767568d9";
 
     if (!internalSecret || internalSecret !== sharedSecret) {
+        console.error(`[VPS_AUTH_FAILURE] Secret mismatch.`);
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

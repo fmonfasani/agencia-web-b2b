@@ -48,7 +48,7 @@ class ScraperScheduler:
         try:
             with get_conn() as conn:
                 with conn.cursor(cursor_factory=RealDictCursor) as cur:
-                    cur.execute("SELECT * FROM scraper_schedules WHERE active = true")
+                    cur.execute("SELECT * FROM scraper_schedules WHERE is_active = true")
                     schedules = cur.fetchall()
 
                     for i, sched in enumerate(schedules):
@@ -100,9 +100,14 @@ class ScraperScheduler:
                         "SELECT neighborhood_index FROM scraper_schedules WHERE id = %s",
                         (sched["id"],),
                     )
-                    current = cur.fetchone() or {"neighborhood_index": 0}
-                    neighborhood_index = current["neighborhood_index"] or 0
+                    row = cur.fetchone()
+                    # Si no hay fila o el valor es None, empezamos en 0
+                    neighborhood_index = 0
+                    if row and row.get("neighborhood_index") is not None:
+                        neighborhood_index = row["neighborhood_index"]
+
                     neighborhood = BA_NEIGHBORHOODS[neighborhood_index % len(BA_NEIGHBORHOODS)]
+                    
                     cur.execute(
                         "UPDATE scraper_schedules SET neighborhood_index = neighborhood_index + 1, last_run_at = now() WHERE id = %s",
                         (sched["id"],),

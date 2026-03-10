@@ -8,6 +8,7 @@ import {
     ArrowRight, Sparkles, RefreshCw
 } from "lucide-react";
 import { IntelligenceMarkdown } from "./IntelligenceMarkdown";
+import { ProposalPreview } from "./ProposalPreview";
 
 interface LeadIntelligenceModalProps {
     lead: any;
@@ -26,6 +27,7 @@ export default function LeadIntelligenceModal({
     const [isGeneratingProposal, setIsGeneratingProposal] = useState(false);
     const [isPromoting, setIsPromoting] = useState(false);
     const [callNotes, setCallNotes] = useState("");
+    const [reviewingProposal, setReviewingProposal] = useState<any>(null);
     const intel = lead.intelligence;
 
     if (!lead) return null;
@@ -243,124 +245,151 @@ export default function LeadIntelligenceModal({
                             )}
 
                             {activeTab === "VENTAS" && (
-                                <div className="space-y-8">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="bg-white rounded-3xl p-6 border border-slate-100 space-y-4">
-                                            <h4 className="text-sm font-black uppercase text-slate-400 tracking-widest mb-4 flex items-center justify-between">
-                                                <span>WhatsApp Outreach</span>
-                                                <Phone size={14} />
-                                            </h4>
-                                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 relative group">
-                                                <p className="text-sm text-slate-700 italic">{intel.whatsappMsg || "No generado"}</p>
-                                                <button className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 text-[10px] font-black uppercase text-indigo-600 transition-all">Copiar</button>
+                                reviewingProposal ? (
+                                    <ProposalPreview
+                                        proposal={reviewingProposal}
+                                        onClose={() => setReviewingProposal(null)}
+                                        onSent={() => {
+                                            setReviewingProposal(null);
+                                            onReAnalyze();
+                                            alert("¡Propuesta enviada con éxito!");
+                                        }}
+                                    />
+                                ) : (
+                                    <div className="space-y-8 animate-in fade-in duration-300">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="bg-white rounded-3xl p-6 border border-slate-100 space-y-4">
+                                                <h4 className="text-sm font-black uppercase text-slate-400 tracking-widest mb-4 flex items-center justify-between">
+                                                    <span>WhatsApp Outreach</span>
+                                                    <Phone size={14} />
+                                                </h4>
+                                                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 relative group">
+                                                    <p className="text-sm text-slate-700 italic">{intel.whatsappMsg || "No generado"}</p>
+                                                    <button className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 text-[10px] font-black uppercase text-indigo-600 transition-all">Copiar</button>
+                                                </div>
+                                            </div>
+                                            <div className="bg-white rounded-3xl p-6 border border-slate-100 space-y-4">
+                                                <h4 className="text-sm font-black uppercase text-slate-400 tracking-widest mb-4 flex items-center justify-between">
+                                                    <span>Email Campaign</span>
+                                                    <Mail size={14} />
+                                                </h4>
+                                                <div className="space-y-2">
+                                                    <div className="text-xs font-bold text-slate-900 p-2 bg-slate-50 rounded-lg">Asunto: {intel.emailSubject}</div>
+                                                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-sm italic">{intel.emailBody}</div>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className="bg-white rounded-3xl p-6 border border-slate-100 space-y-4">
-                                            <h4 className="text-sm font-black uppercase text-slate-400 tracking-widest mb-4 flex items-center justify-between">
-                                                <span>Email Campaign</span>
-                                                <Mail size={14} />
+
+                                        {/* Proposal Generation Section */}
+                                        <div className="bg-indigo-900 rounded-[2.5rem] p-8 text-white shadow-2xl shadow-indigo-500/20">
+                                            {lead.proposal ? (
+                                                <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                                                    <div className="space-y-2">
+                                                        <h4 className="text-2xl font-black flex items-center gap-3 text-emerald-400">
+                                                            <CheckCircle2 />
+                                                            Propuesta Generada
+                                                        </h4>
+                                                        <p className="text-indigo-200 text-sm max-w-lg">
+                                                            Ya existe una propuesta para este lead. Puedes verla online o enviarla de nuevo.
+                                                        </p>
+                                                    </div>
+                                                    <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                                                        <a
+                                                            href={`/p/${lead.proposal.slug}`}
+                                                            target="_blank"
+                                                            className="px-8 py-4 rounded-2xl bg-white text-indigo-900 font-black text-center transition hover:bg-slate-100"
+                                                        >
+                                                            VER PROPUESTA ONLINE
+                                                        </a>
+                                                        <button
+                                                            onClick={async () => {
+                                                                try {
+                                                                    const res = await fetch(`/api/proposals/${lead.proposal.id}/send`, {
+                                                                        method: "POST",
+                                                                        headers: {
+                                                                            "Content-Type": "application/json",
+                                                                            "x-tenant-id": lead.tenantId
+                                                                        }
+                                                                    });
+                                                                    if (!res.ok) throw new Error("Error al re-enviar");
+                                                                    alert("¡Propuesta re-enviada!");
+                                                                } catch (err) {
+                                                                    alert("Error al re-enviar propuesta.");
+                                                                }
+                                                            }}
+                                                            className="px-8 py-4 rounded-2xl border border-white/20 bg-white/5 font-black transition hover:bg-white/10"
+                                                        >
+                                                            RE-ENVIAR EMAIL
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                                                    <div className="space-y-2">
+                                                        <h4 className="text-2xl font-black flex items-center gap-3">
+                                                            <Sparkles className="text-indigo-400" />
+                                                            Generar Propuesta con IA
+                                                        </h4>
+                                                        <p className="text-indigo-200 text-sm max-w-lg">
+                                                            Utilizaremos toda la inteligencia recolectada más tus notas de la llamada para redactar una propuesta comercial premium personalizada.
+                                                        </p>
+                                                    </div>
+                                                    <div className="flex-1 w-full max-w-md">
+                                                        <textarea
+                                                            value={callNotes}
+                                                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setCallNotes(e.target.value)}
+                                                            placeholder="Notas de la llamada (dolores, objetivos, presupuesto mencionado)..."
+                                                            className="w-full bg-white/10 border border-white/20 rounded-2xl p-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-indigo-400 min-h-[120px]"
+                                                        />
+                                                        <button
+                                                            onClick={async () => {
+                                                                if (!callNotes.trim()) {
+                                                                    alert("Por favor, ingresa notas de la llamada primero.");
+                                                                    return;
+                                                                }
+                                                                setIsGeneratingProposal(true);
+                                                                try {
+                                                                    const res = await fetch("/api/proposals", {
+                                                                        method: "POST",
+                                                                        headers: {
+                                                                            "Content-Type": "application/json",
+                                                                            "x-tenant-id": lead.tenantId
+                                                                        },
+                                                                        body: JSON.stringify({ leadId: lead.id, callNotes })
+                                                                    });
+                                                                    if (!res.ok) throw new Error("Error al generar propuesta");
+                                                                    const proposal = await res.json();
+                                                                    setReviewingProposal(proposal);
+                                                                    alert("¡Propuesta generada!");
+                                                                } catch (err) {
+                                                                    alert("Error al generar propuesta.");
+                                                                } finally {
+                                                                    setIsGeneratingProposal(false);
+                                                                }
+                                                            }}
+                                                            disabled={isGeneratingProposal}
+                                                            className="mt-4 w-full bg-white text-indigo-900 font-black py-4 rounded-2xl hover:bg-slate-100 transition-all flex items-center justify-center gap-3 shadow-xl disabled:opacity-50"
+                                                        >
+                                                            {isGeneratingProposal ? (
+                                                                <RefreshCw className="animate-spin" />
+                                                            ) : (
+                                                                <ArrowRight />
+                                                            )}
+                                                            {isGeneratingProposal ? "REDACTANDO PROPUESTA..." : "GENERAR Y ENVIAR PROPUESTA"}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="bg-amber-50 rounded-3xl p-6 border border-amber-100">
+                                            <h4 className="text-sm font-black uppercase text-amber-600 tracking-widest mb-4 flex items-center gap-2">
+                                                <BookOpen size={16} /> Discovery Guide
                                             </h4>
-                                            <div className="space-y-2">
-                                                <div className="text-xs font-bold text-slate-900 p-2 bg-slate-50 rounded-lg">Asunto: {intel.emailSubject}</div>
-                                                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-sm italic">{intel.emailBody}</div>
-                                            </div>
+                                            <IntelligenceMarkdown content={intel.interviewGuide || "Generando preguntas de clousure..."} />
                                         </div>
                                     </div>
-
-                                    {/* Proposal Generation Section */}
-                                    <div className="bg-indigo-900 rounded-[2.5rem] p-8 text-white shadow-2xl shadow-indigo-500/20">
-                                        {lead.proposal ? (
-                                            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                                                <div className="space-y-2">
-                                                    <h4 className="text-2xl font-black flex items-center gap-3 text-emerald-400">
-                                                        <CheckCircle2 />
-                                                        Propuesta Generada
-                                                    </h4>
-                                                    <p className="text-indigo-200 text-sm max-w-lg">
-                                                        Ya existe una propuesta para este lead. Puedes verla online o enviarla de nuevo.
-                                                    </p>
-                                                </div>
-                                                <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-                                                    <a
-                                                        href={`/p/${lead.proposal.slug}`}
-                                                        target="_blank"
-                                                        className="px-8 py-4 rounded-2xl bg-white text-indigo-900 font-black text-center transition hover:bg-slate-100"
-                                                    >
-                                                        VER PROPUESTA ONLINE
-                                                    </a>
-                                                    <button
-                                                        onClick={() => {
-                                                            alert("Función de re-envío en desarrollo. El cliente ya recibió el link original.");
-                                                        }}
-                                                        className="px-8 py-4 rounded-2xl border border-white/20 bg-white/5 font-black transition hover:bg-white/10"
-                                                    >
-                                                        RE-ENVIAR EMAIL
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-                                                <div className="space-y-2">
-                                                    <h4 className="text-2xl font-black flex items-center gap-3">
-                                                        <Sparkles className="text-indigo-400" />
-                                                        Generar Propuesta con IA
-                                                    </h4>
-                                                    <p className="text-indigo-200 text-sm max-w-lg">
-                                                        Utilizaremos toda la inteligencia recolectada más tus notas de la llamada para redactar una propuesta comercial premium personalizada.
-                                                    </p>
-                                                </div>
-                                                <div className="flex-1 w-full max-w-md">
-                                                    <textarea
-                                                        value={callNotes}
-                                                        onChange={(e) => setCallNotes(e.target.value)}
-                                                        placeholder="Notas de la llamada (dolores, objetivos, presupuesto mencionado)..."
-                                                        className="w-full bg-white/10 border border-white/20 rounded-2xl p-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-indigo-400 min-h-[120px]"
-                                                    />
-                                                    <button
-                                                        onClick={async () => {
-                                                            if (!callNotes.trim()) {
-                                                                alert("Por favor, ingresa notas de la llamada primero.");
-                                                                return;
-                                                            }
-                                                            setIsGeneratingProposal(true);
-                                                            try {
-                                                                const res = await fetch("/api/proposals", {
-                                                                    method: "POST",
-                                                                    headers: { "Content-Type": "application/json" },
-                                                                    body: JSON.stringify({ leadId: lead.id, callNotes })
-                                                                });
-                                                                if (!res.ok) throw new Error("Error al generar propuesta");
-                                                                alert("¡Propuesta generada con éxito!");
-                                                                onClose();
-                                                                onReAnalyze(); // To refresh the lead data including the proposal
-                                                            } catch (err) {
-                                                                alert("Error al generar propuesta. Verifica que el lead esté en estado 'LLAMADO'.");
-                                                            } finally {
-                                                                setIsGeneratingProposal(false);
-                                                            }
-                                                        }}
-                                                        disabled={isGeneratingProposal}
-                                                        className="mt-4 w-full bg-white text-indigo-900 font-black py-4 rounded-2xl hover:bg-slate-100 transition-all flex items-center justify-center gap-3 shadow-xl disabled:opacity-50"
-                                                    >
-                                                        {isGeneratingProposal ? (
-                                                            <RefreshCw className="animate-spin" />
-                                                        ) : (
-                                                            <ArrowRight />
-                                                        )}
-                                                        {isGeneratingProposal ? "REDACTANDO PROPUESTA..." : "GENERAR Y ENVIAR PROPUESTA"}
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="bg-amber-50 rounded-3xl p-6 border border-amber-100">
-                                        <h4 className="text-sm font-black uppercase text-amber-600 tracking-widest mb-4 flex items-center gap-2">
-                                            <BookOpen size={16} /> Discovery Guide
-                                        </h4>
-                                        <IntelligenceMarkdown content={intel.interviewGuide || "Generando preguntas de clousure..."} />
-                                    </div>
-                                </div>
+                                )
                             )}
                         </div>
                     )}

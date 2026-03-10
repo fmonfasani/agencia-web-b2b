@@ -1,9 +1,9 @@
 import { PipelineStatus } from "@prisma/client";
-import { Resend } from "resend";
 import { aiEngine } from "@/lib/ai/engine";
 import { LeadPipelineService } from "@/lib/leads/pipeline/pipeline.service";
 import { getTenantPrisma } from "@/lib/prisma";
 import { requireTenantId } from "@/lib/tenant-context";
+import { sendEmail } from "@/lib/mail";
 import { PROPOSAL_SYSTEM_PROMPT, PROPOSAL_USER_PROMPT } from "./proposal.prompts";
 
 type ProposalStatusValue = "DRAFT" | "SENT" | "VIEWED" | "ACCEPTED" | "REJECTED";
@@ -38,9 +38,6 @@ interface UpdateProposalInput {
   status?: ProposalStatusValue;
 }
 
-function getResendClient(): Resend | null {
-  return process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
-}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -246,11 +243,7 @@ export const ProposalService = {
       throw new Error("Lead has no email to send proposal.");
     }
 
-    const resend = getResendClient();
-    if (!resend) {
-      throw new Error("Resend API Key missing.");
-    }
-
+    const fromName = process.env.SMTP_FROM_NAME || "Revenue OS";
     const fromEmail = process.env.SMTP_FROM_EMAIL || "no-reply@agencialeads.com";
     const company = proposal.lead.companyName ?? proposal.lead.name ?? "tu empresa";
 
@@ -260,9 +253,10 @@ export const ProposalService = {
 
     const proposalUrl = `${baseUrl}/p/${proposal.slug}`;
 
-    const { data, error } = await resend.emails.send({
-      from: fromEmail,
+    const { success, data, error } = await sendEmail({
       to: proposal.lead.email,
+      fromName,
+      fromEmail,
       subject: `Propuesta Estratégica para ${company}`,
       html: `
         <div style="font-family: sans-serif; line-height: 1.6; color: #111827; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 12px;">
@@ -283,8 +277,8 @@ export const ProposalService = {
       tags: [{ name: "template", value: "proposal-ready" }],
     });
 
-    if (error) {
-      throw new Error(error.message || "Failed to send proposal email.");
+    if (!success) {
+      throw new Error(error?.message || "Failed to send proposal email.");
     }
 
     const updated = await tPrisma.proposal.update({

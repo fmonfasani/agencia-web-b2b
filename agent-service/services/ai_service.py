@@ -1,5 +1,6 @@
 import logging
 import httpx
+from typing import List, Dict
 from core.config import settings
 
 logger = logging.getLogger(__name__)

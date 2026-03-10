@@ -90,9 +90,11 @@ class BaseScraper:
                     headers=headers,
                     timeout=15.0,
                 )
+                if response.status_code not in (200, 201):
+                    logger.error(f"[Ingest] FAILED: Status {response.status_code}, Body: {response.text}")
                 return response.status_code in (200, 201)
             except Exception as e:
-                logger.warning(f"Error calling ingest: {e}")
+                logger.error(f"[Ingest] CRITICAL Error: {e}")
                 return False
 
     async def _report_failure(self, tenant_id: str, error_msg: str, detail: Optional[str] = None):

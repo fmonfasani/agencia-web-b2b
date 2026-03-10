@@ -21,6 +21,9 @@ interface MetricData {
     diskUsage: number;
     netIn: number;
     netOut: number;
+    loadAvg1: number | null;
+    loadAvg5: number | null;
+    loadAvg15: number | null;
 }
 
 const periods = [
@@ -244,6 +247,35 @@ export default function VpsMetricsCharts() {
                             />
                             <Area type="monotone" dataKey="diskUsage" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorDisk)" />
                         </AreaChart>
+                    </ResponsiveContainer>
+                </ChartCard>
+
+                {/* Load Average Chart */}
+                <ChartCard title="Carga del Sistema (Load)" icon={Activity} color="text-rose-500">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={data}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                            <XAxis
+                                dataKey="timestamp"
+                                tickFormatter={formatTime}
+                                tick={{ fontSize: 10, fontWeight: 700, fill: '#94a3b8' }}
+                                axisLine={false}
+                                tickLine={false}
+                            />
+                            <YAxis
+                                tick={{ fontSize: 10, fontWeight: 700, fill: '#94a3b8' }}
+                                axisLine={false}
+                                tickLine={false}
+                                label={{ value: 'Promedio', angle: -90, position: 'insideLeft', fontSize: 10, fontWeight: 700, fill: '#94a3b8' }}
+                            />
+                            <Tooltip
+                                labelFormatter={(label) => formatTime(label)}
+                                contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                            />
+                            <Line type="monotone" dataKey="loadAvg1" name="1m" stroke="#ef4444" strokeWidth={3} dot={false} />
+                            <Line type="monotone" dataKey="loadAvg5" name="5m" stroke="#f59e0b" strokeWidth={2} dot={false} />
+                            <Line type="monotone" dataKey="loadAvg15" name="15m" stroke="#3b82f6" strokeWidth={2} dot={false} strokeDasharray="5 5" />
+                        </LineChart>
                     </ResponsiveContainer>
                 </ChartCard>
             </div>

@@ -4,10 +4,8 @@ import { requireTenantId, TenantContextError } from "@/lib/tenant-context";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: { id: string } }
 ) {
-  const { id } = await params;
-
   let tenantId: string;
   try {
     tenantId = requireTenantId(req.headers.get("x-tenant-id"));
@@ -16,9 +14,11 @@ export async function POST(
     return NextResponse.json({ error: message }, { status: 400 });
   }
 
+  const proposalId = params.id;
+
   try {
-    const sent = await ProposalService.sendProposal(tenantId, id);
-    return NextResponse.json(sent);
+    const updated = await ProposalService.sendProposal(tenantId, proposalId);
+    return NextResponse.json(updated);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unexpected error";
     return NextResponse.json({ error: message }, { status: 400 });

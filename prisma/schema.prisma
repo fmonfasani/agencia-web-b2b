@@ -595,6 +595,9 @@ model VpsMetric {
   diskUsage Float
   netIn     Float?
   netOut    Float?
+  loadAvg1  Float?
+  loadAvg5  Float?
+  loadAvg15 Float?
   timestamp DateTime @default(now())
 
   @@index([timestamp])
