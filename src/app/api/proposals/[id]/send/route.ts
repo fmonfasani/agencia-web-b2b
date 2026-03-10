@@ -4,7 +4,7 @@ import { requireTenantId, TenantContextError } from "@/lib/tenant-context";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   let tenantId: string;
   try {
@@ -14,7 +14,7 @@ export async function POST(
     return NextResponse.json({ error: message }, { status: 400 });
   }
 
-  const proposalId = params.id;
+  const { id: proposalId } = await params;
 
   try {
     const updated = await ProposalService.sendProposal(tenantId, proposalId);
