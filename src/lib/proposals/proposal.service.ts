@@ -308,7 +308,7 @@ export const ProposalService = {
       {
         proposalId: proposal.id,
         reason: "proposal_sent",
-        emailId: data?.id ?? null,
+        emailId: (data as any)?.id || (data as any)?.messageId || null,
       },
     );
 
