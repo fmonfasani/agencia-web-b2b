@@ -6,10 +6,13 @@ import { BridgeClient } from "@/lib/bridge-client";
  * Protected by X-Internal-Secret.
  */
 export async function POST(req: NextRequest) {
-    const internalSecret = req.headers.get("X-Internal-Secret");
-    const sharedSecret = process.env.INTERNAL_API_SECRET || "04618765-a83a-4467-bc22-8356767568d9";
+    const authHeader = req.headers.get("authorization");
+    const internalSecretHeader = req.headers.get("x-internal-secret");
+    const token = authHeader?.startsWith("Bearer ") ? authHeader.substring(7) : internalSecretHeader;
 
-    if (!internalSecret || internalSecret !== sharedSecret) {
+    const expected = process.env.INTERNAL_API_SECRET || "366bbcdceecb8723e8de206c2e0cc7b5";
+
+    if (!token || token !== expected) {
         console.error(`[METRIC_AUTH_FAILURE] Secret mismatch.`);
         return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }

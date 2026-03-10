@@ -11,18 +11,18 @@ import { incrementCounter } from "@/lib/observability/metrics";
 import { info, error as logError } from "@/lib/observability/logger";
 import { BridgeClient } from "@/lib/bridge-client";
 
-const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET || "04618765-a83a-4467-bc22-8356767568d9";
-
 function isAuthorized(req: NextRequest): boolean {
-    const secret =
-        req.headers.get("x-internal-secret") ??
-        req.headers.get("x-admin-secret") ?? "";
+    const internalSecret = req.headers.get("x-internal-secret") || req.headers.get("x-admin-secret");
+    const authHeader = req.headers.get("authorization");
+    const token = authHeader?.startsWith("Bearer ") ? authHeader.substring(7) : internalSecret;
 
-    if (secret !== INTERNAL_SECRET) {
-        console.error(`[INGEST_AUTH_FAILURE] Mismatch. Expected ${INTERNAL_SECRET.substring(0, 4)}...`);
+    const expected = process.env.INTERNAL_API_SECRET || "366bbcdceecb8723e8de206c2e0cc7b5";
+
+    if (token !== expected) {
+        console.error(`[INGEST_AUTH_FAILURE] Mismatch.`);
     }
 
-    return secret !== "" && secret === INTERNAL_SECRET;
+    return !!token && token === expected;
 }
 
 function resolveTenantId(req: NextRequest): string | null {
