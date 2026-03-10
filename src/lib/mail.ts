@@ -48,13 +48,16 @@ export async function sendEmail({
         tags,
       });
 
-      if (!error) {
-        console.log("✅ Email enviado vía Resend:", data?.id);
-        return { success: true, data };
+      if (error) {
+        console.error("❌ ERROR RESEND:", error);
+        const msg = error instanceof Error ? error.message : "Failed to send email via Resend.";
+        throw new Error(msg); // Throw error to prevent fallback if Resend is primary and fails
       }
-      console.error("❌ ERROR RESEND:", error);
+      console.log("✅ Email enviado vía Resend:", data?.id);
+      return { success: true, data };
     } catch (err) {
       console.error("❌ EXCEPCIÓN RESEND:", err);
+      // If Resend fails, we will proceed to the Nodemailer fallback
     }
   }
 
@@ -71,7 +74,10 @@ export async function sendEmail({
     return { success: true, data: info };
   } catch (err) {
     console.error("❌ ERROR NODEMAILER (FALLBACK):", err);
-    return { success: false, error: err };
+    return {
+      success: false,
+      error: err instanceof Error ? err : new Error(String(err)),
+    };
   }
 }
 

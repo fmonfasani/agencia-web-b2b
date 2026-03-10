@@ -278,7 +278,8 @@ export const ProposalService = {
     });
 
     if (!success) {
-      throw new Error(error?.message || "Failed to send proposal email.");
+      const msg = error instanceof Error ? error.message : "Failed to send proposal email.";
+      throw new Error(msg);
     }
 
     const updated = await tPrisma.proposal.update({
