@@ -9,7 +9,10 @@ import { Redis } from "@upstash/redis";
 const { auth } = NextAuth(authConfig);
 
 let ratelimit: Ratelimit | null = null;
-if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+if (
+  process.env.UPSTASH_REDIS_REST_URL &&
+  process.env.UPSTASH_REDIS_REST_TOKEN
+) {
   ratelimit = new Ratelimit({
     redis: Redis.fromEnv(),
     limiter: Ratelimit.slidingWindow(50, "10 s"),
@@ -21,9 +24,13 @@ const intlMiddleware = createMiddleware(routing);
 
 export default auth(async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const ip = request.headers.get("x-forwarded-for")?.split(",")[0] || "127.0.0.1";
+  const ip =
+    request.headers.get("x-forwarded-for")?.split(",")[0] || "127.0.0.1";
 
-  if (ratelimit && (pathname.startsWith("/api/") || pathname.includes("/api/"))) {
+  if (
+    ratelimit &&
+    (pathname.startsWith("/api/") || pathname.includes("/api/"))
+  ) {
     const { success, limit, reset, remaining } = await ratelimit.limit(ip);
     if (!success) {
       return new NextResponse("Too many requests. Please try again later.", {

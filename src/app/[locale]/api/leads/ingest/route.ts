@@ -3,8 +3,7 @@ import { AuthorizationError } from "@/lib/authz";
 import { resolveTenantIdFromHeaders } from "@/lib/tenant-context";
 import { ingestLead, LeadIngestInput } from "@/lib/leads/ingest.service";
 import { requireAuth } from "@/lib/auth/request-auth";
-import { prisma, getTenantPrisma } from "@/lib/prisma";
-import { Role } from "@prisma/client";
+import { getTenantPrisma } from "@/lib/prisma";
 import { z } from "zod";
 import { ratelimit } from "@/lib/ratelimit";
 import { logBusinessMetric } from "@/lib/sre/metrics";
@@ -31,6 +30,8 @@ const leadSchema = z.object({
   rawMetadata: z.any().optional(),
 });
 
+import { validateInternalSecret } from "@/lib/api-auth";
+
 /**
  * POST /api/leads/ingest
  * Gatekeeper for all lead entries (Scraper, Manual, API, Ads).
@@ -45,16 +46,21 @@ export async function POST(request: NextRequest) {
     }
 
     // 1a. M2M Auth: internal calls from agent-service (VPS)
-    const internalSecret = request.headers.get("x-internal-secret");
-    const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET;
+    const isInternal = validateInternalSecret(request);
     let activeTenantId: string;
     let tPrisma: ReturnType<typeof getTenantPrisma>;
 
-    if (internalSecret && INTERNAL_SECRET && internalSecret === INTERNAL_SECRET) {
+    if (isInternal) {
       // Internal machine-to-machine call — bypass session auth
-      const tenantFromHeader = request.headers.get("x-tenant-id") || process.env.DEFAULT_TENANT_ID || "";
+      const tenantFromHeader =
+        request.headers.get("x-tenant-id") ||
+        process.env.DEFAULT_TENANT_ID ||
+        "";
       if (!tenantFromHeader) {
-        return NextResponse.json({ error: "Missing x-tenant-id header" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Missing x-tenant-id header" },
+          { status: 400 },
+        );
       }
       activeTenantId = tenantFromHeader;
       tPrisma = getTenantPrisma(activeTenantId);
@@ -93,15 +99,23 @@ export async function POST(request: NextRequest) {
     const result = leadSchema.safeParse(body);
 
     if (!result.success) {
-      return NextResponse.json({ error: result.error.flatten() }, { status: 400 });
+      return NextResponse.json(
+        { error: result.error.flatten() },
+        { status: 400 },
+      );
     }
 
     const data = result.data;
 
     const ingestInput: LeadIngestInput = {
       tenantId: activeTenantId,
-      sourceType: data.sourceType as any,
-      businessType: data.businessType as any,
+      sourceType: data.sourceType as "SCRAPER" | "MANUAL" | "API" | "ADS",
+      businessType: data.businessType as
+        | "SERVICIO"
+        | "INDUSTRIA"
+        | "COMERCIO"
+        | "OFICIO"
+        | undefined,
 
       name: data.name,
       email: data.email || undefined,
@@ -136,7 +150,7 @@ export async function POST(request: NextRequest) {
         tenantId: activeTenantId,
         type: "EXTRACTION_SUCCESS",
         status: "SUCCESS",
-        metadata: { source: data.sourceType }
+        metadata: { source: data.sourceType },
       });
 
       await logBusinessMetric({
@@ -144,14 +158,14 @@ export async function POST(request: NextRequest) {
         type: "EXTRACTION_LATENCY",
         status: "SUCCESS",
         value: duration,
-        metadata: { source: data.sourceType }
+        metadata: { source: data.sourceType },
       });
     } catch (err) {
       await logBusinessMetric({
         tenantId: activeTenantId,
         type: "EXTRACTION_SUCCESS",
         status: "FAILURE",
-        metadata: { source: data.sourceType, error: String(err) }
+        metadata: { source: data.sourceType, error: String(err) },
       });
       throw err;
     }
@@ -159,11 +173,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       leadId: lead.id,
-      score: (lead as any).potentialScore,
-      priority: (lead as any).priority,
+      score: (lead as { potentialScore?: number }).potentialScore,
+      priority: (lead as { priority?: string }).priority,
       message: "Lead processed and persisted successfully.",
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[Leads Ingest API Error]:", error);
 
     if (error instanceof AuthorizationError) {

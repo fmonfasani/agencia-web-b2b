@@ -1,4 +1,4 @@
-import "dotenv/config";
+// Environment audit script
 
 const REQUIRED_ENV_VARS = [
     // Database & Auth
@@ -25,6 +25,9 @@ const REQUIRED_ENV_VARS = [
     // Monitoring
     "SENTRY_DSN",
     "NEXT_PUBLIC_VERCEL_ANALYTICS_ID",
+
+    // Internal Security
+    "INTERNAL_API_SECRET",
 ];
 
 function verify() {
