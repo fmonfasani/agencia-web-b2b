@@ -1,11 +1,22 @@
 // Environment audit script
+import "dotenv/config";
 
 const REQUIRED_ENV_VARS = [
-    // Database & Auth
+    // Base de datos (Prisma)
+    "POSTGRES_PRISMA_URL",
+    "POSTGRES_URL_NON_POOLING",
     "DATABASE_URL",
+
+    // Auth & Next.js
     "NEXTAUTH_SECRET",
     "AUTH_GOOGLE_ID",
     "AUTH_GOOGLE_SECRET",
+
+    // Bridge & Seguridad Interna
+    "INTERNAL_API_SECRET",
+    "BRIDGE_API_KEY",
+    "NEXTJS_INTERNAL_AUTH_URL",
+    "AGENT_SERVICE_URL",
 
     // AI & Scraper
     "OPENAI_API_KEY",
@@ -25,9 +36,6 @@ const REQUIRED_ENV_VARS = [
     // Monitoring
     "SENTRY_DSN",
     "NEXT_PUBLIC_VERCEL_ANALYTICS_ID",
-
-    // Internal Security
-    "INTERNAL_API_SECRET",
 ];
 
 function verify() {
@@ -36,7 +44,14 @@ function verify() {
     let missing = 0;
 
     REQUIRED_ENV_VARS.forEach((envVar) => {
-        if (!process.env[envVar]) {
+        let value = process.env[envVar];
+        
+        // Auth v5 compatibility: allow AUTH_SECRET as alias for NEXTAUTH_SECRET
+        if (!value && envVar === "NEXTAUTH_SECRET") {
+            value = process.env.AUTH_SECRET;
+        }
+
+        if (!value) {
             console.error(`❌ ERROR: Falta la variable [${envVar}]`);
             missing++;
         } else {
