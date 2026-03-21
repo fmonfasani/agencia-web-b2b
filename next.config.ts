@@ -5,6 +5,7 @@ import { withSentryConfig } from "@sentry/nextjs";
 const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   reactCompiler: true,
   logging: {
     fetches: {

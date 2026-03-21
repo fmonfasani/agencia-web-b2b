@@ -1,134 +1,95 @@
-# Despliegue Completo en VPS (DigitalOcean)
+# 🚀 Guía de Despliegue Profesional: Plataforma Agencia B2B AI
 
-## Estructura del Proyecto
+> [!IMPORTANT]
+> **SI YA TIENES EL SISTEMA EN VIVO (MIGRACIÓN INCREMENTAL)**
+> No reinstales todo. Sigue estos pasos para actualizar el código sin perder datos de tu base de datos actual:
+>
+> 1. **Backup urgente:** `docker exec agencia-db pg_dump -U postgres agencia_web_b2b > backup_pre_update.sql`
+> 2. **Actualizar código:** `git pull origin main`
+> 3. **Migrar DB (Tablas de MercadoPago):** `npx prisma migrate deploy`
+> 4. **Sembrar Planes:** `npx tsx prisma/seed-plans.ts`
+> 5. **Reiniciar servicios:** `docker-compose -f docker-compose.prod.yml restart frontend agent-service`
 
-```
-agencia-web-b2b/
-├── src/                    # Frontend Next.js
-├── prisma/                 # Schema de base de datos
-├── agent-service/          # Backend Python/FastAPI
-│   ├── main.py
-│   ├── requirements.txt
-│   ├── Dockerfile
-│   └── docker-compose.yml
-├── docker-compose.yml      # Docker principal (DB + servicios)
-└── .env                    # Variables de entorno
-```
+Este documento detalla el proceso de despliegue optimizado en una VPS (DigitalOcean). Hemos configurado una arquitectura **100% Dockerizada e Inmutable** para máxima seguridad y escalabilidad.
 
-## 1. Preparación del VPS
+---
 
-### Conectar al VPS
-```bash
-ssh root@134.209.41.51
-```
+## 🏗️ 1. Estructura del Proyecto en el VPS
 
-### Instalar dependencias
-```bash
-# Actualizar sistema
-apt update && apt upgrade -y
-
-# Instalar Docker y Docker Compose
-apt install -y docker.io docker-compose
-
-# Habilitar Docker
-systemctl enable docker
-systemctl start docker
-
-# Verificar instalación
-docker --version
-docker-compose --version
+```text
+/root/agencia-web-b2b/
+├── Dockerfile.frontend        # Imagen inmutable de Next.js
+├── docker-compose.prod.yml    # Orquestador (Frontend + Agent + DB)
+├── .env                       # Variables de entorno críticas
+├── prisma/                    # Esquema y migraciones
+└── agent-service/             # Backend Python (FastAPI)
 ```
 
-### Configurar Firewall (opcional pero recomendado)
-```bash
-ufw allow 22    # SSH
-ufw allow 80    # HTTP
-ufw allow 443   # HTTPS
-ufw allow 3001  # Frontend Next.js
-ufw allow 8000  # Agent Service
-ufw enable
-```
+---
 
-## 2. Transferir el Proyecto al VPS
+## 🛠️ 2. Preparación Inicial del VPS
 
-### Opción A: Git (recomendado)
-```bash
-# En tu máquina local
-git remote add vps root@134.209.41.51:/root/agencia-web-b2b.git
-git push vps main
+1. **Acceder:** `ssh root@134.209.41.51`
+2. **Instalar Docker Engine:**
+   ```bash
+   apt update && apt upgrade -y
+   apt install -y docker.io docker-compose ufw
+   systemctl enable --now docker
+   ```
+3. **Firewall (UFW):** Solo abrimos lo estrictamente necesario.
+   ```bash
+   ufw allow 22, 80, 443
+   ufw enable
+   ```
+   _Nota: No abrimos el puerto 5432 (PostgreSQL) hacia el exterior por seguridad. Las apps hablarán con la DB por la red interna de Docker._
 
-# En el VPS
-cd /root
-git clone /root/agencia-web-b2b.git
-```
+---
 
-### Opción B: SCP
-```bash
-# En tu máquina local
-scp -r ./agencia-web-b2b root@134.209.41.51:/root/
-```
+## 🌍 3. Variables de Entorno (.env) en el VPS
 
-## 3. Configurar Variables de Entorno
-
-Crea el archivo `.env` en el VPS:
-
-```bash
-cd /root/agencia-web-b2b
-nano .env
-```
+Crea el archivo `.env` en `/root/agencia-web-b2b/`.
+**⚠️ IMPORTANTE: Usamos el nombre del servicio `db` en lugar de `localhost`.**
 
 ```env
-# Base de datos (ya existe en el VPS)
-POSTGRES_PRISMA_URL="postgresql://postgres:password@localhost:5432/agenciab2b"
-POSTGRES_URL_NON_POOLING="postgresql://postgres:password@localhost:5432/agenciab2b"
+# --- Base de Datos (Interna de Docker) ---
+# Usamos 'db:5432' porque es el nombre del servicio en docker-compose
+DATABASE_URL="postgresql://postgres:TU_PASS_SEGURA@db:5432/agencia_web_b2b?sslmode=disable"
+POSTGRES_PRISMA_URL="postgresql://postgres:TU_PASS_SEGURA@db:5432/agencia_web_b2b?sslmode=disable"
+POSTGRES_URL_NON_POOLING="postgresql://postgres:TU_PASS_SEGURA@db:5432/agencia_web_b2b?sslmode=disable"
 
-# Next.js
-NEXTAUTH_URL="http://134.209.41.51:3001"
-NEXTAUTH_SECRET="genera-una-clave-secreta-larga"
+# --- Next.js (Frontend) ---
+NEXTAUTH_URL="https://tu-dominio.com"
+NEXTAUTH_SECRET="genera-algo-largo-con-openssl-rand-base64-32"
 AUTH_TRUST_HOST=true
 
-# OpenAI (para el agent service)
-OPENAI_API_KEY="sk-..."
-
-# Agent Service
-AGENT_SERVICE_URL="http://134.209.41.51:8000"
-
-# MercadoPago
-MERCADOPAGO_ACCESS_TOKEN="..."
-
-# Email (Resend)
-RESEND_API_KEY="re_..."
-
-# Sentry
-SENTRY_DSN="..."
-
-# Upstash (Rate Limiting)
-UPSTASH_REDIS_REST_URL="..."
-UPSTASH_REDIS_REST_TOKEN="..."
+# --- Servicios AI (Agent Backend) ---
+# Desde el frontend, accedemos al backend por DNS interno de docker
+AGENT_SERVICE_URL="http://agent-service:8000"
+INTERNAL_API_SECRET="tu-secreto-compartido-hex"
+ADMIN_SECRET="tu-admin-secret"
+GEMINI_API_KEY="AI..."
+APIFY_API_TOKEN="apify_..."
 ```
 
-## 4. Configuración Unificada con Docker Compose
+---
 
-Crea un `docker-compose.prod.yml` unificado:
+## 🐳 4. Orquestación con Docker Compose (Producción)
 
-```bash
-nano docker-compose.prod.yml
-```
+### `docker-compose.prod.yml`
 
 ```yaml
-version: '3.8'
+version: "3.8"
 
 services:
-  # Base de datos PostgreSQL
   db:
     image: postgres:15-alpine
+    container_name: agencia-db
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
-      POSTGRES_DB: agenciab2b
-    ports:
-      - "5432:5432"
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-TU_PASS_SEGURA}
+      POSTGRES_DB: agencia_web_b2b
+    # No exponemos puertos al VPS por seguridad. Solo red interna.
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -137,270 +98,125 @@ services:
       timeout: 5s
       retries: 5
 
-  # Frontend Next.js
   frontend:
     build:
       context: .
       dockerfile: Dockerfile.frontend
+    container_name: agencia-frontend
     ports:
       - "3001:3001"
-    environment:
-      - NODE_ENV=production
-    env_file:
-      - .env
+    env_file: .env
     depends_on:
       db:
         condition: service_healthy
     restart: always
-    volumes:
-      - /root/agencia-web-b2b:/app
-      - /app/node_modules
-      - /app/.next
 
-  # Agent Service (FastAPI/Python)
   agent-service:
     build:
       context: ./agent-service
       dockerfile: Dockerfile
+    container_name: agencia-agents
     ports:
       - "8000:8000"
-    env_file:
-      - .env
+    env_file: .env
     depends_on:
       db:
         condition: service_healthy
     restart: always
-    volumes:
-      - ./agent-service/widget:/app/widget
 
 volumes:
   pgdata:
 ```
 
-Crea el Dockerfile para el frontend:
-
-```bash
-nano Dockerfile.frontend
-```
+### `Dockerfile.frontend` (Imagen Inmutable)
 
 ```dockerfile
-FROM node:20-alpine
-
+# Stage 1: Build
+FROM node:20-alpine AS builder
 WORKDIR /app
-
 COPY package*.json ./
-RUN npm ci --only=production
-
+RUN npm ci
 COPY . .
-
 RUN npx prisma generate
-RUN npx prisma migrate deploy || echo "Skipping migrations"
-
 RUN npm run build
 
-EXPOSE 3001
-
+# Stage 2: Runner
+FROM node:20-alpine AS runner
+WORKDIR /app
 ENV NODE_ENV=production
+COPY --from=builder /app/next.config.mjs ./
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
 
+EXPOSE 3001
 CMD ["npm", "start"]
 ```
 
-## 5. Despliegue
+---
 
-### Opción A: Sin Docker (desarrollo)
-```bash
-# Instalar Node.js
-curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-apt install -y nodejs
+## 🚀 5. Proceso de Despliegue (Run)
 
-# Instalar Python para el agent service
-apt install -y python3 python3-pip python3-venv
+Para desplegar por primera vez o ante cambios:
 
-# Frontend
-cd /root/agencia-web-b2b
-npm install
-npm run build
-npm start &
+1. **Subir cambios:** `git push origin main`
+2. **En el VPS:**
 
-# Agent Service
-cd /root/agencia-web-b2b/agent-service
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-uvicorn main:app --host 0.0.0.0 --port 8000 &
-```
+   ```bash
+   cd /root/agencia-web-b2b
+   git pull origin main
 
-### Opción B: Con Docker (producción)
-```bash
-cd /root/agencia-web-b2b
+   # 1. Construir imágenes
+   docker-compose -f docker-compose.prod.yml build
 
-# Construir y levantar todos los servicios
-docker-compose -f docker-compose.prod.yml up -d --build
+   # 2. Levantar la base de datos primero para migrar
+   docker-compose -f docker-compose.prod.yml up -d db
 
-# Ver logs
-docker-compose -f docker-compose.prod.yml logs -f
+   # 3. Correr migraciones manualmente (Paso CRÍTICO y seguro)
+   # Esto usa un contenedor temporal para no ensuciar el de producción
+   docker run --rm --network agencia-web-b2b_default \
+     -v $(pwd):/app -w /app node:20-alpine \
+     sh -c "npx prisma migrate deploy && npx tsx prisma/seed-plans.ts"
 
-# Ver estado
-docker-compose -f docker-compose.prod.yml ps
-```
+   # 4. Levantar todo el sistema
+   docker-compose -f docker-compose.prod.yml up -d
+   ```
 
-## 6. Configurar Nginx como Reverse Proxy
+---
 
-```bash
-apt install -y nginx
+## 🛡️ 6. Proxy Inverso con Nginx (Exponer a Internet)
 
-nano /etc/nginx/sites-available/agencia
-```
+Instala Nginx en el host para manejar el tráfico HTTPS y los dominios.
 
 ```nginx
 server {
     listen 80;
     server_name tu-dominio.com;
+    return 301 https://$host$request_uri;
+}
 
-    # Frontend Next.js
+server {
+    listen 443 ssl;
+    server_name tu-dominio.com;
+
     location / {
-        proxy_pass http://localhost:3001;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
+        proxy_pass http://localhost:3001; # Next.js
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
     }
 
-    # Agent Service API
     location /api/agents/ {
-        proxy_pass http://localhost:8000/;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    }
-
-    # WebSocket para Agent Service
-    location /ws/ {
-        proxy_pass http://localhost:8000/ws/;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
+        proxy_pass http://localhost:8000/; # Agent Service
         proxy_set_header Host $host;
     }
 }
 ```
 
-```bash
-ln -s /etc/nginx/sites-available/agencia /etc/nginx/sites-enabled/
-nginx -t
-systemctl enable nginx
-systemctl restart nginx
-```
+---
 
-## 7. SSL con Let's Encrypt
+## 📝 7. Mantenimiento y Logs
 
-```bash
-apt install -y certbot python3-certbot-nginx
-
-certbot --nginx -d tu-dominio.com
-```
-
-## 8. Configurar PM2 para Gestión de Procesos (alternativa a Docker)
-
-```bash
-# Instalar PM2
-npm install -g pm2
-
-# Frontend
-cd /root/agencia-web-b2b
-pm2 start npm --name "frontend" -- start
-pm2 save
-
-# Agent Service
-cd /root/agencia-web-b2b/agent-service
-pm2 start uvicorn --name "agent" -- main:app --host 0.0.0.0 --port 8000
-pm2 save
-
-# Iniciar PM2 al reiniciar
-pm2 startup
-```
-
-## 9. Scripts de Gestión
-
-### Iniciar todos los servicios
-```bash
-#!/bin/bash
-# start-all.sh
-cd /root/agencia-web-b2b
-docker-compose -f docker-compose.prod.yml up -d
-echo "Todos los servicios iniciados"
-```
-
-### Reiniciar todos los servicios
-```bash
-#!/bin/bash
-# restart-all.sh
-cd /root/agencia-web-b2b
-docker-compose -f docker-compose.prod.yml restart
-echo "Todos los servicios reiniciados"
-```
-
-### Ver logs
-```bash
-#!/bin/bash
-# logs.sh
-cd /root/agencia-web-b2b
-docker-compose -f docker-compose.prod.yml logs -f --tail=100
-```
-
-## 10. Migraciones de Base de Datos
-
-```bash
-cd /root/agencia-web-b2b
-npx prisma migrate deploy
-npx prisma db seed
-```
-
-## 11. Verificación
-
-```bash
-# Verificar que los servicios están corriendo
-curl http://localhost:3001  # Frontend
-curl http://localhost:8000/health  # Agent Service
-
-# Ver logs de Docker
-docker-compose -f docker-compose.prod.yml logs
-
-# Ver uso de recursos
-docker stats
-```
-
-## URLs de Acceso
-
-- **Frontend**: http://134.209.41.51:3001
-- **Agent Service API**: http://134.209.41.51:8000
-- **Agent Service Docs**: http://134.209.41.51:8000/docs
-
-## Troubleshooting
-
-### Agent Service no conecta a la DB
-```bash
-# Verificar que la base de datos está corriendo
-docker-compose -f docker-compose.prod.yml ps db
-
-# Ver logs de la DB
-docker-compose -f docker-compose.prod.yml logs db
-```
-
-### Frontend no conecta al Agent Service
-```bash
-# Verificar que AGENT_SERVICE_URL está configurado correctamente en .env
-# Debe ser http://agent-service:8000 si usas Docker networking
-# o http://localhost:8000 si accedes directamente
-```
-
-### Reiniciar todo desde cero
-```bash
-docker-compose -f docker-compose.prod.yml down -v
-docker-compose -f docker-compose.prod.yml up -d
-```
+- **Ver logs de todo:** `docker-compose -f docker-compose.prod.yml logs -f --tail=100`
+- **Revisar DB:** `docker exec -it agencia-db psql -U postgres -d agencia_web_b2b`
+- **Backup de DB:** `docker exec agencia-db pg_dumpall -c -U postgres > backup.sql`
