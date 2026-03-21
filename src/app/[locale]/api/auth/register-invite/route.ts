@@ -1,12 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma, getTenantPrisma } from "@/lib/prisma";
 import { Role } from "@prisma/client";
-import { createSession } from "@/lib/auth/session";
 import { hashPassword } from "@/lib/auth/password";
-import {
-  getSessionCookieOptions,
-  SESSION_COOKIE_NAME,
-} from "@/lib/security/cookies";
+import { signIn } from "@/lib/auth";
 import { logAuditEvent } from "@/lib/security/audit";
 
 export async function POST(request: Request) {
@@ -17,7 +13,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
     }
 
-    // 1. Validar invitación
     const invitation = await prisma.invitation.findUnique({
       where: { tokenHash: token },
     });
@@ -42,10 +37,8 @@ export async function POST(request: Request) {
 
     const tPrisma = getTenantPrisma(invitation.tenantId);
 
-    // 2. Hash password
     const passwordHash = hashPassword(password);
 
-    // 3. Crear o actualizar usuario
     const user = await prisma.user.upsert({
       where: { email },
       update: { passwordHash },
@@ -55,7 +48,6 @@ export async function POST(request: Request) {
       },
     });
 
-    // 4. Crear membresía en el tenant invitado
     await tPrisma.membership.upsert({
       where: {
         userId_tenantId: {
@@ -75,7 +67,6 @@ export async function POST(request: Request) {
       },
     });
 
-    // 5. Marcar invitación como aceptada
     await tPrisma.invitation.update({
       where: { id: invitation.id },
       data: {
@@ -85,12 +76,6 @@ export async function POST(request: Request) {
       },
     });
 
-    // 6. Crear sesión
-    const { token: sessionToken, session } = await createSession(
-      user.id,
-      invitation.tenantId,
-    );
-
     await logAuditEvent({
       eventType: "INVITATION_ACCEPTED",
       userId: user.id,
@@ -98,14 +83,20 @@ export async function POST(request: Request) {
       metadata: { invitationId: invitation.id },
     });
 
-    const response = NextResponse.json({ success: true });
-    response.cookies.set(
-      SESSION_COOKIE_NAME,
-      sessionToken,
-      getSessionCookieOptions(session.expires),
-    );
+    const signInResult = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
 
-    return response;
+    if (signInResult?.error) {
+      return NextResponse.json(
+        { error: "Registro exitoso pero error al iniciar sesión" },
+        { status: 500 },
+      );
+    }
+
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error("INVITE_REGISTER_ERROR:", error);
     return NextResponse.json(

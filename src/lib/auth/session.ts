@@ -30,7 +30,7 @@ export async function createSession(userId: string, tenantId?: string) {
       },
     });
 
-    console.log(`SESSION_DEBUG: Created session for user ${userId} with token ${sessionToken.substring(0, 10)}...`);
+    console.log(`SESSION_DEBUG: Session created for user ${userId}`);
 
     return { token, session };
   } catch (error: any) {
@@ -56,9 +56,7 @@ export async function validateSession(rawToken: string) {
 
   const nextToken = randomBytes(32).toString("hex");
   const nextTokenHash = hashToken(nextToken);
-  const newExpires = new Date(
-    Date.now() + SESSION_TTL_HOURS * 60 * 60 * 1000,
-  );
+  const newExpires = new Date(Date.now() + SESSION_TTL_HOURS * 60 * 60 * 1000);
 
   const rotated = await prisma.$transaction(async (tx: any) => {
     await tx.session.update({

@@ -4,17 +4,24 @@ import { auth } from "@/lib/auth";
 /**
  * Normalized Internal Secret Validator
  * Supports X-Internal-Secret or Authorization: Bearer <token>
+ * SECURITY: No hardcoded fallback - requires INTERNAL_API_SECRET env var
  */
 export function validateInternalSecret(request: Request): boolean {
   const internalHeader = request.headers.get("x-internal-secret");
   const authHeader = request.headers.get("authorization");
 
-  // Accept Bearer token or direct X-Internal-Secret header
   const token = authHeader?.startsWith("Bearer ")
     ? authHeader.substring(7)
     : internalHeader;
-  const expected =
-    process.env.INTERNAL_API_SECRET || "366bbcdceecb8723e8de206c2e0cc7b5";
+
+  const expected = process.env.INTERNAL_API_SECRET;
+
+  if (!expected) {
+    console.error(
+      "[AUTH_CRITICAL] INTERNAL_API_SECRET environment variable is not configured!",
+    );
+    return false;
+  }
 
   if (!token) return false;
   return token === expected;
@@ -24,14 +31,12 @@ export function requireInternalSecret(request: Request): void {
   if (!validateInternalSecret(request)) {
     const internalHeader = request.headers.get("x-internal-secret");
     const authHeader = request.headers.get("authorization");
-    const token = authHeader?.startsWith("Bearer ")
+    const hasToken = !!(authHeader?.startsWith("Bearer ")
       ? authHeader.substring(7)
-      : internalHeader;
-    const expected =
-      process.env.INTERNAL_API_SECRET || "366bbcdceecb8723e8de206c2e0cc7b5";
+      : internalHeader);
 
     console.error(
-      `[AUTH_FAILURE] INTERNAL_API_SECRET Mismatch. Expected (prefix): ${expected.substring(0, 4)}... Got (prefix): ${token?.substring(0, 4) || "none"}...`,
+      `[AUTH_FAILURE] Internal API authentication failed. Token present: ${hasToken}`,
     );
     throw Object.assign(new Error("UNAUTHORIZED"), { status: 401 });
   }

@@ -1,0 +1,31 @@
+# docker-compose.local.yml - Para desarrollo local
+# Uso: docker compose -f docker-compose.local.yml up -d
+
+services:
+  # Base de datos PostgreSQL (sin profiles)
+  db:
+    image: postgres:16-alpine
+    container_name: agencia-db-local
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Karaoke27570Echeverria
+      POSTGRES_DB: agencia_web_b2b
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata_local:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d agencia_web_b2b"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  pgdata_local:

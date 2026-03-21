@@ -149,6 +149,14 @@ export default async function CommercialHubPage({
   });
   const pipelineValue = Number(dealsStats._sum.value || 0);
 
+  // Get economics data for efficiency metrics
+  const economicsData = await EconomicsService.getTenantROI(tenantId ?? "");
+  const economics = {
+    efficiencyScore: economicsData?.efficiencyScore || 1.0,
+    netProfit: economicsData?.netProfit || 0,
+    totalOpEx: economicsData?.totalOpEx || 0,
+  };
+
   // 4. Serialize for Client Component
   const serializedLeads = leadsRaw.map((l: LeadType) => ({
     ...l,
@@ -156,8 +164,8 @@ export default async function CommercialHubPage({
     intelligence: l.intelligence
       ? {
           ...l.intelligence,
-          analyzedAt: (l.intelligence as any).analyzedAt?.toISOString(),
-          updatedAt: (l.intelligence as any).updatedAt?.toISOString(),
+          analyzedAt: (l.intelligence as any).analyzedAt?.toISOString() ?? null,
+          updatedAt: (l.intelligence as any).updatedAt?.toISOString() ?? null,
         }
       : null,
   }));
@@ -276,7 +284,7 @@ export default async function CommercialHubPage({
           </div>
 
           <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-200/40 overflow-hidden">
-            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+            {}
             <LeadsDataTable
               leads={serializedLeads as any}
               tenantId={tenantId ?? undefined}

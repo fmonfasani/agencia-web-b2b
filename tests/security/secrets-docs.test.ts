@@ -13,23 +13,29 @@ describe("security docs hygiene", () => {
   });
 
   it(".env.example contains required empty keys", () => {
-    const envExample = readFileSync(join(process.cwd(), ".env.example"), "utf-8");
+    const envExample = readFileSync(
+      join(process.cwd(), ".env.example"),
+      "utf-8",
+    );
     const required = [
-      "OPENAI_API_KEY=",
-      "ASSISTANT_ID=",
-      "OLD_ASSISTANT_ID=",
-      "AUTH_GOOGLE_ID=",
-      "AUTH_GOOGLE_SECRET=",
       "AUTH_SECRET=",
       "NEXTAUTH_URL=",
       "AUTH_TRUST_HOST=",
       "DATABASE_URL=",
       "POSTGRES_PRISMA_URL=",
       "POSTGRES_URL_NON_POOLING=",
-      "ADMIN_SECRET=",
-      "AGENT_SERVICE_URL=",
       "INTERNAL_API_SECRET=",
-      "NEXT_PUBLIC_SENTRY_DSN=",
+      "ADMIN_SECRET=",
+      "AUTH_GOOGLE_ID=",
+      "AUTH_GOOGLE_SECRET=",
+      "AUTH_MICROSOFT_ENTRA_ID_ID=",
+      "AUTH_MICROSOFT_ENTRA_ID_SECRET=",
+      "AUTH_MICROSOFT_ENTRA_ID_ISSUER=",
+      "UPSTASH_REDIS_REST_URL=",
+      "UPSTASH_REDIS_REST_TOKEN=",
+      "AGENT_SERVICE_URL=",
+      "BRIDGE_API_KEY=",
+      "OPENAI_API_KEY=",
       "SENTRY_AUTH_TOKEN=",
     ];
 

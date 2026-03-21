@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useLocale } from "next-intl";
+import { signIn } from "next-auth/react";
 import { Lock, Mail, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 
@@ -10,7 +11,10 @@ interface LoginFormProps {
   locale?: string;
 }
 
-export default function LoginForm({ darkMode = false, locale: localeProp }: LoginFormProps) {
+export default function LoginForm({
+  darkMode = false,
+  locale: localeProp,
+}: LoginFormProps) {
   const localeFromHook = useLocale();
   const locale = localeProp ?? localeFromHook;
   const en = locale === "en";
@@ -26,7 +30,9 @@ export default function LoginForm({ darkMode = false, locale: localeProp }: Logi
     signingIn: en ? "Signing in..." : "Verificando...",
     noAccount: en ? "Don't have an account?" : "¿No tenés cuenta?",
     signUp: en ? "Create your company →" : "Registrá tu empresa gratis →",
-    networkError: en ? "Network error. Please try again." : "Error de red. Intenta nuevamente.",
+    networkError: en
+      ? "Network error. Please try again."
+      : "Error de red. Intenta nuevamente.",
     invalidCreds: en ? "Invalid credentials" : "Credenciales inválidas",
   };
 
@@ -43,17 +49,14 @@ export default function LoginForm({ darkMode = false, locale: localeProp }: Logi
     setError("");
 
     try {
-      const response = await fetch(`/${locale}/api/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, rememberMe }),
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
       });
 
-      const data = (await response.json()) as { error?: string; message?: string; success?: boolean };
-
-      if (!response.ok) {
-        const errorMsg = data.message || data.error || t.invalidCreds;
-        setError(errorMsg);
+      if (result?.error) {
+        setError(t.invalidCreds);
         setLoading(false);
         return;
       }
@@ -76,7 +79,10 @@ export default function LoginForm({ darkMode = false, locale: localeProp }: Logi
               {t.emailLabel}
             </label>
             <div className="relative">
-              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#4a5168]" size={15} />
+              <Mail
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#4a5168]"
+                size={15}
+              />
               <input
                 id="email"
                 type="email"
@@ -97,7 +103,10 @@ export default function LoginForm({ darkMode = false, locale: localeProp }: Logi
               </label>
             </div>
             <div className="relative">
-              <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#4a5168]" size={15} />
+              <Lock
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#4a5168]"
+                size={15}
+              />
               <input
                 id="password"
                 type={showPassword ? "text" : "password"}
@@ -130,10 +139,18 @@ export default function LoginForm({ darkMode = false, locale: localeProp }: Logi
                 onChange={(e) => setRememberMe(e.target.checked)}
                 className="sr-only"
               />
-              <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${rememberMe ? "bg-[#135bec] border-[#135bec]" : "border-[#2a2f3e] bg-[#161923]"}`}>
+              <div
+                className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${rememberMe ? "bg-[#135bec] border-[#135bec]" : "border-[#2a2f3e] bg-[#161923]"}`}
+              >
                 {rememberMe && (
                   <svg viewBox="0 0 12 12" fill="none" className="w-2.5 h-2.5">
-                    <path d="M2 6l3 3 5-5" stroke="white" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+                    <path
+                      d="M2 6l3 3 5-5"
+                      stroke="white"
+                      strokeWidth={1.5}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 )}
               </div>
@@ -173,11 +190,17 @@ export default function LoginForm({ darkMode = false, locale: localeProp }: Logi
           Email corporativo
         </label>
         <div className="relative">
-          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+          <Mail
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+            size={18}
+          />
           <input
-            id="email" type="email" value={email}
+            id="email"
+            type="email"
+            value={email}
             onChange={(e) => setEmail(e.target.value)}
-            required autoComplete="email"
+            required
+            autoComplete="email"
             className="w-full rounded-xl border border-slate-200 pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
             placeholder="admin@empresa.com"
           />
@@ -185,27 +208,48 @@ export default function LoginForm({ darkMode = false, locale: localeProp }: Logi
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="password" className="text-sm font-semibold text-slate-700">Contraseña</label>
+        <label
+          htmlFor="password"
+          className="text-sm font-semibold text-slate-700"
+        >
+          Contraseña
+        </label>
         <div className="relative">
-          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+          <Lock
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+            size={18}
+          />
           <input
-            id="password" type={showPassword ? "text" : "password"}
-            value={password} onChange={(e) => setPassword(e.target.value)}
-            required autoComplete="current-password"
+            id="password"
+            type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            autoComplete="current-password"
             className="w-full rounded-xl border border-slate-200 pl-10 pr-10 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
             placeholder="••••••••"
           />
-          <button type="button" tabIndex={-1} onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+          <button
+            type="button"
+            tabIndex={-1}
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+          >
             {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         </div>
       </div>
 
-      {error && <div className="p-3 bg-red-50 rounded-xl border border-red-100 text-red-600 text-sm">{error}</div>}
+      {error && (
+        <div className="p-3 bg-red-50 rounded-xl border border-red-100 text-red-600 text-sm">
+          {error}
+        </div>
+      )}
 
-      <button disabled={loading}
-        className="w-full rounded-xl bg-slate-900 text-white px-4 py-3 font-semibold text-sm hover:bg-slate-800 disabled:opacity-50 transition-colors shadow-lg">
+      <button
+        disabled={loading}
+        className="w-full rounded-xl bg-slate-900 text-white px-4 py-3 font-semibold text-sm hover:bg-slate-800 disabled:opacity-50 transition-colors shadow-lg"
+      >
         {loading ? "Verificando..." : "Ingresar al Admin"}
       </button>
     </form>

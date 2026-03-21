@@ -4,17 +4,16 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
-RUN npm ci
+RUN npm install --legacy-peer-deps
 
 COPY prisma ./prisma/
 COPY src ./src/
 COPY next.config.ts .
 COPY tsconfig.json .
-COPY tailwind.config.ts .
 COPY postcss.config.mjs .
 COPY next-env.d.ts .
 COPY public ./public/
-COPY *.ts ./prisma/ ./prisma/
+COPY messages ./messages/
 
 RUN npx prisma generate
 RUN npm run build

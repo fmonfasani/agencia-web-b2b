@@ -6,7 +6,12 @@ export function hashPassword(password: string): string {
   return `${salt}:${hash}`;
 }
 
-export function verifyPassword(password: string, storedHash: string): boolean {
+export function verifyPassword(
+  password: string,
+  storedHash: string | null | undefined,
+): boolean {
+  if (!storedHash) return false;
+
   const [salt, hash] = storedHash.split(":");
   if (!salt || !hash) return false;
 
