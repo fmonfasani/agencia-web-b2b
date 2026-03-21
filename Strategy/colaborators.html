@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador de Comisiones — Plataforma Agentes IA & Webs</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#F5F5F0;color:#333;padding:24px;max-width:980px;margin:0 auto}
+  h1{font-size:22px;font-weight:600;color:#1F4E79;margin-bottom:4px}
+  .subtitle{font-size:13px;color:#999;margin-bottom:24px}
+  .section{background:#fff;border-radius:12px;border:1px solid #E5E5E0;padding:20px 24px;margin-bottom:18px}
+  .section-title{font-size:11px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px}
+
+  /* COLABORADOR SELECTOR */
+  .colab-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .colab-btn{border:1.5px solid #E5E5E0;border-radius:10px;padding:14px 12px;cursor:pointer;background:#fff;transition:all .15s;text-align:center}
+  .colab-btn:hover{border-color:#185FA5;background:#F0F6FC}
+  .colab-btn.active{border-color:#1F4E79;background:#EAF0F8}
+  .colab-avatar{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;margin:0 auto 8px;color:#fff}
+  .colab-name{font-size:13px;font-weight:600;color:#333}
+  .colab-role{font-size:11px;color:#999;margin-top:2px}
+  .colab-total{font-size:14px;font-weight:700;margin-top:8px;color:#1D6A3A}
+
+  /* CONTROLS */
+  .controls{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .ctrl{background:#F8F8F5;border-radius:8px;padding:14px}
+  .ctrl-label{font-size:11px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
+  .ctrl-val{font-size:24px;font-weight:600;color:#1F4E79;margin-bottom:8px}
+  .ctrl-sub{font-size:11px;color:#bbb;margin-top:5px}
+  input[type=range]{width:100%;accent-color:#1F4E79}
+
+  /* METRICS */
+  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .metric{background:#F8F8F5;border-radius:8px;padding:14px}
+  .metric-label{font-size:11px;color:#888;margin-bottom:6px}
+  .metric-val{font-size:20px;font-weight:600}
+  .v-green{color:#1D6A3A}.v-blue{color:#1F4E79}.v-amber{color:#7B4F00}
+  .metric-sub{font-size:11px;color:#bbb;margin-top:4px}
+
+  /* BONUS */
+  .bonus-alert{border-radius:8px;padding:11px 16px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:10px;margin-top:14px}
+  .bonus-alert.none{background:#F5F5F0;color:#999}
+  .bonus-alert.active{background:#FFF8E6;color:#7B4F00;border:1px solid #F5D78E}
+  .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .dot.none{background:#ddd}.dot.active{background:#BA7517}
+
+  /* HIGHLIGHT */
+  .highlight{background:#F0F9F4;border:1px solid #B8DFC8;border-radius:10px;padding:18px 22px}
+  .h-amount{font-size:34px;font-weight:700;color:#1D6A3A}
+  .h-label{font-size:13px;color:#555;margin-top:4px}
+  .h-break{font-size:12px;color:#999;margin-top:6px;margin-bottom:16px}
+  .bar-row{margin-bottom:10px}
+  .bar-label{display:flex;justify-content:space-between;font-size:12px;color:#555;margin-bottom:4px}
+  .bar-track{background:#EEE;border-radius:4px;height:8px;overflow:hidden}
+  .bar-fill{height:100%;border-radius:4px;transition:width .35s}
+  .obj-row{margin-top:14px;padding-top:12px;border-top:1px solid #E8F5EE;font-size:12px;display:flex;align-items:center;gap:8px}
+
+  /* TABLE */
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{padding:9px 12px;text-align:left;font-weight:600;color:#888;border-bottom:1px solid #EEE;font-size:11px;text-transform:uppercase;letter-spacing:.03em}
+  td{padding:9px 12px;border-bottom:1px solid #F0F0EC;color:#333;vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  tr:nth-child(even) td{background:#FAFAF8}
+  .tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600}
+  .tag-b{background:#F0F0EC;color:#666}
+  .tag-p{background:#E6F1FB;color:#185FA5}
+  .tag-x{background:#FFF0F0;color:#CC0000}
+
+  /* CHART */
+  .chart-wrap{position:relative;width:100%;height:250px}
+  .legend{display:flex;flex-wrap:wrap;gap:16px;font-size:12px;color:#888;margin-top:10px}
+  .leg-item{display:flex;align-items:center;gap:6px}
+  .leg-dot{width:10px;height:10px;border-radius:2px}
+
+  .months-row{display:flex;align-items:center;gap:12px;font-size:13px;color:#555;margin-bottom:14px}
+  .months-row b{color:#1F4E79;min-width:56px;display:inline-block}
+
+  footer{text-align:center;font-size:11px;color:#ccc;margin-top:28px;padding-top:14px;border-top:1px solid #EEE}
+</style>
+</head>
+<body>
+
+<h1>Simulador de Comisiones Individuales</h1>
+<p class="subtitle">Plataforma Agentes IA & Servicios Web · Acuerdo v1.0 · 17 de marzo de 2026</p>
+
+<div class="section">
+  <div class="section-title">¿Quién está simulando?</div>
+  <div class="colab-grid" id="colab-grid"></div>
+</div>
+
+<div class="section">
+  <div class="section-title">Proyección a mes</div>
+  <div class="months-row">
+    <b id="mes-lbl">Mes 18</b>
+    <input type="range" min="1" max="24" value="18" id="vmeses" oninput="recalc()" style="flex:1">
+  </div>
+  <div class="section-title">Mis ventas por mes (personales)</div>
+  <div class="controls">
+    <div class="ctrl">
+      <div class="ctrl-label">Agentes / mes</div>
+      <div class="ctrl-val" id="va-val">1</div>
+      <input type="range" min="0" max="8" value="1" step="1" id="va" oninput="recalc()">
+      <div class="ctrl-sub">Setup 40% · Mant. 0% (Socio Principal)</div>
+    </div>
+    <div class="ctrl">
+      <div class="ctrl-label">Webs Basic / mes</div>
+      <div class="ctrl-val" id="vwb-val">0</div>
+      <input type="range" min="0" max="8" value="0" step="1" id="vwb" oninput="recalc()">
+      <div class="ctrl-sub">Setup 50% · Mant. 20%</div>
+    </div>
+    <div class="ctrl">
+      <div class="ctrl-label">Webs Pro / mes</div>
+      <div class="ctrl-val" id="vwp-val">1</div>
+      <input type="range" min="0" max="8" value="1" step="1" id="vwp" oninput="recalc()">
+      <div class="ctrl-sub">Setup 50% · Mant. 35%</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Resumen del mes actual</div>
+  <div class="metrics">
+    <div class="metric">
+      <div class="metric-label">Setup comisiones</div>
+      <div class="metric-val v-green" id="m-setup">$0</div>
+      <div class="metric-sub">este mes</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Mant. webs acumulado</div>
+      <div class="metric-val v-green" id="m-mant">$0</div>
+      <div class="metric-sub" id="m-mant-sub">/mes</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Bonus individual</div>
+      <div class="metric-val v-amber" id="m-bonus">$0</div>
+      <div class="metric-sub" id="m-bonus-sub">—</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Clientes propios activos</div>
+      <div class="metric-val v-blue" id="m-clientes">0</div>
+      <div class="metric-sub" id="m-clientes-sub">al mes 18</div>
+    </div>
+  </div>
+  <div id="bonus-alert" class="bonus-alert none">
+    <div class="dot none" id="bdot"></div>
+    <span id="btxt">Cerrar 2 clientes en el mes activa el primer bonus ($50)</span>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Mi ingreso estimado al mes <span id="mes-lbl2">18</span></div>
+  <div class="highlight">
+    <div class="h-amount" id="cu-total">$0</div>
+    <div class="h-label" id="cu-label">ingreso estimado al mes 18</div>
+    <div class="h-break" id="cu-break">setup $0 + mant. $0 + bonus $0</div>
+    <div class="bar-row">
+      <div class="bar-label"><span>Setup comisiones</span><span id="bs-lbl">$0</span></div>
+      <div class="bar-track"><div class="bar-fill" id="bs-bar" style="background:#1D6A3A;width:0%"></div></div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-label"><span>Mantenimiento webs acumulado</span><span id="bm-lbl">$0</span></div>
+      <div class="bar-track"><div class="bar-fill" id="bm-bar" style="background:#1F4E79;width:0%"></div></div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-label"><span>Bonus volumen</span><span id="bb-lbl">$0</span></div>
+      <div class="bar-track"><div class="bar-fill" id="bb-bar" style="background:#BA7517;width:0%"></div></div>
+    </div>
+    <div class="obj-row">
+      <div class="dot none" id="obj-dot"></div>
+      <span id="obj-txt" style="color:#aaa">Objetivo $1.200/mes: calculando...</span>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Desglose por tipo de venta</div>
+  <table>
+    <tr><th>Tipo</th><th>Qty/mes</th><th>Setup comisión</th><th>Mant. tuyo/mes</th><th>Mant. Socio Principal</th></tr>
+    <tr>
+      <td><span class="tag tag-p">Agente</span></td>
+      <td id="dqa">0</td><td id="dsa">$0</td>
+      <td><span class="tag tag-x">$0 — S.P.</span></td>
+      <td id="dspa" style="color:#999">$0/mes</td>
+    </tr>
+    <tr>
+      <td><span class="tag tag-b">Web Basic</span></td>
+      <td id="dqwb">0</td><td id="dswb">$0</td>
+      <td id="dmwb" style="color:#1D6A3A;font-weight:600">$0/mes</td>
+      <td id="dspwb" style="color:#999">$0/mes</td>
+    </tr>
+    <tr>
+      <td><span class="tag tag-p">Web Pro</span></td>
+      <td id="dqwp">0</td><td id="dswp">$0</td>
+      <td id="dmwp" style="color:#1D6A3A;font-weight:600">$0/mes</td>
+      <td id="dspwp" style="color:#999">$0/mes</td>
+    </tr>
+  </table>
+</div>
+
+<div class="section">
+  <div class="section-title">Evolución mes a mes</div>
+  <div class="chart-wrap"><canvas id="chart"></canvas></div>
+  <div class="legend">
+    <div class="leg-item"><div class="leg-dot" style="background:#1F4E79"></div>Mant. webs acumulado</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#1D6A3A"></div>Setup comisión mensual</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#BA7517;opacity:.7"></div>Objetivo $1.200</div>
+  </div>
+</div>
+
+<footer>
+  Acuerdo de Colaboración v1.0 · Socio Principal: Monfasani Federico · 17 de marzo de 2026<br>
+  Los valores son proyecciones estimadas y no constituyen garantía de ingresos.
+</footer>
+
+<script>
+const COLABS=[
+  {name:"Mateo Llorente",   initials:"ML", color:"#185FA5"},
+  {name:"Valentino Picco",  initials:"VP", color:"#1D6A3A"},
+  {name:"Aldana Oviedo",    initials:"AO", color:"#7B4F00"},
+  {name:"Joaquin Levis",    initials:"JL", color:"#6B3A7D"},
+];
+let activeColab=0;
+const state={};
+COLABS.forEach((_,i)=>state[i]={va:1,vwb:0,vwp:1,meses:18});
+
+const T={
+  agente: {setup:399,setupColab:.40,mant:99,mantColab:0},
+  webBasic:{setup:199,setupColab:.50,mant:39,mantColab:.20},
+  webPro:  {setup:399,setupColab:.50,mant:49,mantColab:.35},
+};
+const OBJ=1200;
+let chart=null;
+
+function bonus(n){
+  if(n>=5) return 250;
+  if(n>=3) return 120;
+  if(n>=2) return 50;
+  return 0;
+}
+const fmt=n=>'$'+Math.round(n).toLocaleString('es-AR');
+const pct=v=>Math.round(Math.min(100,Math.max(0,v)))+'%';
+
+function calcTotal(va,vwb,vwp,meses){
+  const setup=(va*T.agente.setup*T.agente.setupColab)+(vwb*T.webBasic.setup*T.webBasic.setupColab)+(vwp*T.webPro.setup*T.webPro.setupColab);
+  const mantMes=(vwb*T.webBasic.mant*T.webBasic.mantColab)+(vwp*T.webPro.mant*T.webPro.mantColab);
+  const bon=bonus(va+vwb+vwp);
+  return setup+mantMes*meses+bon;
+}
+
+function buildGrid(){
+  const grid=document.getElementById('colab-grid');
+  grid.innerHTML='';
+  COLABS.forEach((c,i)=>{
+    const s=state[i];
+    const tot=calcTotal(s.va,s.vwb,s.vwp,s.meses);
+    const btn=document.createElement('div');
+    btn.className='colab-btn'+(i===activeColab?' active':'');
+    btn.innerHTML=`
+      <div class="colab-avatar" style="background:${c.color}">${c.initials}</div>
+      <div class="colab-name">${c.name}</div>
+      <div class="colab-role">Colaborador</div>
+      <div class="colab-total">${fmt(tot)}</div>
+    `;
+    btn.onclick=()=>selectColab(i);
+    grid.appendChild(btn);
+  });
+}
+
+function selectColab(i){
+  // save current state
+  state[activeColab].va=+document.getElementById('va').value;
+  state[activeColab].vwb=+document.getElementById('vwb').value;
+  state[activeColab].vwp=+document.getElementById('vwp').value;
+  state[activeColab].meses=+document.getElementById('vmeses').value;
+  activeColab=i;
+  // restore
+  document.getElementById('va').value=state[i].va;
+  document.getElementById('vwb').value=state[i].vwb;
+  document.getElementById('vwp').value=state[i].vwp;
+  document.getElementById('vmeses').value=state[i].meses;
+  recalc();
+}
+
+function recalc(){
+  const va=+document.getElementById('va').value;
+  const vwb=+document.getElementById('vwb').value;
+  const vwp=+document.getElementById('vwp').value;
+  const meses=+document.getElementById('vmeses').value;
+  state[activeColab]={va,vwb,vwp,meses};
+  const total=va+vwb+vwp;
+  const c=COLABS[activeColab];
+
+  document.getElementById('va-val').textContent=va;
+  document.getElementById('vwb-val').textContent=vwb;
+  document.getElementById('vwp-val').textContent=vwp;
+  document.getElementById('mes-lbl').textContent='Mes '+meses;
+  document.getElementById('mes-lbl2').textContent=meses;
+
+  const setupA=va*T.agente.setup*T.agente.setupColab;
+  const setupWB=vwb*T.webBasic.setup*T.webBasic.setupColab;
+  const setupWP=vwp*T.webPro.setup*T.webPro.setupColab;
+  const setupTotal=setupA+setupWB+setupWP;
+
+  const mantWBMes=vwb*T.webBasic.mant*T.webBasic.mantColab;
+  const mantWPMes=vwp*T.webPro.mant*T.webPro.mantColab;
+  const mantMesMio=mantWBMes+mantWPMes;
+  const mantAcum=mantMesMio*meses;
+
+  const mantASP=va*T.agente.mant;
+  const mantWBSP=vwb*T.webBasic.mant*(1-T.webBasic.mantColab);
+  const mantWPSP=vwp*T.webPro.mant*(1-T.webPro.mantColab);
+
+  const bon=bonus(total);
+  const totalMio=setupTotal+mantAcum+bon;
+  const clientesActivos=total*meses;
+
+  // bonus alert
+  const ba=document.getElementById('bonus-alert');
+  const bd=document.getElementById('bdot');
+  if(bon>0){
+    ba.className='bonus-alert active'; bd.className='dot active';
+    document.getElementById('btxt').textContent='Bonus activo este mes: '+fmt(bon)+' ('+total+' clientes cerrados)';
+  } else {
+    ba.className='bonus-alert none'; bd.className='dot none';
+    const need=Math.max(0,2-total);
+    document.getElementById('btxt').textContent=need>0?need+' cliente'+(need!==1?'s':'')+' más para activar el primer bonus ($50)':'Estás cerca del siguiente bonus';
+  }
+
+  document.getElementById('m-setup').textContent=fmt(setupTotal);
+  document.getElementById('m-mant').textContent=fmt(mantAcum);
+  document.getElementById('m-mant-sub').textContent=fmt(mantMesMio)+'/mes recurrente';
+  document.getElementById('m-bonus').textContent=fmt(bon);
+  document.getElementById('m-bonus-sub').textContent=bon>0?'✓ activo':'cerrar más clientes';
+  document.getElementById('m-clientes').textContent=clientesActivos;
+  document.getElementById('m-clientes-sub').textContent='al mes '+meses;
+
+  document.getElementById('cu-total').textContent=fmt(totalMio);
+  document.getElementById('cu-label').textContent=c.name+' — ingreso estimado al mes '+meses;
+  document.getElementById('cu-break').textContent='setup '+fmt(setupTotal)+' + mant.webs '+fmt(mantAcum)+' + bonus '+fmt(bon);
+
+  const maxBar=Math.max(setupTotal,mantAcum,bon,1);
+  document.getElementById('bs-bar').style.width=pct((setupTotal/maxBar)*100);
+  document.getElementById('bs-lbl').textContent=fmt(setupTotal);
+  document.getElementById('bm-bar').style.width=pct((mantAcum/maxBar)*100);
+  document.getElementById('bm-lbl').textContent=fmt(mantAcum);
+  document.getElementById('bb-bar').style.width=pct((bon/maxBar)*100);
+  document.getElementById('bb-lbl').textContent=fmt(bon);
+
+  const met=totalMio>=OBJ;
+  document.getElementById('obj-dot').style.background=met?'#1D6A3A':'#ddd';
+  document.getElementById('obj-txt').style.color=met?'#1D6A3A':'#aaa';
+  document.getElementById('obj-txt').textContent=met?'✓ Objetivo $1.200 alcanzado en el mes '+meses:'Objetivo $1.200: falta '+fmt(OBJ-totalMio);
+
+  document.getElementById('dqa').textContent=va;
+  document.getElementById('dsa').textContent=fmt(setupA);
+  document.getElementById('dspa').textContent=fmt(mantASP)+'/mes';
+  document.getElementById('dqwb').textContent=vwb;
+  document.getElementById('dswb').textContent=fmt(setupWB);
+  document.getElementById('dmwb').textContent=fmt(mantWBMes)+'/mes';
+  document.getElementById('dspwb').textContent=fmt(mantWBSP)+'/mes';
+  document.getElementById('dqwp').textContent=vwp;
+  document.getElementById('dswp').textContent=fmt(setupWP);
+  document.getElementById('dmwp').textContent=fmt(mantWPMes)+'/mes';
+  document.getElementById('dspwp').textContent=fmt(mantWPSP)+'/mes';
+
+  const labels=Array.from({length:meses},(_,i)=>'M'+(i+1));
+  const mantD=[],setupD=[],objD=[];
+  for(let m=1;m<=meses;m++){
+    mantD.push(Math.round(mantMesMio*m));
+    setupD.push(Math.round(setupTotal));
+    objD.push(OBJ);
+  }
+  if(chart) chart.destroy();
+  chart=new Chart(document.getElementById('chart'),{
+    data:{
+      labels,
+      datasets:[
+        {type:'bar',label:'Mant. acum.',data:mantD,backgroundColor:c.color+'44',borderColor:c.color,borderWidth:1},
+        {type:'bar',label:'Setup mensual',data:setupD,backgroundColor:c.color+'88'},
+        {type:'line',label:'Obj $1.200',data:objD,borderColor:'#BA7517',borderWidth:1.5,borderDash:[4,4],pointRadius:0,fill:false},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+fmt(ctx.parsed.y)}}},
+      scales:{
+        x:{ticks:{font:{size:10},autoSkip:true,maxTicksLimit:12,maxRotation:0}},
+        y:{ticks:{font:{size:10},callback:v=>'$'+v.toLocaleString('es-AR')}},
+      }
+    }
+  });
+
+  buildGrid();
+}
+
+buildGrid();
+recalc();
+</script>
+</body>
+</html>

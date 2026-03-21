@@ -125,6 +125,8 @@ const MULTI_TENANT_MODELS = [
   "OutreachMessage",
   "Appointment",
   "Proposal",
+  "PaymentEvent",
+  "BillingAlert",
 ];
 
 /**
