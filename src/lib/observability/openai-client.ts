@@ -1,10 +1,6 @@
 import OpenAI from "openai"
 import { prisma } from "@/lib/prisma"
 
-const client = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY
-})
-
 const MODEL_COST = {
     "gpt-4o-mini": {
         input: 0.00000015,
@@ -22,11 +18,23 @@ type OpenAIRequest = {
     messages: any[]
 }
 
+let _client: OpenAI | null = null
+
+function getClient(): OpenAI {
+    if (!_client) {
+        _client = new OpenAI({
+            apiKey: process.env.OPENAI_API_KEY
+        })
+    }
+    return _client
+}
+
 export async function openaiChat({
     tenantId,
     model,
     messages
 }: OpenAIRequest) {
+    const client = getClient()
 
     const response = await client.chat.completions.create({
         model,

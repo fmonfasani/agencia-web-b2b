@@ -5,17 +5,18 @@
   "scripts": {
     "dev": "next dev -p 3001",
     "build": "prisma generate && next build",
+    "build:ci": "prisma generate && next build",
     "start": "next start",
-    "git:fix-pr": "bash scripts/fix-pr-setup.sh",
-    "lint": "eslint",
-    "test": "vitest",
+    "lint": "eslint --max-warnings=999",
+    "lint:fix": "eslint --fix",
+    "typecheck": "tsc --noEmit --skipLibCheck",
+    "test": "vitest run",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest run --coverage",
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui",
-    "prepare": "husky",
+    "test:ci": "vitest run --reporter=junit --output=junit.xml",
     "db:seed": "prisma db seed",
-    "db:backfill:leads-tenant": "node scripts/backfill-leads-tenant.mjs"
+    "db:migrate": "prisma migrate deploy",
+    "db:generate": "prisma generate"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [

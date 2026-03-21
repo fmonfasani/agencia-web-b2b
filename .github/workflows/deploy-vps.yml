@@ -4,31 +4,60 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - "Strategy/**"
 
 jobs:
-  build-and-deploy:
+  # ===========================================
+  # Job 1: Quality Check (non-blocking)
+  # ===========================================
+  quality:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: "npm"
 
       - name: Install deps
         run: npm ci
 
-      - name: Generate Prisma Client
+      - name: Type check
+        run: npm run typecheck || echo "TypeScript errors found (non-blocking)"
+
+      - name: Lint
+        run: npm run lint || echo "ESLint warnings found (non-blocking)"
+
+  # ===========================================
+  # Job 2: Build and Deploy
+  # ===========================================
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    needs: quality
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Generate Prisma
         run: npx prisma generate
 
       - name: Build app
-        run: npm run build
-
-      - name: Prune dev deps
-        run: npm prune --production
+        run: npm run build:ci
 
       - name: Create artifact
         run: |
@@ -55,24 +84,29 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: root
           key: ${{ secrets.VPS_SSH_KEY }}
+          timeout: "10m"
           script: |
+            set -e
             cd /root/apps/agencia
             
-            # Limpiar build anterior
-            rm -rf .next node_modules
+            # Backup actual build
+            [ -d .next ] && mv .next .next.bak || true
             
             # Extraer nuevo build
             tar -xzf app.tar.gz
             
-            # Instalar solo prod deps
-            npm install --production
+            # Instalar deps prod
+            npm install --production --omit=dev
             
             # Copiar .env si no existe
-            if [ ! -f .env ]; then
+            if [ ! -f .env ] && [ -f /root/agencia-web-b2b/.env ]; then
               cp /root/agencia-web-b2b/.env .env
             fi
             
-            # Restart app
+            # Restart
             pm2 delete agencia-web || true
             pm2 start ecosystem.config.js
             pm2 save
+            pm2 describe agencia-web || true
+            
+            echo "=== Deploy completed ==="

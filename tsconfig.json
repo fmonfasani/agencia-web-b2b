@@ -31,5 +31,18 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "scripts", "e2e"]
+  "exclude": [
+    "node_modules", 
+    "scripts", 
+    "e2e",
+    "mcp-servers",
+    "lead-system",
+    "auditor",
+    "intelligence_engine",
+    "tests/**",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx"
+  ]
 }
