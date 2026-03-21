@@ -10,53 +10,35 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '20'
+          cache: 'npm'
 
-      - name: Install deps
-        run: npm install
+      - name: Install dependencies
+        run: npm ci
 
-      # 🚨 SIN LINT, SIN TEST, SIN TYPECHECK
-      - name: Build (relajado)
-        run: |
-          NEXT_DISABLE_TURBOPACK=1 \
-          NODE_OPTIONS="--max-old-space-size=2048" \
-          npm run build
+      - name: Generate Prisma client
+        run: npx prisma generate
 
-      - name: Package
-        run: |
-          tar -czf app.tar.gz \
-          .next \
-          public \
-          package.json \
-          package-lock.json \
-          node_modules
+      - name: Build application
+        run: npm run build
 
-      - name: Upload
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: 134.209.41.51
-          username: root
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "app.tar.gz"
-          target: "/root/apps/agencia"
-
-      - name: Deploy
+      - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: 134.209.41.51
-          username: root
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            cd /root/apps/agencia
-            rm -rf .next node_modules
-            tar -xzf app.tar.gz
-            npm install --production
-            pm2 delete agencia-web || true
-            pm2 start npm --name "agencia-web" -- start -- --port 3001
+            cd /var/www/agencia-web-b2b
+            git pull origin main
+            npm ci --production=false
+            npx prisma migrate deploy
+            npm run build
+            pm2 restart ecosystem.config.js --env production
             pm2 save

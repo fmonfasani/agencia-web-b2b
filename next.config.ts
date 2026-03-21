@@ -7,6 +7,7 @@ const withNextIntl = createNextIntlPlugin();
 const nextConfig: NextConfig = {
   output: "standalone",
   reactCompiler: true,
+  turbopack: false, // Disable Turbopack for stability
   logging: {
     fetches: {
       fullUrl: true,
@@ -14,9 +15,6 @@ const nextConfig: NextConfig = {
   },
   typescript: {
     ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
   },
   serverExternalPackages: [
     "@opentelemetry/sdk-node",

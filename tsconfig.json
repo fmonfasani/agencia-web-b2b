@@ -32,17 +32,21 @@
     "**/*.mts"
   ],
   "exclude": [
-    "node_modules", 
-    "scripts", 
+    "node_modules",
+    "scripts",
     "e2e",
     "mcp-servers",
     "lead-system",
     "auditor",
     "intelligence_engine",
+    "agent-service",
     "tests/**",
     "**/*.test.ts",
     "**/*.test.tsx",
     "**/*.spec.ts",
-    "**/*.spec.tsx"
+    "**/*.spec.tsx",
+    ".next/**",
+    "dist/**",
+    "build/**"
   ]
 }
