@@ -12,7 +12,20 @@ import {
   ExternalLink,
 } from "lucide-react";
 
-export default function LeadContactButton({ lead }: { lead: any }) {
+interface LeadContactButtonProps {
+  lead: {
+    id?: string;
+    phone?: string;
+    email?: string;
+    instagram?: string;
+    facebook?: string;
+    linkedin?: string;
+    website?: string;
+    [key: string]: any;
+  };
+}
+
+export default function LeadContactButton({ lead }: LeadContactButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   // Helper to format links

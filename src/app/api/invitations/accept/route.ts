@@ -82,7 +82,7 @@ export async function POST(request: Request) {
 
     const tokenHash = sha256(token);
 
-    const txResult = await prisma.$transaction(async (tx) => {
+    const txResult = await prisma.$transaction(async (tx: any) => {
       const invitation = await tx.invitation.findFirst({
         where: {
           tokenHash,

@@ -1,6 +1,5 @@
 import { db } from "@/lib/scoped-prisma";
 import { requireTenantMembership } from "@/lib/authz";
-import { redirect } from "next/navigation";
 import { EconomicsService } from "@/lib/economics/tracker";
 import LeadsDataTable from "@/components/admin/LeadsDataTable";
 import {
@@ -8,16 +7,11 @@ import {
   DollarSign,
   Target,
   Zap,
-  Clock,
   ArrowUpRight,
   ArrowDownRight,
   TrendingUp,
   Database,
-  Plus,
   Map as MapIcon,
-  BarChart3,
-  Filter,
-  LayoutDashboard,
 } from "lucide-react";
 
 import Link from "next/link";
@@ -138,12 +132,6 @@ export default async function CommercialHubPage({
   const scraperLeads = leadsRaw.filter(
     (l: LeadType) => l.sourceType === "SCRAPER",
   ).length;
-  const withPhone = leadsRaw.filter((l: LeadType) =>
-    Boolean(l.phone || l.intelligence?.hasWhatsappLink),
-  ).length;
-  const withWebsite = leadsRaw.filter((l: LeadType) =>
-    Boolean(l.website),
-  ).length;
 
   const avgQuality = totalLeads
     ? Math.round(
@@ -156,7 +144,6 @@ export default async function CommercialHubPage({
     : 0;
 
   // 3. Financial Metrics
-  const economics = await EconomicsService.getTenantROI(tenantId ?? "");
   const dealsStats = await scopedDb.deal.aggregate({
     _sum: { value: true },
   });
@@ -169,8 +156,8 @@ export default async function CommercialHubPage({
     intelligence: l.intelligence
       ? {
           ...l.intelligence,
-          analyzedAt: l.intelligence.analyzedAt.toISOString(),
-          updatedAt: l.intelligence.updatedAt.toISOString(),
+          analyzedAt: (l.intelligence as any).analyzedAt?.toISOString(),
+          updatedAt: (l.intelligence as any).updatedAt?.toISOString(),
         }
       : null,
   }));

@@ -1,6 +1,5 @@
 import { requireAuth } from "@/lib/auth/request-auth";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
 import LeadIngestForm from "@/components/admin/LeadIngestForm";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";

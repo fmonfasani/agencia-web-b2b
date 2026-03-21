@@ -29,7 +29,7 @@ export const LeadAutomationService = {
         }
 
         // 2. Prepare report for AI analysis
-        const leadsReport = stalledLeads.map(l => ({
+        const leadsReport = stalledLeads.map((l: { id: string; name?: string | null; companyName?: string | null; status: string; potentialScore?: number | null; updatedAt: Date }) => ({
             id: l.id,
             name: l.name || l.companyName,
             status: l.status,

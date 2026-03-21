@@ -43,6 +43,7 @@ export default async function AdminLayout({
     primaryColor?: string;
     sidebarColor?: string;
     appName?: string;
+    subName?: string;
     logoUrl?: string;
     fontFamily?: string;
     brandingEnabled?: boolean;

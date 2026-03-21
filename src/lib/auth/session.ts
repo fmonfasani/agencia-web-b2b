@@ -60,7 +60,7 @@ export async function validateSession(rawToken: string) {
     Date.now() + SESSION_TTL_HOURS * 60 * 60 * 1000,
   );
 
-  const rotated = await prisma.$transaction(async (tx) => {
+  const rotated = await prisma.$transaction(async (tx: any) => {
     await tx.session.update({
       where: { id: session.id },
       data: { revokedAt: new Date() },

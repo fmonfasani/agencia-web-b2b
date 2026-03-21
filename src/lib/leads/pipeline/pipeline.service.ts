@@ -151,7 +151,7 @@ export const LeadPipelineService = {
       {} as Record<PipelineStatus, number>,
     );
 
-    for (const row of grouped) {
+    for (const row of grouped as Array<{ pipelineStatus: PipelineStatus; _count: { _all: number } }>) {
       byStatus[row.pipelineStatus] = row._count._all;
     }
 

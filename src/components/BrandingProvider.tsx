@@ -16,7 +16,7 @@ interface BrandingConfig {
 }
 
 interface BrandingProviderProps {
-    branding: BrandingConfig | null | any;
+    branding: BrandingConfig | null;
     children: React.ReactNode;
 }
 

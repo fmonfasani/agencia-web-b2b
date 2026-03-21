@@ -3,7 +3,7 @@ import { requireTenantMembership } from "@/lib/authz";
 import DealKanban from "@/components/deals/DealKanban";
 import { updateDealStageAction } from "@/app/actions/deals";
 import { Building2, Plus, Search } from "lucide-react";
-import { DealStage } from "@prisma/client";
+import { DealStage, Deal } from "@prisma/client";
 
 export default async function DealsPage({
     params,

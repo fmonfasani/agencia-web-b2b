@@ -5,16 +5,44 @@ import {
     X, Zap, Shield, Target, TrendingUp, Search,
     MessageSquare, Mail, Phone, BookOpen, AlertCircle,
     CheckCircle2, Star, Globe, BarChart3, Users,
-    ArrowRight, Sparkles, RefreshCw
+    ArrowRight, Sparkles, RefreshCw, LucideIcon
 } from "lucide-react";
 import { IntelligenceMarkdown } from "./IntelligenceMarkdown";
 import { ProposalPreview } from "./ProposalPreview";
 
+interface LeadIntelligence {
+    tier?: string;
+    opportunityScore?: number;
+    digitalGapScore?: number;
+    demandScore?: number;
+    revenueEstimate?: number;
+    websiteLoads?: boolean;
+    [key: string]: any;
+}
+
 interface LeadIntelligenceModalProps {
-    lead: any;
+    lead: {
+        id: string;
+        name: string;
+        pipelineStatus: string;
+        potentialScore?: number;
+        intelligence?: LeadIntelligence;
+        [key: string]: any;
+    };
     onClose: () => void;
     onReAnalyze: () => void;
     isAnalyzing: boolean;
+}
+
+interface StatCardProps {
+    label: string;
+    value: string | number;
+    icon: LucideIcon;
+    color: string;
+}
+
+interface ProposalData {
+    [key: string]: any;
 }
 
 export default function LeadIntelligenceModal({
@@ -27,7 +55,7 @@ export default function LeadIntelligenceModal({
     const [isGeneratingProposal, setIsGeneratingProposal] = useState(false);
     const [isPromoting, setIsPromoting] = useState(false);
     const [callNotes, setCallNotes] = useState("");
-    const [reviewingProposal, setReviewingProposal] = useState<any>(null);
+    const [reviewingProposal, setReviewingProposal] = useState<ProposalData | null>(null);
     const intel = lead.intelligence;
 
     if (!lead) return null;
@@ -39,7 +67,7 @@ export default function LeadIntelligenceModal({
         { id: "VENTAS", icon: MessageSquare, label: "Ventas" },
     ];
 
-    const StatCard = ({ label, value, icon: Icon, color }: any) => (
+    const StatCard = ({ label, value, icon: Icon, color }: StatCardProps) => (
         <div className="bg-white border border-slate-100 p-4 rounded-2xl shadow-sm flex items-center gap-4">
             <div className={`size-10 rounded-xl flex items-center justify-center ${color}`}>
                 <Icon size={20} />

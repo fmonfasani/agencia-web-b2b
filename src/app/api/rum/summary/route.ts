@@ -28,7 +28,7 @@ export async function GET() {
       ORDER BY "page" ASC, "metric" ASC
     `;
 
-    const summary = rows.map((row) => ({
+    const summary = rows.map((row: any) => ({
       page: row.page,
       metric: row.metric,
       count: Number(row.count),

@@ -98,8 +98,9 @@ export default function LeadIngestForm({ locale }: { locale: string }) {
         router.push(`/${locale}/admin/dashboard`);
         router.refresh();
       }, 2000);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const error = err instanceof Error ? err.message : "Unknown error";
+      setError(error);
     } finally {
       setLoading(false);
     }

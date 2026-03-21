@@ -73,7 +73,7 @@ export async function GET() {
         ]);
 
         // Aggregate revenue history by date
-        const revenueByDate = revenueHistory.reduce((acc: Record<string, number>, curr) => {
+        const revenueByDate = revenueHistory.reduce((acc: Record<string, number>, curr: any) => {
             const dateStr = curr.date.toISOString().split("T")[0];
             acc[dateStr] = (acc[dateStr] || 0) + Number(curr.revenueGenerated);
             return acc;
