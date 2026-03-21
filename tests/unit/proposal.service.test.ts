@@ -86,7 +86,11 @@ describe("ProposalService", () => {
       title: "Propuesta para Delta SA: Growth",
     });
 
-    const proposal = await ProposalService.generateProposal("tenant-a", "lead-1", "Notas de llamada");
+    const proposal = await ProposalService.generateProposal(
+      "tenant-a",
+      "lead-1",
+      "Notas de llamada",
+    );
 
     expect(proposal.id).toBe("proposal-1");
     expect(aiEngine.generateWithFallback).toHaveBeenCalledTimes(1);
@@ -107,7 +111,9 @@ describe("ProposalService", () => {
 
     await expect(
       ProposalService.generateProposal("tenant-a", "lead-2", "Notas"),
-    ).rejects.toThrow("must be in LLAMADO status");
+    ).rejects.toThrow(
+      "Lead lead-2 debe estar en estado ELEGIDO, ENTREVISTA, CALIFICADO o LLAMADO para generar una propuesta",
+    );
 
     expect(aiEngine.generateWithFallback).not.toHaveBeenCalled();
     expect(proposalUpsertMock).not.toHaveBeenCalled();
@@ -137,14 +143,16 @@ describe("ProposalService", () => {
       lead: { id: "lead-3", pipelineStatus: PipelineStatus.LLAMADO },
     });
 
-    vi.mocked(LeadPipelineService.advancePipeline).mockResolvedValueOnce({ id: "lead-3" } as never);
+    vi.mocked(LeadPipelineService.advancePipeline).mockResolvedValueOnce({
+      id: "lead-3",
+    } as never);
 
     const result = await ProposalService.sendProposal("tenant-a", "proposal-3");
 
     expect(sendEmailMock).toHaveBeenCalledWith(
       expect.objectContaining({
         to: "lucia@delta.com",
-        subject: expect.stringContaining("Propuesta lista"),
+        subject: expect.stringContaining("Propuesta Estratégica"),
       }),
     );
     expect(LeadPipelineService.advancePipeline).toHaveBeenCalledWith(

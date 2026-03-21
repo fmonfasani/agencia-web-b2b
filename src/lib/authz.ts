@@ -1,11 +1,6 @@
 import { Role } from "@prisma/client";
 
-export const APP_ROLES = [
-  "SUPER_ADMIN",
-  "ADMIN",
-  "MEMBER",
-  "VIEWER",
-] as const;
+export const APP_ROLES = ["SUPER_ADMIN", "ADMIN", "MEMBER", "VIEWER"] as const;
 
 export type AppRole = Role;
 
@@ -20,7 +15,9 @@ export class AuthorizationError extends Error {
 }
 
 function isAppRole(value: string | null | undefined): value is AppRole {
-  return (APP_ROLES as unknown as string[]).includes((value || "").toUpperCase());
+  return (APP_ROLES as unknown as string[]).includes(
+    (value || "").toUpperCase(),
+  );
 }
 
 function parseRole(value: string | null | undefined): AppRole | null {
@@ -29,7 +26,6 @@ function parseRole(value: string | null | undefined): AppRole | null {
   const normalized = value.toUpperCase();
   return isAppRole(normalized) ? (normalized as AppRole) : null;
 }
-
 
 export function getRoleFromRequest(request: Request): AppRole | null {
   // Rely exclusively on process.env for default or skip if managed by session
@@ -57,7 +53,7 @@ export async function requireTenantMembership(allowedRoles?: AppRole[]) {
         ...(custom.user as any),
         userId: custom.user.id,
         tenantId: custom.session.tenantId,
-        role: (custom.user as any).role || "MEMBER"
+        role: (custom.user as any).role || "MEMBER",
       };
       tenantId = custom.session.tenantId;
     }
@@ -66,7 +62,7 @@ export async function requireTenantMembership(allowedRoles?: AppRole[]) {
   }
 
   if (!user) {
-    redirect("/en/auth/sign-in");
+    throw new AuthorizationError("Authentication required", 401);
   }
 
   // Try to get tenant from request header, fallback to session tenantId
@@ -74,13 +70,30 @@ export async function requireTenantMembership(allowedRoles?: AppRole[]) {
   try {
     const headerTenantId = await getActiveTenantId();
     if (headerTenantId) activeTenantId = headerTenantId;
-  } catch {
+
+    // Restrict non-super-admin users to their tenant ids
+    if (
+      headerTenantId &&
+      user.role !== "SUPER_ADMIN" &&
+      user.role !== "ADMIN" &&
+      user.tenantId &&
+      headerTenantId !== user.tenantId
+    ) {
+      throw new AuthorizationError("Access denied to this tenant", 403);
+    }
+  } catch (error) {
+    if (error instanceof AuthorizationError) {
+      throw error;
+    }
     // No x-tenant-id header — use the one from the user session (normal browser flow)
   }
 
   // Verify roles if specified
   if (allowedRoles && !allowedRoles.includes((user as any).role as AppRole)) {
-    throw new AuthorizationError("Insufficient permissions for this action", 403);
+    throw new AuthorizationError(
+      "Insufficient permissions for this action",
+      403,
+    );
   }
 
   return {

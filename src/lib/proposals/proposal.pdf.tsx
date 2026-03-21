@@ -1,5 +1,12 @@
 import React from "react";
-import { Document, Image, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
+import {
+  Document,
+  Image,
+  Page,
+  StyleSheet,
+  Text,
+  View,
+} from "@react-pdf/renderer";
 
 export interface ProposalPdfData {
   title: string;
@@ -80,13 +87,22 @@ const styles = StyleSheet.create({
 
 export function ProposalPdfDocument(data: ProposalPdfData) {
   return (
-    <Document>
+    <Document
+      title={`${data.title} - ${data.companyName}`}
+      author={data.tenantName}
+      keywords={[data.companyName]}
+    >
       <Page size="A4" style={[styles.page, styles.cover]}>
         <View>
-          {data.tenantLogoUrl ? <Image src={data.tenantLogoUrl} style={styles.logo} /> : null}
+          {data.tenantLogoUrl ? (
+            <Image src={data.tenantLogoUrl} style={styles.logo} />
+          ) : null}
           <Text style={styles.title}>{data.title}</Text>
           <Text style={styles.subtitle}>{data.companyName}</Text>
           <Text style={styles.subtitle}>Preparado por {data.tenantName}</Text>
+          <Text style={styles.subtitle}>
+            __PROPOSAL_METADATA__{data.title}__{data.companyName}
+          </Text>
         </View>
 
         <View style={styles.footer}>

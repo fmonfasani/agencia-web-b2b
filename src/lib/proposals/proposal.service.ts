@@ -4,9 +4,17 @@ import { LeadPipelineService } from "@/lib/leads/pipeline/pipeline.service";
 import { getTenantPrisma } from "@/lib/prisma";
 import { requireTenantId } from "@/lib/tenant-context";
 import { sendEmail } from "@/lib/mail";
-import { PROPOSAL_SYSTEM_PROMPT, PROPOSAL_USER_PROMPT } from "./proposal.prompts";
+import {
+  PROPOSAL_SYSTEM_PROMPT,
+  PROPOSAL_USER_PROMPT,
+} from "./proposal.prompts";
 
-type ProposalStatusValue = "DRAFT" | "SENT" | "VIEWED" | "ACCEPTED" | "REJECTED";
+type ProposalStatusValue =
+  | "DRAFT"
+  | "SENT"
+  | "VIEWED"
+  | "ACCEPTED"
+  | "REJECTED";
 
 interface ProposalPayload {
   title: string;
@@ -38,7 +46,6 @@ interface UpdateProposalInput {
   status?: ProposalStatusValue;
 }
 
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
@@ -60,25 +67,44 @@ function parseJsonObject(raw: string): Record<string, unknown> {
 
 function toStringArray(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
-  return value.filter((item): item is string => typeof item === "string" && item.trim().length > 0);
+  return value.filter(
+    (item): item is string =>
+      typeof item === "string" && item.trim().length > 0,
+  );
 }
 
 function parseProposalPayload(raw: string): ProposalPayload {
   const parsed = parseJsonObject(raw);
 
   const title = typeof parsed.title === "string" ? parsed.title.trim() : "";
-  const problem = typeof parsed.problem === "string" ? parsed.problem.trim() : "";
-  const solution = typeof parsed.solution === "string" ? parsed.solution.trim() : "";
+  const problem =
+    typeof parsed.problem === "string" ? parsed.problem.trim() : "";
+  const solution =
+    typeof parsed.solution === "string" ? parsed.solution.trim() : "";
   const deliverables = toStringArray(parsed.deliverables);
-  const timeline = typeof parsed.timeline === "string" ? parsed.timeline.trim() : "";
-  const investment = typeof parsed.investment === "string" ? parsed.investment.trim() : "";
-  const roi = typeof parsed.roi === "string" && parsed.roi.trim().length > 0
-    ? parsed.roi.trim()
-    : null;
-  const content = typeof parsed.content === "string" ? parsed.content.trim() : "";
+  const timeline =
+    typeof parsed.timeline === "string" ? parsed.timeline.trim() : "";
+  const investment =
+    typeof parsed.investment === "string" ? parsed.investment.trim() : "";
+  const roi =
+    typeof parsed.roi === "string" && parsed.roi.trim().length > 0
+      ? parsed.roi.trim()
+      : null;
+  const content =
+    typeof parsed.content === "string" ? parsed.content.trim() : "";
 
-  if (!title || !problem || !solution || !timeline || !investment || !content || deliverables.length === 0) {
-    throw new Error("AI response did not include all required proposal fields.");
+  if (
+    !title ||
+    !problem ||
+    !solution ||
+    !timeline ||
+    !investment ||
+    !content ||
+    deliverables.length === 0
+  ) {
+    throw new Error(
+      "AI response did not include all required proposal fields.",
+    );
   }
 
   return {
@@ -104,7 +130,13 @@ function slugify(value: string): string {
 }
 
 function assertProposalStatus(value: string): ProposalStatusValue {
-  const allowed: ProposalStatusValue[] = ["DRAFT", "SENT", "VIEWED", "ACCEPTED", "REJECTED"];
+  const allowed: ProposalStatusValue[] = [
+    "DRAFT",
+    "SENT",
+    "VIEWED",
+    "ACCEPTED",
+    "REJECTED",
+  ];
   if (!allowed.includes(value as ProposalStatusValue)) {
     throw new Error(`Invalid proposal status '${value}'.`);
   }
@@ -115,7 +147,9 @@ function assertProposalStatus(value: string): ProposalStatusValue {
 export const ProposalService = {
   async generateProposal(tenantId: string, leadId: string, callNotes: string) {
     const activeTenantId = requireTenantId(tenantId);
-    const tPrisma = getTenantPrisma(activeTenantId) as ReturnType<typeof getTenantPrisma> & {
+    const tPrisma = getTenantPrisma(activeTenantId) as ReturnType<
+      typeof getTenantPrisma
+    > & {
       proposal: any;
     };
 
@@ -130,10 +164,16 @@ export const ProposalService = {
       throw new Error(`Lead ${leadId} not found for tenant ${activeTenantId}.`);
     }
 
-    const allowedStatuses = ["ELEGIDO", "ENTREVISTA", "CALIFICADO"] as string[];
-    if (!allowedStatuses.includes(lead.pipelineStatus as string)) {
+    const allowedStatuses = [
+      PipelineStatus.ELEGIDO,
+      PipelineStatus.ENTREVISTA,
+      PipelineStatus.CALIFICADO,
+      PipelineStatus.LLAMADO,
+    ];
+
+    if (!allowedStatuses.includes(lead.pipelineStatus)) {
       throw new Error(
-        `Lead ${leadId} debe estar en estado ELEGIDO o ENTREVISTA para generar una propuesta. Estado actual: ${lead.pipelineStatus}.`,
+        `Lead ${leadId} debe estar en estado ELEGIDO, ENTREVISTA, CALIFICADO o LLAMADO para generar una propuesta. Estado actual: ${lead.pipelineStatus}.`,
       );
     }
 
@@ -217,7 +257,9 @@ export const ProposalService = {
 
   async sendProposal(tenantId: string, proposalId: string) {
     const activeTenantId = requireTenantId(tenantId);
-    const tPrisma = getTenantPrisma(activeTenantId) as ReturnType<typeof getTenantPrisma> & {
+    const tPrisma = getTenantPrisma(activeTenantId) as ReturnType<
+      typeof getTenantPrisma
+    > & {
       proposal: any;
     };
 
@@ -236,7 +278,9 @@ export const ProposalService = {
     });
 
     if (!proposal) {
-      throw new Error(`Proposal ${proposalId} not found for tenant ${activeTenantId}.`);
+      throw new Error(
+        `Proposal ${proposalId} not found for tenant ${activeTenantId}.`,
+      );
     }
 
     if (!proposal.lead?.email) {
@@ -244,8 +288,10 @@ export const ProposalService = {
     }
 
     const fromName = process.env.SMTP_FROM_NAME || "Revenue OS";
-    const fromEmail = process.env.SMTP_FROM_EMAIL || "no-reply@agencialeads.com";
-    const company = proposal.lead.companyName ?? proposal.lead.name ?? "tu empresa";
+    const fromEmail =
+      process.env.SMTP_FROM_EMAIL || "no-reply@agencialeads.com";
+    const company =
+      proposal.lead.companyName ?? proposal.lead.name ?? "tu empresa";
 
     const baseUrl = process.env.NEXTAUTH_URL?.includes("localhost")
       ? "https://agencia-web-b2b.vercel.app"
@@ -279,9 +325,10 @@ export const ProposalService = {
 
     if (!success) {
       const errorObj = error as unknown as Record<string, unknown>;
-      const msg = typeof errorObj?.message === "string"
-        ? errorObj.message
-        : "Failed to send proposal email.";
+      const msg =
+        typeof errorObj?.message === "string"
+          ? errorObj.message
+          : "Failed to send proposal email.";
       throw new Error(msg);
     }
 
@@ -317,7 +364,9 @@ export const ProposalService = {
 
   async listProposals(tenantId: string, filters?: ListProposalFilters) {
     const activeTenantId = requireTenantId(tenantId);
-    const tPrisma = getTenantPrisma(activeTenantId) as ReturnType<typeof getTenantPrisma> & {
+    const tPrisma = getTenantPrisma(activeTenantId) as ReturnType<
+      typeof getTenantPrisma
+    > & {
       proposal: any;
     };
 
@@ -349,7 +398,9 @@ export const ProposalService = {
 
   async getProposalById(tenantId: string, proposalId: string) {
     const activeTenantId = requireTenantId(tenantId);
-    const tPrisma = getTenantPrisma(activeTenantId) as ReturnType<typeof getTenantPrisma> & {
+    const tPrisma = getTenantPrisma(activeTenantId) as ReturnType<
+      typeof getTenantPrisma
+    > & {
       proposal: any;
     };
 
@@ -369,9 +420,15 @@ export const ProposalService = {
     });
   },
 
-  async updateProposal(tenantId: string, proposalId: string, input: UpdateProposalInput) {
+  async updateProposal(
+    tenantId: string,
+    proposalId: string,
+    input: UpdateProposalInput,
+  ) {
     const activeTenantId = requireTenantId(tenantId);
-    const tPrisma = getTenantPrisma(activeTenantId) as ReturnType<typeof getTenantPrisma> & {
+    const tPrisma = getTenantPrisma(activeTenantId) as ReturnType<
+      typeof getTenantPrisma
+    > & {
       proposal: any;
     };
 
@@ -380,14 +437,19 @@ export const ProposalService = {
     if (typeof input.title === "string") data.title = input.title;
     if (typeof input.problem === "string") data.problem = input.problem;
     if (typeof input.solution === "string") data.solution = input.solution;
-    if (Array.isArray(input.deliverables)) data.deliverables = input.deliverables;
+    if (Array.isArray(input.deliverables))
+      data.deliverables = input.deliverables;
     if (typeof input.timeline === "string") data.timeline = input.timeline;
-    if (typeof input.investment === "string") data.investment = input.investment;
-    if (typeof input.roi === "string" || input.roi === null) data.roi = input.roi;
+    if (typeof input.investment === "string")
+      data.investment = input.investment;
+    if (typeof input.roi === "string" || input.roi === null)
+      data.roi = input.roi;
     if (typeof input.content === "string") data.content = input.content;
-    if (input.viewedAt instanceof Date || input.viewedAt === null) data.viewedAt = input.viewedAt;
+    if (input.viewedAt instanceof Date || input.viewedAt === null)
+      data.viewedAt = input.viewedAt;
     if (typeof input.viewCount === "number") data.viewCount = input.viewCount;
-    if (typeof input.status === "string") data.status = assertProposalStatus(input.status);
+    if (typeof input.status === "string")
+      data.status = assertProposalStatus(input.status);
 
     return tPrisma.proposal.update({
       where: { id: proposalId },

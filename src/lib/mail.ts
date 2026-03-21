@@ -1,20 +1,24 @@
 import nodemailer from "nodemailer";
 import { Resend } from "resend";
 
-// Configuración de Resend (Prioritario si existe API Key)
-const resend = process.env.RESEND_API_KEY
-  ? new Resend(process.env.RESEND_API_KEY)
-  : null;
+function getResendClient() {
+  if (!process.env.RESEND_API_KEY) return null;
+  return new Resend(process.env.RESEND_API_KEY);
+}
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT),
-  secure: process.env.SMTP_SECURE === "true",
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+function createTransporter() {
+  if (!process.env.SMTP_HOST || !process.env.SMTP_PORT) return null;
+
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT),
+    secure: process.env.SMTP_SECURE === "true",
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+}
 
 export interface SendEmailOptions {
   to: string;
@@ -38,9 +42,10 @@ export async function sendEmail({
     fromEmail || process.env.SMTP_FROM_EMAIL || "no-reply@agencialeads.com";
 
   // 1. Intentar con Resend si está configurado
-  if (resend) {
+  const resendClient = getResendClient();
+  if (resendClient) {
     try {
-      const { data, error } = await resend.emails.send({
+      const { data, error } = await resendClient.emails.send({
         from: `"${finalFromName}" <${finalFromEmail}>`,
         to,
         subject,
@@ -50,7 +55,10 @@ export async function sendEmail({
 
       if (error) {
         console.error("❌ ERROR RESEND:", error);
-        const msg = error instanceof Error ? error.message : "Failed to send email via Resend.";
+        const msg =
+          error instanceof Error
+            ? error.message
+            : "Failed to send email via Resend.";
         throw new Error(msg); // Throw error to prevent fallback if Resend is primary and fails
       }
       console.log("✅ Email enviado vía Resend:", data?.id);
@@ -62,6 +70,14 @@ export async function sendEmail({
   }
 
   // 2. Fallback a Nodemailer (SMTP)
+  const transporter = createTransporter();
+  if (!transporter) {
+    return {
+      success: false,
+      error: new Error("No SMTP transporter configured"),
+    };
+  }
+
   try {
     const info = await transporter.sendMail({
       from: `"${finalFromName}" <${finalFromEmail}>`,

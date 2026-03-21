@@ -31,6 +31,16 @@ vi.mock("@/lib/analytics", () => ({
   trackFormSubmit: vi.fn(),
 }));
 
+// Mock next-auth to avoid native next/server dependency branching in tests
+vi.mock("next-auth", () => ({
+  default: vi.fn(() => ({
+    handlers: {},
+    auth: vi.fn().mockResolvedValue(null),
+    signIn: vi.fn(),
+    signOut: vi.fn(),
+  })),
+}));
+
 // Mock lucide-react (Explicit named icons used in tests/components)
 vi.mock("lucide-react", () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

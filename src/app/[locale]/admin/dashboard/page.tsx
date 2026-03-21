@@ -24,24 +24,45 @@ import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
+type IconComponent = React.ComponentType<{
+  size?: number;
+  className?: string;
+  strokeWidth?: number;
+}>;
+
 interface MetricCardProps {
   title: string;
   value: string | number;
   trend?: number;
-  icon: React.ElementType;
+  icon: IconComponent;
   description?: string;
   color?: string;
 }
 
-const MetricCard = ({ title, value, trend, icon: Icon, description, color = "blue" }: MetricCardProps) => (
+const MetricCard = ({
+  title,
+  value,
+  trend,
+  icon: Icon,
+  description,
+  color = "blue",
+}: MetricCardProps) => (
   <div className="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
     <div className="flex items-center justify-between mb-4">
-      <div className={`p-3 rounded-2xl bg-${color}-50 text-${color}-600 group-hover:scale-110 transition-transform`}>
+      <div
+        className={`p-3 rounded-2xl bg-${color}-50 text-${color}-600 group-hover:scale-110 transition-transform`}
+      >
         <Icon size={20} />
       </div>
       {trend !== undefined && (
-        <span className={`flex items-center gap-1 text-[10px] font-black uppercase px-2 py-1 rounded-lg ${trend > 0 ? "text-emerald-600 bg-emerald-50" : "text-rose-600 bg-rose-50"}`}>
-          {trend > 0 ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
+        <span
+          className={`flex items-center gap-1 text-[10px] font-black uppercase px-2 py-1 rounded-lg ${trend > 0 ? "text-emerald-600 bg-emerald-50" : "text-rose-600 bg-rose-50"}`}
+        >
+          {trend > 0 ? (
+            <ArrowUpRight size={12} />
+          ) : (
+            <ArrowDownRight size={12} />
+          )}
           {Math.abs(trend)}%
         </span>
       )}
@@ -50,8 +71,14 @@ const MetricCard = ({ title, value, trend, icon: Icon, description, color = "blu
       <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
         {title}
       </span>
-      <h3 className="text-2xl font-black text-slate-900 mt-1 leading-none">{value}</h3>
-      {description && <p className="text-[10px] text-slate-400 mt-2 font-medium">{description}</p>}
+      <h3 className="text-2xl font-black text-slate-900 mt-1 leading-none">
+        {value}
+      </h3>
+      {description && (
+        <p className="text-[10px] text-slate-400 mt-2 font-medium">
+          {description}
+        </p>
+      )}
     </div>
     <div className="absolute -right-4 -bottom-4 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity">
       <Icon size={120} />
@@ -69,8 +96,12 @@ export default async function CommercialHubPage({
   const { locale } = await params;
   const { source } = await searchParams;
 
-  const { user, tenantId } = await requireTenantMembership(["ADMIN", "SUPER_ADMIN"]);
-  const userId = (user as { id?: string; userId?: string })?.id ??
+  const { user, tenantId } = await requireTenantMembership([
+    "ADMIN",
+    "SUPER_ADMIN",
+  ]);
+  const userId =
+    (user as { id?: string; userId?: string })?.id ??
     (user as { id?: string; userId?: string })?.userId;
   if (!userId || !tenantId) {
     throw new Error("TENANT_CONTEXT_REQUIRED");
@@ -81,7 +112,10 @@ export default async function CommercialHubPage({
     sourceType?: string | null;
     phone?: string | null;
     website?: string | null;
-    intelligence?: { hasWhatsappLink?: boolean; opportunityScore?: number | null; } | null;
+    intelligence?: {
+      hasWhatsappLink?: boolean;
+      opportunityScore?: number | null;
+    } | null;
     potentialScore?: number | null;
     createdAt: Date;
   };
@@ -100,13 +134,25 @@ export default async function CommercialHubPage({
 
   // 2. Aggregate Metrics
   const totalLeads = leadsRaw.length;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const scraperLeads = leadsRaw.filter((l: LeadType) => l.sourceType === "SCRAPER").length;
-  const withPhone = leadsRaw.filter((l: LeadType) => Boolean(l.phone || l.intelligence?.hasWhatsappLink)).length;
-  const withWebsite = leadsRaw.filter((l: LeadType) => Boolean(l.website)).length;
+
+  const scraperLeads = leadsRaw.filter(
+    (l: LeadType) => l.sourceType === "SCRAPER",
+  ).length;
+  const withPhone = leadsRaw.filter((l: LeadType) =>
+    Boolean(l.phone || l.intelligence?.hasWhatsappLink),
+  ).length;
+  const withWebsite = leadsRaw.filter((l: LeadType) =>
+    Boolean(l.website),
+  ).length;
 
   const avgQuality = totalLeads
-    ? Math.round(leadsRaw.reduce((a: number, l: LeadType) => a + (l.intelligence?.opportunityScore || l.potentialScore || 0), 0) / totalLeads)
+    ? Math.round(
+        leadsRaw.reduce(
+          (a: number, l: LeadType) =>
+            a + (l.intelligence?.opportunityScore || l.potentialScore || 0),
+          0,
+        ) / totalLeads,
+      )
     : 0;
 
   // 3. Financial Metrics
@@ -117,21 +163,21 @@ export default async function CommercialHubPage({
   const pipelineValue = Number(dealsStats._sum.value || 0);
 
   // 4. Serialize for Client Component
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const serializedLeads = leadsRaw.map((l: any) => ({
+  const serializedLeads = leadsRaw.map((l: LeadType) => ({
     ...l,
     createdAt: l.createdAt.toISOString(),
-    intelligence: l.intelligence ? {
-      ...l.intelligence,
-      analyzedAt: l.intelligence.analyzedAt.toISOString(),
-      updatedAt: l.intelligence.updatedAt.toISOString(),
-    } : null,
+    intelligence: l.intelligence
+      ? {
+          ...l.intelligence,
+          analyzedAt: l.intelligence.analyzedAt.toISOString(),
+          updatedAt: l.intelligence.updatedAt.toISOString(),
+        }
+      : null,
   }));
 
   return (
     <div className="min-h-screen bg-[#f8fafc]">
       <div className="max-w-[1600px] mx-auto px-8 py-10 space-y-10">
-
         {/* TOP HEADER */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-1">
@@ -147,7 +193,8 @@ export default async function CommercialHubPage({
               Terminal Comercial <span className="text-blue-600">Hub</span>
             </h1>
             <p className="text-slate-500 font-medium max-w-xl">
-              Consolidación de inteligencia comercial, pipeline de ventas y KPIs operativos en tiempo real.
+              Consolidación de inteligencia comercial, pipeline de ventas y KPIs
+              operativos en tiempo real.
             </p>
           </div>
 
@@ -169,7 +216,10 @@ export default async function CommercialHubPage({
               href={`/${locale}/admin/dashboard/scraper`}
               className="bg-blue-600 text-white px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 flex items-center gap-2 group"
             >
-              <MapIcon size={14} className="group-hover:rotate-12 transition-transform" />
+              <MapIcon
+                size={14}
+                className="group-hover:rotate-12 transition-transform"
+              />
               Lanzar Discovery
             </Link>
           </div>
@@ -222,7 +272,9 @@ export default async function CommercialHubPage({
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <h2 className="text-xl font-bold text-slate-900">Base Maestra de Inteligencia</h2>
+              <h2 className="text-xl font-bold text-slate-900">
+                Base Maestra de Inteligencia
+              </h2>
               <div className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 rounded-full text-[10px] font-bold text-slate-500 shadow-sm">
                 <Database size={10} />
                 {totalLeads} Entidades
@@ -238,10 +290,13 @@ export default async function CommercialHubPage({
 
           <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-200/40 overflow-hidden">
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            <LeadsDataTable leads={serializedLeads as any} tenantId={tenantId ?? undefined} locale={locale} />
+            <LeadsDataTable
+              leads={serializedLeads as any}
+              tenantId={tenantId ?? undefined}
+              locale={locale}
+            />
           </div>
         </div>
-
       </div>
     </div>
   );

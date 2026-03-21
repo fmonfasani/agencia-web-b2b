@@ -43,7 +43,7 @@ describe("Proposal PDF", () => {
     const buffer = await renderToBuffer(doc);
     const content = buffer.toString("latin1");
 
-    expect(content).toContain("Propuesta para Acme");
+    expect(content).toContain("Propuesta para Acme - Acme Corp");
     expect(content).toContain("Acme Corp");
   });
 });

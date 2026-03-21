@@ -159,9 +159,13 @@ export const LeadPipelineService = {
       (sum, count) => sum + count,
       0,
     );
-    const activeStatuses = [...LINEAR_FLOW, ...TERMINAL_FLOW];
-    const active = activeStatuses.reduce(
-      (sum, status) => sum + byStatus[status],
+    const closedSiblingStatuses = [
+      PipelineStatus.CERRADO_PERDIDO,
+      PipelineStatus.DESCARTADO,
+    ];
+    const active = Object.values(PipelineStatus).reduce(
+      (sum, status) =>
+        closedSiblingStatuses.includes(status) ? sum : sum + byStatus[status],
       0,
     );
 

@@ -9,6 +9,7 @@ const eslintConfig = defineConfig([
     files: ["**/*.js", "**/*.cjs"],
     rules: {
       "@typescript-eslint/no-var-requires": "off",
+      "@typescript-eslint/no-require-imports": "off",
       "@typescript-eslint/no-explicit-any": "off",
     },
   },

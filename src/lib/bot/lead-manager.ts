@@ -14,7 +14,7 @@ function getRedis(): Redis | null {
   const url = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
 
-  if (!isValidRedisUrl(url) || !token) {
+  if (process.env.NODE_ENV !== "test" && (!isValidRedisUrl(url) || !token)) {
     return null;
   }
 
