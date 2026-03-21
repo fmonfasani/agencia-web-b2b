@@ -1,0 +1,67 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps
+        run: npm install
+
+      - name: Build (fuera del VPS)
+        run: |
+          NEXT_DISABLE_TURBOPACK=1 \
+          NODE_OPTIONS="--max-old-space-size=2048" \
+          npm run build
+
+      - name: Prune dev deps
+        run: npm prune --production
+
+      - name: Package app
+        run: |
+          tar -czf app.tar.gz \
+          .next \
+          public \
+          package.json \
+          package-lock.json \
+          node_modules
+
+      - name: Upload to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: 134.209.41.51
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "app.tar.gz"
+          target: "/root/apps/agencia"
+
+      - name: Deploy on VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 134.209.41.51
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /root/apps/agencia
+
+            rm -rf .next node_modules
+            tar -xzf app.tar.gz
+
+            npm install --production
+
+            pm2 delete agencia-web || true
+            pm2 start npm --name "agencia-web" -- start -- --port 3001
+            pm2 save
