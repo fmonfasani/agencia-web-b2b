@@ -20,6 +20,20 @@ if (
   });
 }
 
+// Specific rate limiter for Auth (more aggressive)
+let authRatelimit: Ratelimit | null = null;
+if (
+  process.env.UPSTASH_REDIS_REST_URL &&
+  process.env.UPSTASH_REDIS_REST_TOKEN
+) {
+  authRatelimit = new Ratelimit({
+    redis: Redis.fromEnv(),
+    limiter: Ratelimit.slidingWindow(5, "1 m"), // 5 attempts per minute
+    analytics: true,
+    prefix: "@upstash/ratelimit/auth",
+  });
+}
+
 const intlMiddleware = createMiddleware(routing);
 
 export default auth(async function middleware(request: NextRequest) {
@@ -27,20 +41,23 @@ export default auth(async function middleware(request: NextRequest) {
   const ip =
     request.headers.get("x-forwarded-for")?.split(",")[0] || "127.0.0.1";
 
-  if (
-    ratelimit &&
-    (pathname.startsWith("/api/") || pathname.includes("/api/"))
-  ) {
-    const { success, limit, reset, remaining } = await ratelimit.limit(ip);
-    if (!success) {
-      return new NextResponse("Too many requests. Please try again later.", {
-        status: 429,
-        headers: {
-          "X-RateLimit-Limit": limit.toString(),
-          "X-RateLimit-Remaining": remaining.toString(),
-          "X-RateLimit-Reset": reset.toString(),
-        },
-      });
+  if (pathname.startsWith("/api/")) {
+    const isAuthRoute =
+      pathname.includes("/auth/") || pathname.includes("/register-company");
+    const limiter = isAuthRoute && authRatelimit ? authRatelimit : ratelimit;
+
+    if (limiter) {
+      const { success, limit, reset, remaining } = await limiter.limit(ip);
+      if (!success) {
+        return new NextResponse("Too many requests. Please try again later.", {
+          status: 429,
+          headers: {
+            "X-RateLimit-Limit": limit.toString(),
+            "X-RateLimit-Remaining": remaining.toString(),
+            "X-RateLimit-Reset": reset.toString(),
+          },
+        });
+      }
     }
   }
 

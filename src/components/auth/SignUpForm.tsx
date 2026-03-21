@@ -4,6 +4,7 @@ import { FormEvent, useState } from "react";
 import { useLocale } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { Lock, Mail, ShieldCheck, Zap } from "lucide-react";
+import { signIn } from "next-auth/react";
 
 export default function SignUpForm() {
   const [password, setPassword] = useState("");
@@ -44,6 +45,19 @@ export default function SignUpForm() {
       if (!response.ok) {
         setError(data.error || "Error al completar el registro");
         setLoading(false);
+        return;
+      }
+
+      // AUTO-LOGIN: Trigger NextAuth flow from the client to establish the session cookie
+      const loginResult = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (loginResult?.error) {
+        // If auto-login fails, redirect to sign-in page instead of throwing error
+        window.location.href = `/${locale}/auth/sign-in?registered=true`;
         return;
       }
 

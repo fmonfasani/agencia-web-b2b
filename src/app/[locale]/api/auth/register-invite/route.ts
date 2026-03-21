@@ -7,7 +7,9 @@ import { logAuditEvent } from "@/lib/security/audit";
 
 export async function POST(request: Request) {
   try {
-    const { email, password, token } = await request.json();
+    const body = await request.json();
+    const email = body.email?.toString().toLowerCase().trim();
+    const { password, token } = body;
 
     if (!token || !email || !password) {
       return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
@@ -41,7 +43,7 @@ export async function POST(request: Request) {
 
     const user = await prisma.user.upsert({
       where: { email },
-      update: { passwordHash },
+      update: {},
       create: {
         email,
         passwordHash,
@@ -83,18 +85,8 @@ export async function POST(request: Request) {
       metadata: { invitationId: invitation.id },
     });
 
-    const signInResult = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
-
-    if (signInResult?.error) {
-      return NextResponse.json(
-        { error: "Registro exitoso pero error al iniciar sesión" },
-        { status: 500 },
-      );
-    }
+    // NextAuth v5 server-side signIn in a Route Handler doesn't persist cookies correctly.
+    // We return success and let the client-side handle the sign-in flow to get the session.
 
     return NextResponse.json({ success: true });
   } catch (error) {

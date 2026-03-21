@@ -58,16 +58,21 @@ export const authConfig = {
         });
 
         if (!user) {
+          console.warn(`[AUTH_DEBUG] User not found for email: ${email}`);
           return null;
         }
 
         if (!user.passwordHash) {
+          console.warn(
+            `[AUTH_DEBUG] User found but has NO passwordHash: ${email}`,
+          );
           return null;
         }
 
         const isValid = verifyPassword(password, user.passwordHash);
 
         if (!isValid) {
+          console.warn(`[AUTH_DEBUG] Invalid password for email: ${email}`);
           const ip =
             (await headers()).get("x-forwarded-for")?.split(",")[0] ||
             "unknown";
