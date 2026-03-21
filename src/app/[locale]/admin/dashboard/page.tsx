@@ -91,12 +91,16 @@ export default async function CommercialHubPage({
 
   // 2. Aggregate Metrics
   const totalLeads = leadsRaw.length;
-  const scraperLeads = leadsRaw.filter(l => l.sourceType === "SCRAPER").length;
-  const withPhone = leadsRaw.filter(l => l.phone || l.intelligence?.hasWhatsappLink).length;
-  const withWebsite = leadsRaw.filter(l => l.website).length;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const scraperLeads = leadsRaw.filter((l: any) => l.sourceType === "SCRAPER").length;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const withPhone = leadsRaw.filter((l: any) => l.phone || l.intelligence?.hasWhatsappLink).length;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const withWebsite = leadsRaw.filter((l: any) => l.website).length;
 
   const avgQuality = totalLeads
-    ? Math.round(leadsRaw.reduce((a, l) => a + (l.intelligence?.opportunityScore || l.potentialScore || 0), 0) / totalLeads)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ? Math.round(leadsRaw.reduce((a: number, l: any) => a + (l.intelligence?.opportunityScore || l.potentialScore || 0), 0) / totalLeads)
     : 0;
 
   // 3. Financial Metrics
@@ -107,7 +111,8 @@ export default async function CommercialHubPage({
   const pipelineValue = Number(dealsStats._sum.value || 0);
 
   // 4. Serialize for Client Component
-  const serializedLeads = leadsRaw.map(l => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const serializedLeads = leadsRaw.map((l: any) => ({
     ...l,
     createdAt: l.createdAt.toISOString(),
     intelligence: l.intelligence ? {
