@@ -11,13 +11,17 @@ export default async function SelectTenantPage({
   const { locale } = await params;
   const session = await requireSession(locale);
 
+  type MembershipWithTenant = {
+    tenant: { id: string; name: string };
+  };
+
   const memberships = await prisma.membership.findMany({
     where: {
       userId: session.userId,
       status: "ACTIVE",
     },
     include: { tenant: true },
-  });
+  }) as MembershipWithTenant[];
 
   if (memberships.length === 0) {
     redirect(`/${locale}/login`);

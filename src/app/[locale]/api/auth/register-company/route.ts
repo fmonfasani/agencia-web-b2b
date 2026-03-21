@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 import { createSession } from "@/lib/auth/session";
 import { hashPassword } from "@/lib/auth/password";
 import {
@@ -68,7 +69,7 @@ export async function POST(request: Request) {
     const slug = existingSlug ? `${baseSlug}-${Date.now()}` : baseSlug;
 
     // Atomic transaction: User + Tenant + Membership + Subscription
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const user = await tx.user.upsert({
         where: { email },
         update: { passwordHash, firstName, lastName, whatsapp },

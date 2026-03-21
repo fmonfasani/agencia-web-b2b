@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 import { generateInvitationToken, sha256 } from "@/lib/auth/hash";
 import { z } from "zod";
 import { ratelimit } from "@/lib/ratelimit";
@@ -46,7 +47,7 @@ export async function POST(request: Request) {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + validDays);
 
-    const invitation = await prisma.$transaction(async (tx) => {
+    const invitation = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const invitedBy = await tx.user.upsert({
         where: { email: normalizedInvitedByEmail },
         update: {},

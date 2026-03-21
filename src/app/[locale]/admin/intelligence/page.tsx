@@ -51,7 +51,13 @@ export default function LeadIntelligencePage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState("");
-  const [summary, setSummary] = useState<Record<string, any> | null>(null);
+  interface SummaryData {
+    totalLeads?: number;
+    overallScore?: number;
+    [key: string]: string | number | undefined | null;
+  }
+
+  const [summary, setSummary] = useState<SummaryData | null>(null);
   const [taxonomy, setTaxonomy] = useState<Taxonomy>({});
 
   // Filtros

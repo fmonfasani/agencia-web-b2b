@@ -39,7 +39,16 @@ export default async function AdminLayout({
     redirect(`/${locale}/auth/sign-in?error=no_membership`);
   }
 
-  let branding: any = {};
+  type AdminBranding = {
+    primaryColor?: string;
+    sidebarColor?: string;
+    appName?: string;
+    logoUrl?: string;
+    fontFamily?: string;
+    brandingEnabled?: boolean;
+  };
+
+  let branding: AdminBranding = {};
   let tenantName = "Revenue OS";
 
   try {

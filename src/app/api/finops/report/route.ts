@@ -30,7 +30,7 @@ export async function GET() {
         });
 
         const costByProvider: Record<string, number> = {};
-        costByProviderRaw.forEach(item => {
+        costByProviderRaw.forEach((item: { api: string; _sum: { costUsd: number | null } }) => {
             costByProvider[item.api] = item._sum.costUsd || 0;
         });
 

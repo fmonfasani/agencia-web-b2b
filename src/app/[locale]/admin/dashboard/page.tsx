@@ -77,10 +77,19 @@ export default async function CommercialHubPage({
   }
   const scopedDb = await db({ userId, tenantId });
 
+  type LeadType = {
+    sourceType?: string | null;
+    phone?: string | null;
+    website?: string | null;
+    intelligence?: { hasWhatsappLink?: boolean; opportunityScore?: number | null; } | null;
+    potentialScore?: number | null;
+    createdAt: Date;
+  };
+
   // 1. Fetch Leads with Intelligence
   const leadsRaw = await scopedDb.lead.findMany({
     where: {
-      sourceType: source ? (source.toUpperCase() as any) : undefined,
+      sourceType: source ? (source.toUpperCase() as string) : undefined,
     },
     take: 1000,
     orderBy: { createdAt: "desc" },
@@ -92,15 +101,12 @@ export default async function CommercialHubPage({
   // 2. Aggregate Metrics
   const totalLeads = leadsRaw.length;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const scraperLeads = leadsRaw.filter((l: any) => l.sourceType === "SCRAPER").length;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const withPhone = leadsRaw.filter((l: any) => l.phone || l.intelligence?.hasWhatsappLink).length;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const withWebsite = leadsRaw.filter((l: any) => l.website).length;
+  const scraperLeads = leadsRaw.filter((l: LeadType) => l.sourceType === "SCRAPER").length;
+  const withPhone = leadsRaw.filter((l: LeadType) => Boolean(l.phone || l.intelligence?.hasWhatsappLink)).length;
+  const withWebsite = leadsRaw.filter((l: LeadType) => Boolean(l.website)).length;
 
   const avgQuality = totalLeads
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ? Math.round(leadsRaw.reduce((a: number, l: any) => a + (l.intelligence?.opportunityScore || l.potentialScore || 0), 0) / totalLeads)
+    ? Math.round(leadsRaw.reduce((a: number, l: LeadType) => a + (l.intelligence?.opportunityScore || l.potentialScore || 0), 0) / totalLeads)
     : 0;
 
   // 3. Financial Metrics

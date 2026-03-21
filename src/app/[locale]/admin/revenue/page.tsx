@@ -145,9 +145,12 @@ export default async function RevenueDashboard({
     ]);
 
     // Calculations
-    const totalMrr = customerData.reduce((sum, c: any) => sum + Number(c.mrr), 0);
-    const newRevenueThisMonth = closedWonDeals.reduce((sum, d: any) => sum + Number(d.value || 0), 0);
-    const pipelineValue = totalDeals.reduce((sum, d: any) => sum + Number(d.value || 0), 0);
+    interface CustomerRevenue { mrr: number | null }
+    interface DealRevenue { value: number | null }
+
+    const totalMrr = customerData.reduce((sum: number, c: CustomerRevenue) => sum + Number(c.mrr || 0), 0);
+    const newRevenueThisMonth = closedWonDeals.reduce((sum: number, d: DealRevenue) => sum + Number(d.value || 0), 0);
+    const pipelineValue = totalDeals.reduce((sum: number, d: DealRevenue) => sum + Number(d.value || 0), 0);
     const conversionRate = totalDeals.length > 0 ? (closedWonDeals.length / totalDeals.length) * 100 : 0;
 
     // Simple projection: Current MRR + 80% weight of proposal-stage deals

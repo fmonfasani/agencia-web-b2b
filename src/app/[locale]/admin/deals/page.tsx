@@ -67,7 +67,7 @@ export default async function DealsPage({
             {/* CRM KANBAN */}
             <div className="flex-1 min-h-0">
                 <DealKanban
-                    initialDeals={deals as any}
+                    initialDeals={deals as Deal[]}
                     onStageChange={updateDealStageAction}
                 />
             </div>

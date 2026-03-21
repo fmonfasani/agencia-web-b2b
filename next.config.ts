@@ -7,7 +7,7 @@ const withNextIntl = createNextIntlPlugin();
 const nextConfig: NextConfig = {
   output: "standalone",
   reactCompiler: true,
-  turbopack: false, // Disable Turbopack for stability
+  // turbopack: false, // Aquí no puede ser false en la configuración de tipado ts
   logging: {
     fetches: {
       fullUrl: true,
