@@ -21,16 +21,14 @@ jobs:
       - name: Install deps
         run: npm install
 
-      - name: Build (fuera del VPS)
+      # 🚨 SIN LINT, SIN TEST, SIN TYPECHECK
+      - name: Build (relajado)
         run: |
           NEXT_DISABLE_TURBOPACK=1 \
           NODE_OPTIONS="--max-old-space-size=2048" \
           npm run build
 
-      - name: Prune dev deps
-        run: npm prune --production
-
-      - name: Package app
+      - name: Package
         run: |
           tar -czf app.tar.gz \
           .next \
@@ -39,7 +37,7 @@ jobs:
           package-lock.json \
           node_modules
 
-      - name: Upload to VPS
+      - name: Upload
         uses: appleboy/scp-action@v0.1.7
         with:
           host: 134.209.41.51
@@ -48,7 +46,7 @@ jobs:
           source: "app.tar.gz"
           target: "/root/apps/agencia"
 
-      - name: Deploy on VPS
+      - name: Deploy
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 134.209.41.51
@@ -56,12 +54,9 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /root/apps/agencia
-
             rm -rf .next node_modules
             tar -xzf app.tar.gz
-
             npm install --production
-
             pm2 delete agencia-web || true
             pm2 start npm --name "agencia-web" -- start -- --port 3001
             pm2 save
