@@ -1,0 +1,78 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Build app
+        run: npm run build
+
+      - name: Prune dev deps
+        run: npm prune --production
+
+      - name: Create artifact
+        run: |
+          tar -czf app.tar.gz \
+            .next \
+            public \
+            package.json \
+            package-lock.json \
+            node_modules \
+            prisma
+
+      - name: Copy to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: root
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "app.tar.gz"
+          target: "/root/apps/agencia"
+
+      - name: Deploy on VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: root
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /root/apps/agencia
+            
+            # Limpiar build anterior
+            rm -rf .next node_modules
+            
+            # Extraer nuevo build
+            tar -xzf app.tar.gz
+            
+            # Instalar solo prod deps
+            npm install --production
+            
+            # Copiar .env si no existe
+            if [ ! -f .env ]; then
+              cp /root/agencia-web-b2b/.env .env
+            fi
+            
+            # Restart app
+            pm2 delete agencia-web || true
+            pm2 start ecosystem.config.js
+            pm2 save

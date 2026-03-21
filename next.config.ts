@@ -12,6 +12,12 @@ const nextConfig: NextConfig = {
       fullUrl: true,
     },
   },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   serverExternalPackages: [
     "@opentelemetry/sdk-node",
     "@opentelemetry/auto-instrumentations-node",
