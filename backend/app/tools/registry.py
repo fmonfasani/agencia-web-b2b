@@ -1,5 +1,6 @@
 from typing import Any, Dict, Callable, Awaitable
 from app.qdrant.client import tenant_scoped_search
+from app.embedding_utils import text_to_embedding
 
 class Tool:
     def __init__(self, name: str, func: Callable[[Dict[str, Any], str], Awaitable[Any]]):
@@ -26,7 +27,8 @@ async def scrape_tool(data: Dict[str, Any], tenant_id: str):
 
 async def rag_search_tool(data: Dict[str, Any], tenant_id: str):
     query = data.get("task", "")
-    results = await tenant_scoped_search(tenant_id, query)
+    vector = await text_to_embedding(query)
+    results = await tenant_scoped_search(tenant_id, vector)
     return {"results": results}
 
 # --- Registering Tools ---
