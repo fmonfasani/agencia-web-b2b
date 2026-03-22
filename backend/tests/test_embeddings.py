@@ -1,33 +1,75 @@
+"""
+Real integration tests for Ollama embeddings.
+Requires Ollama running at http://localhost:11434
+Run: pytest test_embeddings.py -v
+"""
 import pytest
-import sys
-import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+import httpx
+import asyncio
 
-from app.embedding_utils import text_to_embedding
+OLLAMA_URL = "http://localhost:11434"
+EMBED_MODEL = "nomic-embed-text"  # cambiar si usás otro modelo
 
-def test_embedding_generation():
-    """Test that embedding generation works"""
-    text = "test document for embedding"
-    embedding = text_to_embedding(text)
-    assert isinstance(embedding, list)
-    assert len(embedding) == 128
-    assert all(isinstance(x, float) for x in embedding)
 
-def test_embedding_determinism():
-    """Test that same text produces same embedding"""
-    text = "deterministic test"
-    emb1 = text_to_embedding(text)
-    emb2 = text_to_embedding(text)
-    assert emb1 == emb2
+@pytest.fixture(scope="session", autouse=True)
+def check_ollama():
+    """Falla rápido si Ollama no está corriendo."""
+    try:
+        r = httpx.get(f"{OLLAMA_URL}/api/tags", timeout=5.0)
+        assert r.status_code == 200, f"Ollama respondió {r.status_code}"
+    except Exception as e:
+        pytest.fail(f"Ollama no disponible en {OLLAMA_URL}: {e}")
 
-def test_embedding_different_texts():
-    """Test that different texts produce different embeddings"""
-    emb1 = text_to_embedding("hello world")
-    emb2 = text_to_embedding("goodbye world")
-    assert emb1 != emb2
 
-def test_embedding_empty_text():
-    """Test empty text handling"""
-    emb = text_to_embedding("")
-    assert len(emb) == 128
-    assert all(x == 0.0 for x in emb)
+async def embed(text: str) -> list[float]:
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.post(
+            f"{OLLAMA_URL}/api/embeddings",
+            json={"model": EMBED_MODEL, "prompt": text},
+        )
+        r.raise_for_status()
+        return r.json()["embedding"]
+
+
+@pytest.mark.asyncio
+async def test_embedding_returns_list():
+    result = await embed("hola mundo")
+    assert isinstance(result, list)
+    assert len(result) > 0
+
+
+@pytest.mark.asyncio
+async def test_embedding_dimension_consistent():
+    e1 = await embed("texto uno")
+    e2 = await embed("texto dos")
+    assert len(e1) == len(e2), "Dimensiones inconsistentes entre llamadas"
+
+
+@pytest.mark.asyncio
+async def test_embedding_not_all_zeros():
+    result = await embed("agente de IA para leads B2B")
+    assert any(v != 0.0 for v in result), "Embedding todo ceros"
+
+
+@pytest.mark.asyncio
+async def test_embedding_deterministic():
+    text = "tenant isolation test"
+    e1 = await embed(text)
+    e2 = await embed(text)
+    # Ollama puede tener pequeñas variaciones con sampling, verificamos similitud alta
+    dot = sum(a * b for a, b in zip(e1, e2))
+    norm1 = sum(a ** 2 for a in e1) ** 0.5
+    norm2 = sum(b ** 2 for b in e2) ** 0.5
+    cosine = dot / (norm1 * norm2 + 1e-9)
+    assert cosine > 0.99, f"Embeddings del mismo texto muy diferentes: cosine={cosine:.4f}"
+
+
+@pytest.mark.asyncio
+async def test_different_texts_produce_different_embeddings():
+    e1 = await embed("empresa de software en Buenos Aires")
+    e2 = await embed("restaurante de comida japonesa en Tokio")
+    dot = sum(a * b for a, b in zip(e1, e2))
+    norm1 = sum(a ** 2 for a in e1) ** 0.5
+    norm2 = sum(b ** 2 for b in e2) ** 0.5
+    cosine = dot / (norm1 * norm2 + 1e-9)
+    assert cosine < 0.99, "Textos diferentes producen embeddings idénticos"

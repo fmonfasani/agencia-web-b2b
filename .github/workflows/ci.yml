@@ -1,119 +1,59 @@
-name: CI
+name: Backend CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
-    branches: [main]
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-          cache: "npm"
-      - run: npm ci
-      - run: npm run lint
-    continue-on-error: true  # Allow lint failures for now
-
-  type-check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-          cache: "npm"
-      - run: npm ci
-      - run: npx tsc --noEmit
-    continue-on-error: true  # Allow type errors for now
-
   test:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-          cache: "npm"
-      - run: npm ci
-      - run: npm test
-    continue-on-error: true  # Allow test failures for now
 
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-          cache: "npm"
-      - run: npm ci
-      - run: npm run build
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-          cache: "npm"
-      - run: npm ci
-      - run: npm run build
-      - name: Deploy to VPS
-        run: |
-          echo "Deploy logic here - use rsync or similar"
-          # TODO: Add actual deploy commands
+    services:
+      postgres:
+        image: postgres:15
         env:
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_USER: ${{ secrets.VPS_USER }}
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
-  e2e-tests:
-    timeout-minutes: 60
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        project: [chromium, firefox, webkit]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-          cache: "npm"
-      - run: npm ci
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
-      - name: Run Playwright tests
-        run: npx playwright test --project=${{ matrix.project }}
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: playwright-report-${{ matrix.project }}
-          path: playwright-report/
-          retention-days: 30
 
-  lighthouse:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          node-version: "24"
-          cache: "npm"
-      - run: npm ci
-      - run: npm run build
-      - name: Run Lighthouse CI
+          python-version: "3.11"
+
+      - name: Install dependencies
         run: |
-          npm install -g @lhci/cli@0.13.x
-          lhci autorun
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+          pip install bandit pytest-cov
+
+      - name: Security Scan (Bandit)
+        run: |
+          bandit -r backend/app -ll
+
+      - name: Run Tests
         env:
-          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+          DATABASE_URL: postgresql://postgres:password@localhost:5432/test_db
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+          TESTING: "true"
+        run: |
+          cd backend
+          pytest --cov=app --cov-report=xml --cov-report=term-missing tests/
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./backend/coverage.xml
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}

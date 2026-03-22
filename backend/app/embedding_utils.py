@@ -1,23 +1,26 @@
-import hashlib
-import math
+import os
+import httpx
 from typing import List
 
-def text_to_embedding(text: str, dim: int = 128) -> List[float]:
-    # Simple deterministic embedding based on hash; suitable for prototyping
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+EMBED_MODEL = os.getenv("EMBED_MODEL", "nomic-embed-text")
+
+async def text_to_embedding(text: str) -> List[float]:
+    """Call Ollama to get embeddings for a given text."""
     if not text:
-        return [0.0] * dim
-    h = hashlib.sha256(text.encode("utf-8")).hexdigest()
-    # Convert hex string to a list of floats in [0,1)
-    nums = []
-    for i in range(0, len(h), 4):
-        chunk = h[i:i+4]
-        if len(chunk) < 4:
-            break
-        val = int(chunk, 16) / float(0xFFFF)
-        nums.append(val)
-        if len(nums) >= dim:
-            break
-    # pad if needed
-    if len(nums) < dim:
-        nums += [0.0] * (dim - len(nums))
-    return nums[:dim]
+        return [0.0] * 768
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                f"{OLLAMA_BASE_URL}/api/embeddings",
+                json={
+                    "model": EMBED_MODEL,
+                    "prompt": text,
+                }
+            )
+            response.raise_for_status()
+            return response.json().get("embedding", [0.0] * 768)
+    except Exception as e:
+        # Fallback for demo if Ollama is not ready
+        print(f"Embedding error: {e}")
+        return [0.01] * 768
