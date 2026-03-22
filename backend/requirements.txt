@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+pydantic
+sqlalchemy
+asyncpg
+httpx
+credscheck
+python-dotenv
+redis
+qdrant-client
+langchain
+typing-extensions
