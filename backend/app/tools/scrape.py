@@ -1,5 +1,5 @@
 from typing import Any
-from ..tools.registry import Tool
+from app.tools.registry import Tool
 
 async def scrape(input_data: Any, tenant_id: str):
     url = input_data.get("url") if isinstance(input_data, dict) else None

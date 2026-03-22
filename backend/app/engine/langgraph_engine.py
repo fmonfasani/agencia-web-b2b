@@ -1,9 +1,13 @@
 import asyncio
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from typing import Any, Dict, List, Tuple
 from enum import Enum
-from ..tools.registry import get as registry_get
-from ..embedding_utils import text_to_embedding
-from ..llm.ollama_client import chat
+from app.tools.registry import get as registry_get
+from app.embedding_utils import text_to_embedding
+from app.llm.ollama_client import chat
 
 MAX_ITERATIONS = 4
 
