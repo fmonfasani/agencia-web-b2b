@@ -53,22 +53,24 @@ def check_services():
 # ---------------------------------------------------------------------------
 
 def test_execute_returns_result():
-    """El endpoint /agent/execute devuelve result y metadata."""
+    """El endpoint /agent/execute devuelve result, metadata y trace_id."""
     with httpx.Client(timeout=60.0) as client:
         r = client.post(
             f"{BACKEND_URL}/agent/execute",
-            json={"task": "buscar leads de software en Argentina", "tenant_id": "tenant_test"},
+            json={"query": "buscar leads de software en Argentina", "tenant_id": "tenant_test"},
         )
     assert r.status_code == 200, f"Status inesperado: {r.status_code} — {r.text}"
     body = r.json()
     assert "result" in body, f"Falta 'result' en respuesta: {body}"
     assert "metadata" in body, f"Falta 'metadata' en respuesta: {body}"
+    assert "trace_id" in body, f"Falta 'trace_id' en respuesta: {body}"
+    assert "total_duration_ms" in body, f"Falta 'total_duration_ms' en respuesta: {body}"
 
 
 def test_execute_validates_missing_fields():
-    """Sin task o tenant_id debe devolver 400/422."""
+    """Sin query o tenant_id debe devolver 400/422."""
     with httpx.Client(timeout=10.0) as client:
-        r = client.post(f"{BACKEND_URL}/agent/execute", json={"task": "algo"})
+        r = client.post(f"{BACKEND_URL}/agent/execute", json={"query": "algo"})
     assert r.status_code in (400, 422), f"Esperado 400/422, obtenido {r.status_code}"
 
 
@@ -77,13 +79,43 @@ def test_execute_metadata_has_tenant():
     with httpx.Client(timeout=60.0) as client:
         r = client.post(
             f"{BACKEND_URL}/agent/execute",
-            json={"task": "calificar empresa XYZ", "tenant_id": "tenant_abc"},
+            json={"query": "calificar empresa XYZ", "tenant_id": "tenant_abc"},
         )
     assert r.status_code == 200
-    metadata = r.json().get("metadata", {})
+    body = r.json()
+    assert body.get("tenant_id") == "tenant_abc", (
+        f"tenant_id incorrecto en response: {body.get('tenant_id')}"
+    )
+    metadata = body.get("metadata", {})
     assert metadata.get("tenant_id") == "tenant_abc", (
         f"tenant_id incorrecto en metadata: {metadata}"
     )
+
+
+def test_execute_with_tracing():
+    """Con enable_detailed_trace=True debe retornar trazas completas."""
+    with httpx.Client(timeout=60.0) as client:
+        r = client.post(
+            f"{BACKEND_URL}/agent/execute",
+            json={
+                "query": "buscar empresas de fintech en LATAM",
+                "tenant_id": "tenant_test",
+                "enable_detailed_trace": True,
+            },
+        )
+    assert r.status_code == 200, f"Status inesperado: {r.status_code} — {r.text}"
+    body = r.json()
+    assert body.get("trace_id"), "Falta trace_id"
+    assert body.get("total_duration_ms") is not None, "Falta total_duration_ms"
+    assert body.get("timestamp_start"), "Falta timestamp_start"
+    assert body.get("timestamp_end"), "Falta timestamp_end"
+    # Con tracing habilitado debe haber al menos embedding_trace o llm_traces
+    has_traces = (
+        body.get("embedding_trace")
+        or body.get("llm_traces")
+        or body.get("trace")
+    )
+    assert has_traces, f"No hay trazas en la respuesta: {list(body.keys())}"
 
 
 def test_execute_different_tenants_isolated():
@@ -91,22 +123,22 @@ def test_execute_different_tenants_isolated():
     with httpx.Client(timeout=60.0) as client:
         r1 = client.post(
             f"{BACKEND_URL}/agent/execute",
-            json={"task": "listar leads", "tenant_id": "tenant_X"},
+            json={"query": "listar leads", "tenant_id": "tenant_X"},
         )
         r2 = client.post(
             f"{BACKEND_URL}/agent/execute",
-            json={"task": "listar leads", "tenant_id": "tenant_Y"},
+            json={"query": "listar leads", "tenant_id": "tenant_Y"},
         )
 
     assert r1.status_code == 200
     assert r2.status_code == 200
 
-    # Ambos deben responder pero sus resultados pueden diferir
-    # (si tienen RAG cargado con datos diferentes)
     b1 = r1.json()
     b2 = r2.json()
-    assert b1["metadata"]["tenant_id"] == "tenant_X"
-    assert b2["metadata"]["tenant_id"] == "tenant_Y"
+    assert b1["tenant_id"] == "tenant_X"
+    assert b2["tenant_id"] == "tenant_Y"
+    # trace_ids deben ser distintos
+    assert b1["trace_id"] != b2["trace_id"], "trace_ids no deben ser iguales"
 
 
 # ---------------------------------------------------------------------------
