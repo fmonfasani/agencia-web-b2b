@@ -88,4 +88,23 @@ else
   echo "CSRF token not found; skipping credentials callback path."
 fi
 
-echo "==== DONE ===="
+### Step 4: Verify Session
+echo "[4/4] Verifying session..."
+SESSION_URL="$BASE/api/auth/session"
+http_code_session=$(curl -s -o /tmp/session.json -w "%{http_code}" -b /tmp/qa_cookies.txt "$SESSION_URL")
+
+echo "Session check status: $http_code_session"
+if [ "$http_code_session" -eq 200 ]; then
+  if grep -q "user" /tmp/session.json; then
+    echo "Session verified successfully!"
+    cat /tmp/session.json
+  else
+    echo "Session exists but no user found in payload."
+    exit 3
+  fi
+else
+  echo "Failed to retrieve session (status $http_code_session)."
+  exit 4
+fi
+
+echo "==== QA AUTH FLOW COMPLETED SUCCESSFULLY ===="

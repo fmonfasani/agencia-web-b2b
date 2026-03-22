@@ -58,21 +58,19 @@ export const authConfig = {
         });
 
         if (!user) {
-          console.warn(`[AUTH_DEBUG] User not found for email: ${email}`);
+          console.warn("[AUTH_DEBUG] User not found (scrubbed)");
           return null;
         }
 
         if (!user.passwordHash) {
-          console.warn(
-            `[AUTH_DEBUG] User found but has NO passwordHash: ${email}`,
-          );
+          console.warn("[AUTH_DEBUG] User found but has NO passwordHash");
           return null;
         }
 
         const isValid = verifyPassword(password, user.passwordHash);
 
         if (!isValid) {
-          console.warn(`[AUTH_DEBUG] Invalid password for email: ${email}`);
+          console.warn("[AUTH_DEBUG] Invalid password (scrubbed)");
           const ip =
             (await headers()).get("x-forwarded-for")?.split(",")[0] ||
             "unknown";
@@ -131,6 +129,20 @@ export const authConfig = {
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60,
+  },
+  cookies: {
+    sessionToken: {
+      name:
+        process.env.NODE_ENV === "production"
+          ? "__Secure-next-auth.session-token"
+          : "next-auth.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production" ? true : false,
+      },
+    },
   },
   secret: process.env.AUTH_SECRET,
   trustHost: true,
