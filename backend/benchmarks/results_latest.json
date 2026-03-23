@@ -1,0 +1,130 @@
+[
+  {
+    "model": "qwen2.5:0.5b",
+    "label": "planning",
+    "ms": 6767,
+    "ok": true,
+    "finished": true,
+    "action": "scrape"
+  },
+  {
+    "model": "qwen2.5:0.5b",
+    "label": "finish",
+    "ms": 14333,
+    "ok": true,
+    "finished": false,
+    "action": "none or tool"
+  },
+  {
+    "model": "qwen2.5:7b",
+    "label": "planning",
+    "ms": 58548,
+    "ok": true,
+    "finished": false,
+    "action": "rag_search"
+  },
+  {
+    "model": "qwen2.5:7b",
+    "label": "finish",
+    "ms": 23208,
+    "ok": true,
+    "finished": false,
+    "action": "rag_search"
+  },
+  {
+    "model": "qwen2:7b",
+    "label": "planning",
+    "ms": 66496,
+    "ok": true,
+    "finished": false,
+    "action": "?"
+  },
+  {
+    "model": "qwen2:7b",
+    "label": "finish",
+    "ms": 25507,
+    "ok": true,
+    "finished": false,
+    "action": "scrape"
+  },
+  {
+    "model": "llama3.2",
+    "label": "planning",
+    "ms": 29548,
+    "ok": true,
+    "finished": false,
+    "action": "rag_search"
+  },
+  {
+    "model": "llama3.2",
+    "label": "finish",
+    "ms": 21966,
+    "ok": true,
+    "finished": false,
+    "action": "rag_search"
+  },
+  {
+    "model": "glm4",
+    "label": "planning",
+    "ms": 66302,
+    "ok": true,
+    "finished": false,
+    "action": "scrape"
+  },
+  {
+    "model": "glm4",
+    "label": "finish",
+    "ms": 36287,
+    "ok": true,
+    "finished": false,
+    "action": "rag_search"
+  },
+  {
+    "model": "gemma2",
+    "label": "planning",
+    "ms": 63324,
+    "ok": true,
+    "finished": false,
+    "action": "scrape"
+  },
+  {
+    "model": "gemma2",
+    "label": "finish",
+    "ms": 36352,
+    "ok": true,
+    "finished": false,
+    "action": "scrape"
+  },
+  {
+    "model": "phi4",
+    "label": "planning",
+    "ms": 120722,
+    "ok": false,
+    "finished": false,
+    "error": ""
+  },
+  {
+    "model": "phi4",
+    "label": "finish",
+    "ms": 100722,
+    "ok": true,
+    "finished": false,
+    "action": "rag_search"
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "label": "planning",
+    "ms": 65947,
+    "ok": true,
+    "finished": false,
+    "action": "scrape"
+  },
+  {
+    "model": "qwen2.5-coder:7b",
+    "label": "finish",
+    "ms": 33678,
+    "ok": true,
+    "finished": true,
+    "action": "none"
+  }
+]

@@ -14,7 +14,7 @@ describe("Proposal PDF", () => {
       investment: "USD 4.000 - 8.000",
       roi: "30% mas leads",
       companyName: "Delta SA",
-      tenantName: "Agencia B2B",
+      tenantName: "Webshooks",
       contactEmail: "hola@agencia.com",
     });
 
@@ -36,7 +36,7 @@ describe("Proposal PDF", () => {
       investment: "USD 2.000 - 4.000",
       roi: null,
       companyName,
-      tenantName: "Agencia B2B",
+      tenantName: "Webshooks",
       contactEmail: "hola@agencia.com",
     });
 

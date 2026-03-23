@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Auto-detect and execute tests for the Agencia B2B project.
+Auto-detect and execute tests for the Webshooks project.
 
 ## Current Test Status
 
@@ -13,14 +13,14 @@ The project already includes **Jest** for unit/integration and **Playwright** fo
 Run this to check if any test runner is present:
 
 ```powershell
-cd "c:\Users\fmonf\Desktop\Software Enginnering LAPTOP\Agencia B2B\agencia-web-b2b"
+cd "c:\Users\fmonf\Desktop\Software Enginnering LAPTOP\Webshooks\agencia-web-b2b"
 cat package.json | Select-String "jest|playwright|test"
 ```
 
 ## Running Unit/Integration Tests (Jest)
 
 ```powershell
-cd "c:\Users\fmonf\Desktop\Software Enginnering LAPTOP\Agencia B2B\agencia-web-b2b"
+cd "c:\Users\fmonf\Desktop\Software Enginnering LAPTOP\Webshooks\agencia-web-b2b"
 npm test
 npm run test:watch
 npm run test:coverage
@@ -29,7 +29,7 @@ npm run test:coverage
 ## Running E2E Tests (Playwright)
 
 ```powershell
-cd "c:\Users\fmonf\Desktop\Software Enginnering LAPTOP\Agencia B2B\agencia-web-b2b"
+cd "c:\Users\fmonf\Desktop\Software Enginnering LAPTOP\Webshooks\agencia-web-b2b"
 npx playwright test
 # For UI mode
 npx playwright test --ui

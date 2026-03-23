@@ -115,7 +115,7 @@ export default async function TeamPerformanceDashboard({
       <div>
         <div className="flex items-center gap-2 mb-2">
           <span className="bg-slate-900 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-widest">
-            Revenue OS: Operational Analytics
+            Webshooks: Operational Analytics
           </span>
         </div>
         <h1 className="text-4xl font-black text-slate-900 tracking-tight">

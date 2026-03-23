@@ -67,7 +67,7 @@ export default async function AcceptInvitePage({
             Acceso Prioritario
           </h1>
           <p className="text-slate-400 font-bold uppercase text-[10px] tracking-[3px]">
-            Revenue OS Gateway
+            Webshooks Gateway
           </p>
         </div>
 

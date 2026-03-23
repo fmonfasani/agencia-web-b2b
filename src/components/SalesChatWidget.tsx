@@ -42,7 +42,7 @@ export default function SalesChatWidget() {
           {
             role: "assistant",
             content:
-              "¡Hola! Soy el asistente de Agencia Leads. ¿En qué puedo ayudarte hoy con Revenue OS?",
+              "¡Hola! Soy el asistente de Agencia Leads. ¿En qué puedo ayudarte hoy con Webshooks?",
           },
         ];
       }
@@ -117,7 +117,7 @@ export default function SalesChatWidget() {
                 </div>
                 <div>
                   <h3 className="text-sm font-semibold text-white">
-                    Revenue OS Assistant
+                    Webshooks Assistant
                   </h3>
                   <div className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -204,7 +204,7 @@ export default function SalesChatWidget() {
         {/* Tooltip */}
         {!isOpen && (
           <span className="absolute left-full ml-4 px-3 py-1 bg-neutral-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-neutral-700">
-            ¿Dudas sobre Revenue OS?
+            ¿Dudas sobre Webshooks?
           </span>
         )}
       </motion.button>

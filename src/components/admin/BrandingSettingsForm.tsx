@@ -57,7 +57,7 @@ export default function BrandingSettingsForm({ initialData, onSave }: BrandingSe
                                 value={formData.appName}
                                 onChange={(e) => setFormData({ ...formData, appName: e.target.value })}
                                 className="w-full bg-[#fafafa] border border-[#e5e7eb] rounded-[9px] px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#4a7fa5] outline-none transition-all"
-                                placeholder="Revenue OS"
+                                placeholder="Webshooks"
                             />
                         </div>
                         <div className="space-y-2">
@@ -199,7 +199,7 @@ export default function BrandingSettingsForm({ initialData, onSave }: BrandingSe
                     <div className="absolute top-0 right-0 left-[80px] h-[50px] bg-white border-b border-slate-200 px-6 flex items-center justify-between">
                         <div className="flex flex-col">
                             <span className="text-[10px] font-bold text-slate-800 transition-all duration-300">
-                                {formData.appName || "Revenue OS"}
+                                {formData.appName || "Webshooks"}
                             </span>
                             <span className="text-[7px] text-slate-400 font-medium">Panel de Control</span>
                         </div>

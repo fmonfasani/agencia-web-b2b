@@ -1,4 +1,4 @@
-# PROJECT_MEMORY.md — Agencia B2B Internal Semantic Map
+# PROJECT_MEMORY.md — Webshooks Internal Semantic Map
 
 # Updated: 2026-03-03
 
@@ -44,4 +44,4 @@
 
 ---
 
-_Updated by the Engineering Agent for Agencia B2B._
+_Updated by the Engineering Agent for Webshooks._

@@ -3,7 +3,7 @@
 # Configuration
 VPS_USER="root"
 VPS_IP="134.209.41.51"
-REMOTE_PATH="/opt/agencia-b2b-scraper"
+REMOTE_PATH="/opt/webshooks-scraper"
 
 echo "🚀 Iniciando despliegue de Scraper a la VPS ($VPS_IP)..."
 

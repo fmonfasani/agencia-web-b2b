@@ -1,9 +1,16 @@
 import os
+import time
+import uuid
+
+import httpx
 import psycopg2
 import pytest
 
 # Use the environment variable or a default development string
-DSN = os.getenv("POSTGRES_PRISMA_URL") or "postgresql://postgres:password@localhost:5432/agenciab2b"
+DSN = os.getenv("POSTGRES_PRISMA_URL") or "postgresql://postgres:Karaoke27570Echeverria@localhost:5432/agencia_web_b2b"
+
+BACKEND_URL = "http://localhost:8000"
+MAX_ITERATIONS = 5
 
 @pytest.fixture(scope="module")
 def db_conn():
@@ -58,3 +65,72 @@ def test_audit_log_tenant_consistency(db_conn):
         """)
         rows = cur.fetchall()
         assert len(rows) == 0, f"Orphan audit events found: {rows}"
+
+
+# ---------------------------------------------------------------------------
+# agent_request_traces tests
+# ---------------------------------------------------------------------------
+
+def _execute_agent(tenant_id: str = "tenant_test", query: str = "buscar leads de software en Argentina") -> str:
+    """Hit the agent endpoint and return the trace_id."""
+    with httpx.Client(timeout=60.0) as client:
+        r = client.post(
+            f"{BACKEND_URL}/agent/execute",
+            json={"query": query, "tenant_id": tenant_id},
+        )
+    assert r.status_code == 200, f"Agent returned {r.status_code}: {r.text}"
+    return r.json()["trace_id"]
+
+
+def test_trace_persisted_after_request(db_conn):
+    """After a successful agent call, one row must exist in agent_request_traces."""
+    trace_id = _execute_agent()
+    time.sleep(1.5)  # give background task time to commit
+
+    with db_conn.cursor() as cur:
+        cur.execute(
+            "SELECT iterations, finish_reason, had_error FROM agent_request_traces WHERE request_id = %s",
+            (trace_id,),
+        )
+        row = cur.fetchone()
+
+    assert row is not None, f"No trace found for request_id={trace_id}"
+    iterations, finish_reason, had_error = row
+    assert iterations >= 1, f"Expected iterations >= 1, got {iterations}"
+    assert not had_error, f"had_error should be False, got {had_error}"
+
+
+def test_trace_iterations_within_bounds(db_conn):
+    """Every trace row must have 1 <= iterations <= MAX_ITERATIONS."""
+    with db_conn.cursor() as cur:
+        cur.execute(
+            "SELECT request_id, iterations FROM agent_request_traces WHERE iterations IS NOT NULL ORDER BY created_at DESC LIMIT 20"
+        )
+        rows = cur.fetchall()
+
+    assert len(rows) > 0, "No traces in DB — run test_trace_persisted_after_request first"
+    for request_id, iterations in rows:
+        assert 1 <= iterations <= MAX_ITERATIONS, (
+            f"request_id={request_id} has iterations={iterations} outside [1, {MAX_ITERATIONS}]"
+        )
+
+
+def test_trace_finish_reason_not_max_when_results(db_conn):
+    """Rows with results_count > 0 must have finish_reason='results_found', not 'max_iterations'."""
+    with db_conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT request_id, finish_reason, results_count
+            FROM agent_request_traces
+            WHERE results_count > 0
+            ORDER BY created_at DESC
+            LIMIT 20
+            """
+        )
+        rows = cur.fetchall()
+
+    for request_id, finish_reason, results_count in rows:
+        assert finish_reason == "results_found", (
+            f"request_id={request_id} has results_count={results_count} "
+            f"but finish_reason='{finish_reason}' (expected 'results_found')"
+        )

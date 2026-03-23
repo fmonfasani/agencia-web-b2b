@@ -24,8 +24,8 @@ async function run() {
     console.log('✅ Lead listo con ID:', lead.id);
 
     // 2. Procesar Inteligencia
-    console.log('⚡ Ejecutando Revenue OS Intelligence...');
-    const { processRevenueIntelligence } = require('../src/lib/intelligence/revenue-os');
+    console.log('⚡ Ejecutando Webshooks Intelligence...');
+    const { processRevenueIntelligence } = require('../src/lib/intelligence/webshooks');
     await processRevenueIntelligence(lead.id);
 
     console.log('🎯 Test completado con éxito.');

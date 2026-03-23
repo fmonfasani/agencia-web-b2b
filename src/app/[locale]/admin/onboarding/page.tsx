@@ -18,7 +18,7 @@ const STEPS = [
     {
         id: "config",
         title: "Configuración Inicial",
-        description: "Personalizá tu instancia de Revenue OS.",
+        description: "Personalizá tu instancia de Webshooks.",
         icon: Settings2,
     },
     {
@@ -93,7 +93,7 @@ export default function OnboardingPage({ params: paramsPromise }: { params: Prom
                         <div className="w-10 h-10 rounded-xl bg-[#135bec] flex items-center justify-center shadow-lg shadow-[#135bec]/30">
                             <Rocket className="w-5 h-5 text-white" />
                         </div>
-                        <span className="text-xl font-bold tracking-tight">Revenue OS</span>
+                        <span className="text-xl font-bold tracking-tight">Webshooks</span>
                     </div>
 
                     <h1 className="text-4xl font-black mb-3">
@@ -153,7 +153,7 @@ export default function OnboardingPage({ params: paramsPromise }: { params: Prom
                                     </div>
                                     <div className="flex items-center gap-3 p-4 rounded-2xl bg-[#135bec]/5 border border-[#135bec]/10">
                                         <Sparkles className="w-5 h-5 text-[#135bec]" />
-                                        <p className="text-sm text-[#8b92a5]">Tu dominio táctico estará listo en <code>instance.revenue-os.ai</code></p>
+                                        <p className="text-sm text-[#8b92a5]">Tu dominio táctico estará listo en <code>instance.webshooks.ai</code></p>
                                     </div>
                                 </div>
                             )}

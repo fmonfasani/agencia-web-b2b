@@ -2,12 +2,12 @@
 
 ## Purpose
 
-Allows the agent to inspect commit history, diffs, and detect regressions in the Agencia B2B repository.
+Allows the agent to inspect commit history, diffs, and detect regressions in the Webshooks repository.
 
 ## Repository Info
 
 ```
-Repo root: c:\Users\fmonf\Desktop\Software Enginnering LAPTOP\Agencia B2B\agencia-web-b2b\
+Repo root: c:\Users\fmonf\Desktop\Software Enginnering LAPTOP\Webshooks\agencia-web-b2b\
 VCS:       Git
 ```
 
@@ -16,7 +16,7 @@ VCS:       Git
 ### Recent history
 
 ```powershell
-cd "c:\Users\fmonf\Desktop\Software Enginnering LAPTOP\Agencia B2B\agencia-web-b2b"
+cd "c:\Users\fmonf\Desktop\Software Enginnering LAPTOP\Webshooks\agencia-web-b2b"
 git log --oneline -20
 ```
 

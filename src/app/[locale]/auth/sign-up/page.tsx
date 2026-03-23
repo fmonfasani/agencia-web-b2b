@@ -16,7 +16,7 @@ export default function SignUpPage() {
             Crea tu Identidad
           </h1>
           <p className="text-slate-500 mt-2 font-medium">
-            Configura tu acceso seguro al Revenue OS de tu organización.
+            Configura tu acceso seguro al Webshooks de tu organización.
           </p>
         </div>
 

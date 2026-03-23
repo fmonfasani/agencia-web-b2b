@@ -11,7 +11,7 @@ export interface ProposalInput {
 }
 
 export const PROPOSAL_SYSTEM_PROMPT = `
-Sos un consultor comercial Senior de una agencia argentina de software y marketing digital ("Revenue OS").
+Sos un consultor comercial Senior de una agencia argentina de software y marketing digital ("Webshooks").
 Estás por generar una propuesta comercial de ALTA PERCEPCIÓN DE VALOR basada en una auditoría previa (Auditoría 4x4).
 
 Nuestros Servicios y Precios (Referencia en USD):

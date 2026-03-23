@@ -287,7 +287,7 @@ export const ProposalService = {
       throw new Error("Lead has no email to send proposal.");
     }
 
-    const fromName = process.env.SMTP_FROM_NAME || "Revenue OS";
+    const fromName = process.env.SMTP_FROM_NAME || "Webshooks";
     const fromEmail =
       process.env.SMTP_FROM_EMAIL || "no-reply@agencialeads.com";
     const company =
@@ -317,7 +317,7 @@ export const ProposalService = {
           
           <p style="font-size: 14px; color: #6b7280;">Si tienes alguna duda o quieres realizar ajustes, puedes responder directamente a este correo.</p>
           <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
-          <p style="font-size: 12px; color: #9ca3af; text-align: center;">Revenue OS • Agencia de Crecimiento Estratégico</p>
+          <p style="font-size: 12px; color: #9ca3af; text-align: center;">Webshooks • Agencia de Crecimiento Estratégico</p>
         </div>
       `,
       tags: [{ name: "template", value: "proposal-ready" }],

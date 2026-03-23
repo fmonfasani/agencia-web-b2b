@@ -1,6 +1,6 @@
 $VPS_USER = "root"
 $VPS_IP = "134.209.41.51"
-$REMOTE_PATH = "/opt/agencia-b2b-scraper"
+$REMOTE_PATH = "/opt/webshooks-scraper"
 
 Write-Host "--- Iniciando despliegue de Scraper a la VPS ($VPS_IP) ---"
 
@@ -17,4 +17,4 @@ Write-Host "3. Levantando contenedores en la VPS..."
 ssh $VPS_USER@$VPS_IP "cd $REMOTE_PATH && docker compose up -d --build"
 
 Write-Host "DONE: Despliegue completado."
-Write-Host "RECUERDA: Configura el .env en la VPS con: nano /opt/agencia-b2b-scraper/.env"
+Write-Host "RECUERDA: Configura el .env en la VPS con: nano /opt/webshooks-scraper/.env"

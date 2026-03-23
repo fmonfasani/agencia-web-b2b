@@ -36,7 +36,7 @@ export async function createSubscriptionPreference(params: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      reason: `Suscripción ${params.planName} - Agencia B2B`,
+      reason: `Suscripción ${params.planName} - Webshooks`,
       auto_recurring: {
         frequency: 1,
         frequency_type: 'months',

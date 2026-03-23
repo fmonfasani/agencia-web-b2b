@@ -75,21 +75,16 @@ def test_execute_validates_missing_fields():
 
 
 def test_execute_metadata_has_tenant():
-    """El metadata debe incluir el tenant_id correcto."""
+    """La respuesta debe incluir un tenant_id (viene del token/fallback, no del body)."""
     with httpx.Client(timeout=60.0) as client:
         r = client.post(
             f"{BACKEND_URL}/agent/execute",
-            json={"query": "calificar empresa XYZ", "tenant_id": "tenant_abc"},
+            json={"query": "calificar empresa XYZ", "tenant_id": "tenant_test"},
         )
     assert r.status_code == 200
     body = r.json()
-    assert body.get("tenant_id") == "tenant_abc", (
-        f"tenant_id incorrecto en response: {body.get('tenant_id')}"
-    )
-    metadata = body.get("metadata", {})
-    assert metadata.get("tenant_id") == "tenant_abc", (
-        f"tenant_id incorrecto en metadata: {metadata}"
-    )
+    assert body.get("tenant_id"), f"tenant_id ausente en response: {body}"
+    assert isinstance(body["tenant_id"], str) and len(body["tenant_id"]) > 0
 
 
 def test_execute_with_tracing():
@@ -118,27 +113,25 @@ def test_execute_with_tracing():
     assert has_traces, f"No hay trazas en la respuesta: {list(body.keys())}"
 
 
-def test_execute_different_tenants_isolated():
-    """Dos tenants distintos no deben compartir contexto RAG."""
+def test_execute_sequential_requests_have_unique_trace_ids():
+    """Requests secuenciales generan trace_ids únicos — no hay reutilización de contexto."""
     with httpx.Client(timeout=60.0) as client:
         r1 = client.post(
             f"{BACKEND_URL}/agent/execute",
-            json={"query": "listar leads", "tenant_id": "tenant_X"},
+            json={"query": "listar leads", "tenant_id": "tenant_test"},
         )
         r2 = client.post(
             f"{BACKEND_URL}/agent/execute",
-            json={"query": "listar leads", "tenant_id": "tenant_Y"},
+            json={"query": "listar leads", "tenant_id": "tenant_test"},
         )
 
     assert r1.status_code == 200
     assert r2.status_code == 200
+    assert r1.json()["trace_id"] != r2.json()["trace_id"]
 
-    b1 = r1.json()
-    b2 = r2.json()
-    assert b1["tenant_id"] == "tenant_X"
-    assert b2["tenant_id"] == "tenant_Y"
-    # trace_ids deben ser distintos
-    assert b1["trace_id"] != b2["trace_id"], "trace_ids no deben ser iguales"
+    # Nota: aislamiento real entre tenants distintos se prueba en
+    # test_multi_tenant_security.py::test_tenant_isolation_engine_scoped_to_token_tenant
+    # donde se inyectan dos tenants distintos via dependency override.
 
 
 # ---------------------------------------------------------------------------
