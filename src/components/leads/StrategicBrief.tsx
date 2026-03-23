@@ -31,7 +31,7 @@ export function StrategicBrief({ brief, leadName }: StrategicBriefProps) {
 
             <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-3 border-t border-slate-100 dark:border-slate-800">
                 <p className="text-xs text-slate-400 italic">
-                    Generado automáticamente por el Engine de Inteligencia de Agencia B2B.
+                    Generado automáticamente por el Engine de Inteligencia de Webshooks.
                 </p>
             </div>
         </div>

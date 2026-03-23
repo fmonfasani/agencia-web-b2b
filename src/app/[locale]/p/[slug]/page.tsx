@@ -104,7 +104,7 @@ export default async function PublicProposalPage({
 
                 {/* Footer */}
                 <footer className="mt-20 border-t border-white/5 pt-12 text-center text-gray-500">
-                    <p>© {new Date().getFullYear()} Revenue OS - Strategic Growth Agency</p>
+                    <p>© {new Date().getFullYear()} Webshooks - Strategic Growth Agency</p>
                     <p className="mt-2 text-sm">Esta propuesta es confidencial y ha sido generada especialmente para {proposal.lead.companyName}.</p>
                 </footer>
             </div>

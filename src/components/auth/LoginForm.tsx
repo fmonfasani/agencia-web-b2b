@@ -26,7 +26,7 @@ export default function LoginForm({
     passwordPlaceholder: "••••••••",
     forgotPassword: en ? "Forgot password?" : "¿Olvidaste tu contraseña?",
     rememberMe: en ? "Remember me" : "Recordarme",
-    signInBtn: en ? "Sign in to your account" : "Ingresar a Revenue OS →",
+    signInBtn: en ? "Sign in to your account" : "Ingresar a Webshooks →",
     signingIn: en ? "Signing in..." : "Verificando...",
     noAccount: en ? "Don't have an account?" : "¿No tenés cuenta?",
     signUp: en ? "Create your company →" : "Registrá tu empresa gratis →",

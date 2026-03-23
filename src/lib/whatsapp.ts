@@ -38,7 +38,7 @@ export class WhatsAppService {
                 new URLSearchParams({
                     From: fromNumber,
                     To: toNumber,
-                    Body: `🚨 *REVENUE OS ALERT* 🚨\n\n${message}\n\nTimestamp: ${new Date().toISOString()}`,
+                    Body: `🚨 *WEBSHOOKS ALERT* 🚨\n\n${message}\n\nTimestamp: ${new Date().toISOString()}`,
                 }),
                 {
                     headers: {

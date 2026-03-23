@@ -75,9 +75,9 @@ async def generate_outreach_messages(lead_name: str, top_problem: str, service: 
     except Exception as e:
         logger.error(f"Error generando mensajes con AI: {e}")
         return {
-            "whatsapp": f"Hola {lead_name}, soy de Agencia B2B. Noté que podrían mejorar su presencia digital eliminando el problema de: {top_problem}. ¿Les interesaría coordinar una breve llamada?",
+            "whatsapp": f"Hola {lead_name}, soy de Webshooks. Noté que podrían mejorar su presencia digital eliminando el problema de: {top_problem}. ¿Les interesaría coordinar una breve llamada?",
             "email_subject": f"Consulta sobre la presencia digital de {lead_name}",
-            "email_body": f"Hola,\n\nEstaba revisando su sitio y noté que {pain}. En Agencia B2B nos especializamos en {service}.\n\n¿Le interesaría una breve auditoría gratuita?\n\nSaludos."
+            "email_body": f"Hola,\n\nEstaba revisando su sitio y noté que {pain}. En Webshooks nos especializamos en {service}.\n\n¿Le interesaría una breve auditoría gratuita?\n\nSaludos."
         }
 
 async def generate_strategic_brief(lead_name: str, category: str, website: str, problems: List[Dict]) -> str:
@@ -105,7 +105,7 @@ async def generate_strategic_brief(lead_name: str, category: str, website: str, 
     ESTRUCTURA DEL REPORTE (en Markdown):
     1. ## 🎯 Gancho de Apertura (The Opener): Una frase disruptiva basada en surubro y un problema detectado.
     2. ## 🔍 Análisis de Situación: Breve descripción de por qué su situación actual les está haciendo perder dinero.
-    3. ## 💡 Solución Sugerida: Qué servicio específico de la Agencia B2B deberíamos ofrecerle primero.
+    3. ## 💡 Solución Sugerida: Qué servicio específico de la Webshooks deberíamos ofrecerle primero.
     4. ## 🚀 Impacto Estimado: Qué resultado verían en 3-6 meses si implementamos la solución.
     
     REGLAS:

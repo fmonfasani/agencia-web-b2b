@@ -96,7 +96,7 @@ export default function ObservabilityDashboard() {
                         <Activity className="text-blue-600 w-8 h-8" />
                         Centro de Observabilidad
                     </h1>
-                    <p className="text-slate-500 mt-1 font-medium italic">Agencia B2B SRE Engine • v1.0.0-Stable</p>
+                    <p className="text-slate-500 mt-1 font-medium italic">Webshooks SRE Engine • v1.0.0-Stable</p>
                 </div>
 
                 <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
@@ -150,7 +150,7 @@ export default function ObservabilityDashboard() {
             <div className="flex justify-between items-center text-[10px] font-bold text-slate-300 uppercase tracking-[0.2em] pt-8">
                 <div className="flex items-center gap-2">
                     <Zap size={12} fill="currentColor" />
-                    Powered by Agencia B2B SRE Engine
+                    Powered by Webshooks SRE Engine
                 </div>
                 <div>Deep Observability Stack</div>
             </div>

@@ -246,7 +246,7 @@ def print_bottleneck_analysis(agent_results: List[AgentBenchmarkResult]):
 
 async def run_benchmark():
     print("=" * 70)
-    print("     AGENCIA B2B -- LLM BENCHMARK END-TO-END")
+    print("     WEBSHOOKS -- LLM BENCHMARK END-TO-END")
     print("=" * 70)
     print(f"\nModelos disponibles: {len(MODELS)}")
     print("Prompts: planning (sin contexto) + finish (con contexto)")

@@ -1,4 +1,4 @@
-# 🧠 Agencia B2B Project: Codex Instructions (v1.1)
+# 🧠 Webshooks Project: Codex Instructions (v1.1)
 
 ## 🏗️ Architecture & Stack
 
@@ -32,4 +32,4 @@
 
 ---
 
-_Sigue estas instrucciones para mantener la consistencia arquitectónica en el ecosistema de la Agencia B2B._
+_Sigue estas instrucciones para mantener la consistencia arquitectónica en el ecosistema de la Webshooks._

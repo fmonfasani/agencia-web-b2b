@@ -352,7 +352,7 @@ async def analyze_lead(lead: dict) -> IntelligenceResult:
             problems=result.detected_problems
         )
 
-        # 7. Revenue OS: Mercado, Nicho, Entrevista
+        # 7. Webshooks: Mercado, Nicho, Entrevista
         from services.ai_service import generate_market_analysis, generate_niche_analysis, generate_interview_guide
         
         result.market_analysis = await generate_market_analysis(

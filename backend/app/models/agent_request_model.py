@@ -215,7 +215,13 @@ class AgentResponse(BaseModel):
     trace_id: str = Field(description="ID único del request para tracing")
     tenant_id: str = Field(description="Tenant que hizo el request")
     query: str = Field(description="Query original del usuario")
-    
+
+    # Convergence — exposed at top level for quick client consumption
+    iterations: int = Field(
+        default=0,
+        description="Número real de iteraciones del agente en esta ejecución",
+    )
+
     # Result
     result: List[Dict[str, str]] = Field(
         description="Resultado del agente (lista de mensajes)",

@@ -2,7 +2,7 @@
   "ci": {
     "collect": {
       "startServerCommand": "npm run start",
-      "url": ["http://localhost:3000/", "http://localhost:3000/pricing"],
+      "url": ["http://localhost:3001/", "http://localhost:3001/pricing"],
       "numberOfRuns": 3
     },
     "assert": {

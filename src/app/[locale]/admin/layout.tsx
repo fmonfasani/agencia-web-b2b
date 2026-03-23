@@ -50,7 +50,7 @@ export default async function AdminLayout({
   };
 
   let branding: AdminBranding = {};
-  let tenantName = "Revenue OS";
+  let tenantName = "Webshooks";
 
   try {
     const tenant = await (prisma.tenant as any).findUnique({
@@ -73,7 +73,7 @@ export default async function AdminLayout({
 
   return (
     <div className="min-h-screen bg-[#f7f7f7] flex overflow-hidden" style={{ fontFamily: branding.fontFamily ? `'${branding.fontFamily}', sans-serif` : "'DM Sans', 'Nunito', sans-serif" }}>
-      {/* Sidebar — Revenue OS Design System */}
+      {/* Sidebar — Webshooks Design System */}
       <aside className="w-[220px] text-white hidden md:flex flex-col relative z-50 shrink-0"
         style={{
           background: branding.brandingEnabled ? sidebarColor : "linear-gradient(180deg, #2c3e55 0%, #34495e 60%, #2c3e55 100%)",

@@ -5,7 +5,7 @@
       "args": [
         "-y",
         "@modelcontextprotocol/server-filesystem",
-        "c:/Users/fmonf/Desktop/Software Enginnering LAPTOP/Agencia B2B/agencia-web-b2b"
+        "c:/Users/fmonf/Desktop/Software Enginnering LAPTOP/Webshooks/agencia-web-b2b"
       ],
       "description": "Exploración profunda de archivos y estructura del repositorio."
     },

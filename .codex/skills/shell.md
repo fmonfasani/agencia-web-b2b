@@ -10,10 +10,10 @@ Allows the agent to execute project scripts, run the dev server, and invoke lint
 Shell:    PowerShell (Windows 11)
 Node:     (detected from system)
 Package:  npm
-Root:     c:\Users\fmonf\Desktop\Software Enginnering LAPTOP\Agencia B2B\agencia-web-b2b\
+Root:     c:\Users\fmonf\Desktop\Software Enginnering LAPTOP\Webshooks\agencia-web-b2b\
 ```
 
-## Available npm Scripts (Agencia B2B)
+## Available npm Scripts (Webshooks)
 
 | Script  | Command           | Description                          |
 | ------- | ----------------- | ------------------------------------ |
@@ -27,7 +27,7 @@ Root:     c:\Users\fmonf\Desktop\Software Enginnering LAPTOP\Agencia B2B\agencia
 ## How to Run Dev Server
 
 ```powershell
-cd "c:\Users\fmonf\Desktop\Software Enginnering LAPTOP\Agencia B2B\agencia-web-b2b"
+cd "c:\Users\fmonf\Desktop\Software Enginnering LAPTOP\Webshooks\agencia-web-b2b"
 npm run dev
 ```
 
@@ -45,7 +45,7 @@ npx prisma db push
 ## Linting
 
 ```powershell
-cd "c:\Users\fmonf\Desktop\Software Enginnering LAPTOP\Agencia B2B\agencia-web-b2b"
+cd "c:\Users\fmonf\Desktop\Software Enginnering LAPTOP\Webshooks\agencia-web-b2b"
 npm run lint
 ```
 

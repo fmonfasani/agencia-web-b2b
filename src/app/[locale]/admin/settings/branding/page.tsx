@@ -17,7 +17,7 @@ export default async function BrandingSettingsPage() {
         sidebarColor: "#2c3e55",
         accentColor: "#3b82f6",
         logoUrl: "",
-        appName: "Revenue OS",
+        appName: "Webshooks",
         subName: "Agencia Leads",
         fontFamily: "DM Sans",
         brandingEnabled: false,

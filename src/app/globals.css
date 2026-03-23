@@ -1,4 +1,4 @@
-/* ─── DM Sans (Revenue OS Design System) ─── */
+/* ─── DM Sans (Webshooks Design System) ─── */
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&display=swap');
 
 @import "tailwindcss";
@@ -6,7 +6,7 @@
 @theme {
   --font-sans: 'DM Sans', 'Nunito', ui-sans-serif, system-ui, sans-serif;
 
-  /* === REVENUE OS DESIGN TOKENS === */
+  /* === WEBSHOOKS DESIGN TOKENS === */
 
   /* App backgrounds */
   --color-bg-app: #f7f7f7;
@@ -90,7 +90,7 @@
 
 @layer utilities {
 
-  /* Revenue OS admin body */
+  /* Webshooks admin body */
   .admin-bg {
     background-color: #f7f7f7;
   }

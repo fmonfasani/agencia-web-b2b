@@ -60,7 +60,7 @@ export default function CompanySignUpForm({
     confirm: en ? "Confirm" : "Confirmar",
     confirmPh: en ? "Repeat" : "Repetir",
     submit: en ? "Register Company" : "Registrar Empresa",
-    submitting: en ? "Deploying Revenue OS..." : "Desplegando Revenue OS...",
+    submitting: en ? "Deploying Webshooks..." : "Desplegando Webshooks...",
     signIn: en ? "Already have an account?" : "¿Ya tenés cuenta?",
     signInLink: en ? "Sign in →" : "Iniciá sesión →",
     errorPassMismatch: en

@@ -60,16 +60,17 @@ async def tenant_scoped_search(
     payload: List[Dict[str, Any]] = []
 
     try:
-        results = await asyncio.to_thread(
-            client.search,
+        response = await asyncio.to_thread(
+            client.query_points,
             collection_name=collection_name,
-            query_vector=list(vector),
+            query=list(vector),
             limit=limit,
             with_payload=True,
             with_vectors=False,
             score_threshold=min_score or None,
         )
-    except Exception as exc:  # pragma: no cover - best we can do is fallback
+        results = response.points
+    except Exception as exc:
         print(f"[qdrant] tenant search failed for {tenant_id}: {exc}")
         return []
 

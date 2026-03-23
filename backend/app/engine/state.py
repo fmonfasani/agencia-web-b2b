@@ -4,13 +4,13 @@ Agent state definitions for the new engine architecture.
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
-
 @dataclass
 class AgentDecision:
     thought: str = ""
     action: str = "none"
     is_finished: bool = False
     tool_input: Dict[str, Any] = field(default_factory=dict)
+    answer: str = ""
 
     @classmethod
     def from_dict(cls, d: Dict[str, Any]) -> "AgentDecision":
@@ -19,6 +19,7 @@ class AgentDecision:
             action=str(d.get("action", "none")),
             is_finished=bool(d.get("is_finished", False)),
             tool_input=d.get("tool_input", {}),
+            answer=str(d.get("answer", "")),
         )
 
 

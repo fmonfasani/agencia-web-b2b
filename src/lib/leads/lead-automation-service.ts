@@ -38,7 +38,7 @@ export const LeadAutomationService = {
         }));
 
         const analysisPrompt = `
-      Eres un experto en Growth para una Agencia B2B. Tengo los siguientes leads estancados (sin actividad por más de 7 días):
+      Eres un experto en Growth para una Webshooks. Tengo los siguientes leads estancados (sin actividad por más de 7 días):
       ${JSON.stringify(leadsReport, null, 2)}
       
       Por favor:

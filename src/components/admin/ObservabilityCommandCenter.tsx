@@ -419,7 +419,7 @@ export default function ObservabilityCommandCenter() {
                 {/* Footer Section */}
                 <div className="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-white/5 text-[10px] font-black uppercase tracking-[0.3em] text-slate-600">
                     <div className="flex items-center gap-4 mb-4 md:mb-0">
-                        <span className="text-slate-400">© 2026 Agencia B2B SRE System</span>
+                        <span className="text-slate-400">© 2026 Webshooks SRE System</span>
                         <div className="h-2 w-2 bg-emerald-500 rounded-full animate-pulse-slow" />
                         <span>K8s Cluster Node: DO-NYC-01</span>
                     </div>

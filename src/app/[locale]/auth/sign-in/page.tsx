@@ -18,8 +18,8 @@ export default async function SignInPage({
     google: en ? "Sign in with Google" : "Continuar con Google",
     or: "or",
     badge: en
-      ? "Protected by Revenue OS IAM · TLS 1.3"
-      : "Protegido por Revenue OS IAM · TLS 1.3",
+      ? "Protected by Webshooks IAM · TLS 1.3"
+      : "Protegido por Webshooks IAM · TLS 1.3",
     tagline: en
       ? "Your sales pipeline, humans and AI,\nall in one place."
       : "Tu pipeline de ventas, humanos e IA,\ntodo en un solo lugar.",
@@ -59,7 +59,7 @@ export default async function SignInPage({
               </svg>
             </div>
             <span className="text-white font-bold text-base tracking-tight">
-              Revenue OS
+              Webshooks
             </span>
           </div>
 
@@ -103,7 +103,7 @@ export default async function SignInPage({
         <div className="absolute inset-0 z-0">
           <Image
             src="/signin-hero.png"
-            alt="Revenue OS AI Agent"
+            alt="Webshooks AI Agent"
             fill
             className="object-cover object-center"
             priority

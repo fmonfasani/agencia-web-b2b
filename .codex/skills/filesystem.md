@@ -2,19 +2,19 @@
 
 ## Purpose
 
-Allows the agent to read, navigate, and map the Agencia B2B codebase efficiently.
+Allows the agent to read, navigate, and map the Webshooks codebase efficiently.
 
 ## Capabilities
 
 - Read any file in the project
 - Map directory architecture (App Router, Components, Lib, Prisma)
 - Locate multi-tenant business logic (Leads, Deals, Agents)
-- Detect patterns in Revenue OS implementation
+- Detect patterns in Webshooks implementation
 
 ## Key Project Paths
 
 ```
-Root:         c:\Users\fmonf\Desktop\Software Enginnering LAPTOP\Agencia B2B\agencia-web-b2b\
+Root:         c:\Users\fmonf\Desktop\Software Enginnering LAPTOP\Webshooks\agencia-web-b2b\
 App Router:   src/app/
 Components:   src/components/
 Lib (Core):   src/lib/ (auth, prisma, leads, intelligence)

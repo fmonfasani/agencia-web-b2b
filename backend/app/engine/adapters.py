@@ -25,14 +25,17 @@ class RagRetriever:
         tenant_id: str,
         top_k: int = 5,
         ctx=None,
-    ) -> Tuple[List[Dict[str, Any]], int, int]:
+    ) -> Tuple[List[Dict[str, Any]], int, int, bool]:
         """
-        Returns (results, embedding_ms, qdrant_ms).
+        Returns (results, embedding_ms, qdrant_ms, had_embedding_fallback).
         Results are dicts with keys: id, score, text, source.
+        had_embedding_fallback=True means Ollama was unreachable and a constant
+        zero-vector was used — results are semantically meaningless.
         """
         # --- Embed ---
         t0 = time.time()
-        vector = await text_to_embedding(query)
+        vector, emb_meta = await text_to_embedding(query)
+        had_embedding_fallback = emb_meta.get("had_embedding_fallback", False)
         embedding_ms = int((time.time() - t0) * 1000)
 
         if ctx:
@@ -73,7 +76,7 @@ class RagRetriever:
             except Exception:
                 pass
 
-        return results, embedding_ms, qdrant_ms
+        return results, embedding_ms, qdrant_ms, had_embedding_fallback
 
 
 class OllamaAdapter:
@@ -110,7 +113,7 @@ class OllamaAdapter:
                 result = json.loads(content)
         except Exception as e:
             print(f"OllamaAdapter.chat_json error: {e}")
-            result = {"thought": f"LLM error: {e}", "action": "none", "is_finished": True}
+            result = {"thought": f"LLM error: {e}", "action": "none", "is_finished": True, "_llm_error": str(e)}
 
         llm_ms = int((time.time() - t0) * 1000)
 
@@ -142,12 +145,13 @@ class RegistryAdapter:
     """
 
     # Tools the agent planner can call (rag_search removed — RAG is upfront)
-    _AVAILABLE = ["scrape"]
+    _AVAILABLE = ["scrape", "search"]
 
     def get_tool_descriptions(self) -> str:
         lines = []
         descriptions = {
             "scrape": "scrape(url) — fetch and extract content from a web URL",
+            "search": "search(query) — search for B2B companies and leads matching the query",
         }
         for name in self._AVAILABLE:
             if name in REGISTRY:

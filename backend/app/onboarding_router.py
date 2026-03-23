@@ -81,10 +81,12 @@ Los archivos se guardan en el servidor y se procesan en el paso de ingesta.
     response_model=dict,
 )
 async def upload_files(
-    tenant_id: str = Form(..., description="ID del tenant al que pertenecen los archivos"),
-    files: list[UploadFile] = File(..., description="Archivos a subir (txt, pdf, xlsx)"),
-    _: dict = Depends(require_analista_or_admin),
+    tenant_id: str = Form(..., description="ID del tenant"),
+    file1: UploadFile = File(..., description="Archivo principal"),
+    file2: Optional[UploadFile] = File(None, description="Archivo 2 (opcional)"),
+    file3: Optional[UploadFile] = File(None, description="Archivo 3 (opcional)"),
 ):
+    files = [f for f in [file1, file2, file3] if f is not None]
     tenant_dir = UPLOAD_DIR / tenant_id
     tenant_dir.mkdir(parents=True, exist_ok=True)
 
@@ -324,3 +326,4 @@ def _read_table(path: Path) -> str:
     except ImportError:
         logger.warning("pandas no instalado, saltando tabla")
         return ""
+

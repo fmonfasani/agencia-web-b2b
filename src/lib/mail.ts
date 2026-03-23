@@ -37,7 +37,7 @@ export async function sendEmail({
   fromEmail,
   tags,
 }: SendEmailOptions) {
-  const finalFromName = fromName || process.env.SMTP_FROM_NAME || "Revenue OS";
+  const finalFromName = fromName || process.env.SMTP_FROM_NAME || "Webshooks";
   const finalFromEmail =
     fromEmail || process.env.SMTP_FROM_EMAIL || "no-reply@agencialeads.com";
 
@@ -110,7 +110,7 @@ export async function sendInvitationEmail({
 }) {
   return sendEmail({
     to,
-    subject: `Invitación Prioritaria: Revenue OS - ${tenantName}`,
+    subject: `Invitación Prioritaria: Webshooks - ${tenantName}`,
     html: generateInviteTemplate(tenantName, role, inviteUrl),
   });
 }
@@ -122,7 +122,7 @@ function generateInviteTemplate(
 ) {
   return `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 20px;">
-      <h1 style="color: #0f172a; font-size: 24px; font-weight: 900; letter-spacing: -0.025em; margin-bottom: 8px;">Revenue OS</h1>
+      <h1 style="color: #0f172a; font-size: 24px; font-weight: 900; letter-spacing: -0.025em; margin-bottom: 8px;">Webshooks</h1>
       <p style="color: #64748b; font-size: 14px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.1em; margin-bottom: 24px;">Security Gateway</p>
       
       <p style="color: #334155; font-size: 16px; line-height: 1.5; margin-bottom: 24px;">

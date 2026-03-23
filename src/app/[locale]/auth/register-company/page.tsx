@@ -14,15 +14,15 @@ export default async function RegisterCompanyPage({
   const t = {
     heading: en ? "Create your company" : "Registrá tu empresa",
     sub: en
-      ? "Deploy your Revenue OS instance in 30 seconds."
+      ? "Deploy your Webshooks instance in 30 seconds."
       : "Creá tu instancia privada en 30 segundos.",
     signIn: en ? "Already have an account?" : "¿Ya tenés cuenta?",
     signInLink: en ? "Sign in" : "Iniciá sesión",
     google: en ? "Sign up with Google" : "Registrate con Google",
     or: "or",
     badge: en
-      ? "Protected by Revenue OS IAM · TLS 1.3"
-      : "Protegido por Revenue OS IAM · TLS 1.3",
+      ? "Protected by Webshooks IAM · TLS 1.3"
+      : "Protegido por Webshooks IAM · TLS 1.3",
     tagline: en
       ? "Scale your agency with humans and AI\nworking together in the same pipeline."
       : "Escalá tu agencia con humanos e IA\ntrabajando juntos en el mismo pipeline.",
@@ -62,7 +62,7 @@ export default async function RegisterCompanyPage({
               </svg>
             </div>
             <span className="text-white font-bold text-base tracking-tight">
-              Revenue OS
+              Webshooks
             </span>
           </div>
 
@@ -105,7 +105,7 @@ export default async function RegisterCompanyPage({
         <div className="absolute inset-0 z-0">
           <Image
             src="/signin-hero.png"
-            alt="Revenue OS AI Agent"
+            alt="Webshooks AI Agent"
             fill
             className="object-cover object-center"
             priority
