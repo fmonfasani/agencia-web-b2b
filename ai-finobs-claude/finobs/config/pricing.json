@@ -1,0 +1,22 @@
+{
+  "claude-opus-4-20250514": {
+    "input_per_mtok": 15.0,
+    "output_per_mtok": 75.0
+  },
+  "claude-sonnet-4-20250514": {
+    "input_per_mtok": 3.0,
+    "output_per_mtok": 15.0
+  },
+  "claude-haiku-4-5-20251001": {
+    "input_per_mtok": 0.8,
+    "output_per_mtok": 4.0
+  },
+  "gpt-4o": {
+    "input_per_mtok": 2.5,
+    "output_per_mtok": 10.0
+  },
+  "gpt-4o-mini": {
+    "input_per_mtok": 0.15,
+    "output_per_mtok": 0.6
+  }
+}
