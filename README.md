@@ -3,6 +3,7 @@
 ![Webshooks Banner](https://img.shields.io/badge/Status-Live%20MVP-emerald?style=for-the-badge&logo=rocket)
 ![Stack](https://img.shields.io/badge/Stack-Next.js%2016%20%7C%20Tailwind%204%20%7C%20Prisma%20%7C%20Supabase-blue?style=for-the-badge)
 
+
 **Webshooks** es un ecosistema operativo diseñado para agencias B2B y startups que buscan transformar la gestión técnica en impacto financiero real. Basado en la arquitectura de **8 Unidades de Negocio**, permite una visión ejecutiva 360° del rendimiento de equipo y seguridad.
 
 ---
