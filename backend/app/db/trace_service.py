@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 _DSN = os.getenv(
     "POSTGRES_PRISMA_URL",
-    "postgresql://postgres:Karaoke27570Echeverria@localhost:5432/agencia_web_b2b",
+    "postgresql://postgres:Karaoke27570Echeverria@backend_postgres_1:5432/agencia_web_b2b",
 )
 
 MAX_ITERATIONS = 5
