@@ -9,6 +9,7 @@ from typing import Optional
 from passlib.context import CryptContext
 
 _pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
+_PREHASH_PREFIX = "sha256$"
 
 logger = logging.getLogger(__name__)
 
@@ -47,14 +48,25 @@ def setup_users_table():
 # ---------------------------------------------------------------------------
 
 def hash_password(password: str) -> str:
-    return _pwd_ctx.hash(password)
+    """
+    Hashea password usando pre-hash SHA256 + bcrypt.
+    Evita el limite de 72 bytes de bcrypt y mantiene formato versionado.
+    """
+    prehashed = hashlib.sha256(password.encode("utf-8")).digest()
+    return f"{_PREHASH_PREFIX}{_pwd_ctx.hash(prehashed)}"
 
 
 def verify_password(plain: str, stored_hash: str) -> bool:
     """Verifica password contra bcrypt. Backward-compat con SHA256 legacy."""
     if len(stored_hash) == 64 and all(c in "0123456789abcdef" for c in stored_hash):
         # Hash legacy SHA256 — comparar y migrar en el próximo login
-        return hashlib.sha256(plain.encode()).hexdigest() == stored_hash
+        return hashlib.sha256(plain.encode()).digest() == stored_hash
+    if stored_hash.startswith(_PREHASH_PREFIX):
+        bcrypt_hash = stored_hash[len(_PREHASH_PREFIX):]
+        prehashed = hashlib.sha256(plain.encode("utf-8")).digest()
+        return _pwd_ctx.verify(prehashed, bcrypt_hash)
+
+    # Backward-compat con bcrypt historico sin pre-hash
     return _pwd_ctx.verify(plain, stored_hash)
 
 

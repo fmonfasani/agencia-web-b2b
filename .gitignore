@@ -159,3 +159,6 @@ _migration_backup_*/
 _archived_scripts/
 
 backend/uploads/
+/RAG/
+/benchmarks/
+
