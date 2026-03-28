@@ -14,8 +14,8 @@ _PREHASH_PREFIX = "sha256$"
 logger = logging.getLogger(__name__)
 
 #DB_DSN = "postgresql://postgres:Karaoke27570Echeverria@localhost:5432/agencia_web_b2b"
-
-DB_DSN = "postgresql://usuario:password@backend_postgres_1:5432/db"
+DB_DSN = "postgresql://postgres:Karaoke27570Echeverria@backend_postgres_1:5432/agencia_web_b2b"
+#DB_DSN = "postgresql://usuario:password@backend_postgres_1:5432/db"
 # ---------------------------------------------------------------------------
 # Setup tabla users
 # ---------------------------------------------------------------------------
