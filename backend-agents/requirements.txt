@@ -1,0 +1,16 @@
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+langgraph
+langchain
+langchain-core
+langsmith
+qdrant-client
+psycopg2-binary
+httpx
+ollama
+openai
+python-json-logger
+slowapi
+python-dotenv

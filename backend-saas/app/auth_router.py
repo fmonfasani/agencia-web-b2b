@@ -43,13 +43,13 @@ def get_current_user(api_key: str = Security(API_KEY_HEADER)) -> dict:
 
 
 def require_admin(user: dict = Depends(get_current_user)) -> dict:
-    if user["rol"] != "admin":
+    if user["rol"] not in ("admin", "superadmin", "super_admin"):
         raise HTTPException(status_code=403, detail="Solo admins pueden realizar esta acción")
     return user
 
 
 def require_analista_or_admin(user: dict = Depends(get_current_user)) -> dict:
-    if user["rol"] not in ("admin", "analista"):
+    if user["rol"] not in ("admin", "superadmin", "super_admin", "analista"):
         raise HTTPException(status_code=403, detail="Se requiere rol analista o admin")
     return user
 
@@ -122,6 +122,7 @@ async def login(req: LoginRequest):
     try:
         user = login_user(req.email, req.password)
         return LoginResponse(
+            id=user["id"],
             api_key=user["api_key"],
             email=user["email"],
             nombre=user["nombre"],

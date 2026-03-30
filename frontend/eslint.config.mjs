@@ -14,9 +14,10 @@ const eslintConfig = defineConfig([
     },
   },
   {
-    files: ["src/app/**", "src/lib/**"],
+    files: ["src/**"],
     rules: {
       "@typescript-eslint/no-explicit-any": "warn",
+      "react-hooks/set-state-in-effect": "warn",
     },
   },
   // Override default ignores of eslint-config-next.

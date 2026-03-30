@@ -1,13 +1,14 @@
 """
-Router FastAPI para el pipeline de onboarding.
-Expone los endpoints en Swagger para uso del analista.
+Router FastAPI para el pipeline de onboarding en backend-saas.
+SOLO maneja datos estructurados en PostgreSQL.
 
 Endpoints:
   POST /onboarding/tenant   → crea tenant con datos del formulario
   POST /onboarding/upload   → sube archivos de la fuente de verdad
-  POST /onboarding/ingest   → dispara el pipeline de ingesta
   GET  /onboarding/status   → estado del tenant en DB y Qdrant
   DELETE /onboarding/tenant → elimina todos los datos del tenant
+
+LA INGESTA (LLM + Qdrant) se hace en backend-agents:8001
 """
 import json
 import logging
@@ -21,14 +22,17 @@ from qdrant_client import QdrantClient
 from app.onboarding_models import (
     OnboardingForm,
     OnboardingStatusResponse,
-    IngestResponse,
 )
-from app.onboarding_service import run_ingestion_pipeline, UPLOAD_DIR, QDRANT_URL, DB_DSN
-from app.qdrant.client import _normalize_tenant_id
+from app.onboarding_service import setup_postgresql, UPLOAD_DIR, QDRANT_URL, DB_DSN
 from app.auth_router import require_analista_or_admin
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/onboarding", tags=["Onboarding"])
+
+
+def _normalize_tenant_id(tenant_id: str) -> str:
+    """Normaliza tenant_id a formato válido para Qdrant."""
+    return tenant_id.lower().replace("-", "_").replace(" ", "_")
 
 
 # ---------------------------------------------------------------------------
@@ -43,22 +47,22 @@ Recibe el JSON del formulario de onboarding y carga los datos estructurados
 en PostgreSQL. NO procesa documentos todavía.
 
 **Flujo recomendado:**
-1. `POST /onboarding/tenant` — crear tenant
-2. `POST /onboarding/upload` — subir documentos
-3. `POST /onboarding/ingest` — procesar con LLM y cargar en Qdrant
-4. `GET /onboarding/status` — verificar resultado
+1. `POST /onboarding/tenant` — crear tenant (backend-saas)
+2. `POST /onboarding/upload` — subir documentos (backend-saas)
+3. `POST /onboarding/ingest` — procesar con LLM y cargar en Qdrant (backend-agents)
+4. `GET /onboarding/status` — verificar resultado (backend-saas)
     """,
     response_model=dict,
 )
 async def create_tenant(form: OnboardingForm, _: dict = Depends(require_analista_or_admin)):
     try:
-        from app.onboarding_service import setup_postgresql
         stats = setup_postgresql(form)
         return {
             "status": "ok",
             "tenant_id": form.tenant_id,
-            "mensaje": f"Tenant '{form.tenant_nombre}' creado correctamente",
+            "mensaje": f"Tenant '{form.tenant_nombre}' creado correctamente en PostgreSQL",
             "datos_cargados": stats,
+            "proximo_paso": "POST http://localhost:8001/onboarding/ingest (backend-agents)",
         }
     except Exception as e:
         logger.error(f"Error creando tenant: {e}")
@@ -76,7 +80,7 @@ async def create_tenant(form: OnboardingForm, _: dict = Depends(require_analista
 Sube archivos desde la máquina del analista al servidor.
 Formatos soportados: .txt, .pdf, .xlsx, .csv
 
-Los archivos se guardan en el servidor y se procesan en el paso de ingesta.
+Los archivos se guardan en el servidor y se procesan en backend-agents.
     """,
     response_model=dict,
 )
@@ -118,66 +122,8 @@ async def upload_files(
         "archivos_guardados": guardados,
         "errores": errores,
         "mensaje": f"{len(guardados)} archivo(s) subido(s) correctamente",
+        "proximo_paso": "POST http://localhost:8001/onboarding/ingest (backend-agents)",
     }
-
-
-# ---------------------------------------------------------------------------
-# POST /onboarding/ingest — pipeline completo
-# ---------------------------------------------------------------------------
-
-@router.post(
-    "/ingest",
-    summary="Disparar pipeline de ingesta con LLM",
-    description="""
-Ejecuta el pipeline completo de ingesta para un tenant:
-
-1. **Chunks determinísticos** — genera chunks desde los datos del formulario (sin LLM)
-2. **LLM procesa documentos** — lee los archivos subidos y genera chunks adicionales
-3. **Embeddings** — convierte chunks en vectores con nomic-embed-text
-4. **Qdrant** — almacena todos los chunks con metadata completa
-
-Usa `qwen2.5:0.5b` como modelo principal. Si falla, usa OpenAI como fallback.
-
-⚠️ Este proceso puede tardar varios minutos dependiendo de la cantidad de documentos.
-    """,
-    response_model=IngestResponse,
-)
-async def ingest(
-    tenant_id: str = Form(..., description="ID del tenant a ingestar"),
-    form_json: str = Form(..., description="JSON del formulario de onboarding (mismo que se usó en /tenant)"),
-    _: dict = Depends(require_analista_or_admin),
-):
-    # Parsear formulario
-    try:
-        form_data = json.loads(form_json)
-        form = OnboardingForm(**form_data)
-    except Exception as e:
-        raise HTTPException(status_code=422, detail=f"Error parseando formulario: {str(e)}")
-
-    if form.tenant_id != tenant_id:
-        raise HTTPException(status_code=400, detail="tenant_id no coincide con el formulario")
-
-    # Leer documentos subidos
-    tenant_dir = UPLOAD_DIR / tenant_id
-    document_texts = []
-
-    if tenant_dir.exists():
-        for archivo in tenant_dir.iterdir():
-            try:
-                if archivo.suffix == ".txt":
-                    document_texts.append(archivo.read_text(encoding="utf-8"))
-                elif archivo.suffix == ".pdf":
-                    document_texts.append(_read_pdf(archivo))
-                elif archivo.suffix in (".xlsx", ".csv"):
-                    document_texts.append(_read_table(archivo))
-            except Exception as e:
-                logger.warning(f"Error leyendo {archivo.name}: {e}")
-
-    logger.info(f"[{tenant_id}] Documentos a procesar: {len(document_texts)}")
-
-    # Ejecutar pipeline
-    result = await run_ingestion_pipeline(form, document_texts)
-    return result
 
 
 # ---------------------------------------------------------------------------
@@ -238,7 +184,7 @@ async def get_status(tenant_id: str):
             qdrant_stats["por_categoria"] = cats
         else:
             qdrant_stats["chunks_total"] = 0
-            gaps.append(f"Coleccion '{collection_name}' no existe en Qdrant -- ejecuta POST /onboarding/ingest primero")
+            gaps.append(f"Coleccion '{collection_name}' no existe en Qdrant -- ejecuta POST /onboarding/ingest en backend-agents primero")
     except Exception as e:
         qdrant_stats["error"] = str(e)
 
@@ -326,4 +272,3 @@ def _read_table(path: Path) -> str:
     except ImportError:
         logger.warning("pandas no instalado, saltando tabla")
         return ""
-

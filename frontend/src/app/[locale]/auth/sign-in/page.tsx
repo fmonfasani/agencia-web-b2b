@@ -1,4 +1,4 @@
-import LoginForm from "@/components/auth/LoginForm";
+import { LoginForm } from "@/components/auth/LoginForm";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 import Image from "next/image";
 import Link from "next/link";

@@ -162,3 +162,43 @@ backend/uploads/
 /RAG/
 /benchmarks/
 
+# =====================
+# ROOT SCRIPTS & INFORMES (no subir al repo)
+# =====================
+
+# Scripts Python en root
+/*.py
+/*.template
+
+# Scripts PowerShell en root
+/*.ps1
+
+# Informes y docs temporales en root (mantiene README.md y CLAUDE.md)
+/*.txt
+/CLAUDE-INSTRUCCIONES.md
+/POST-MIGRACION-CHECKLIST.md
+/PROPUESTA_SEPARACION_ARQUITECTONICA.md
+/STRUCTURED.md
+/SWAGGER-PROMPT.md
+/Skiils-README.md
+
+# Templates en frontend/files/
+frontend/files/
+
+# Uploads de backend
+backend-saas/uploads/
+backend-agents/uploads/
+
+# Seeds y scripts de DB sensibles en backend-saas root
+/backend-saas/*.py
+/backend-saas/*.json
+/backend-saas/ARSENAL_TESTS_RESUMEN.txt
+/backend-saas/CREDENCIALES_SEED.json
+
+# Env files (todos los backends)
+**/.env
+**/.env.local
+**/.env.production
+**/.env.*
+!**/.env.example
+

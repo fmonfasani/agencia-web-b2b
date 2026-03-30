@@ -1,11 +1,14 @@
 import NextAuth from "next-auth";
-import { PrismaAdapter } from "@auth/prisma-adapter";
-import { prisma } from "@/lib/prisma";
 import { authConfig } from "@/auth.config";
 import { redirect } from "next/navigation";
 
+// ────────────────────────────────────────────────────
+// NOTA: PrismaAdapter fue eliminado.
+// La sesión es 100% JWT. No hay conexión a DB desde el frontend.
+// ────────────────────────────────────────────────────
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
+  // Sin adapter: sesión JWT pura
   ...authConfig,
 });
 

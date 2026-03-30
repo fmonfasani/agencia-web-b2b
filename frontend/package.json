@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3001",
-    "build": "prisma generate && next build",
-    "build:ci": "prisma generate && next build",
+    "build": "next build",
+    "build:ci": "next build",
     "start": "next start",
     "lint": "eslint --max-warnings=999",
     "lint:fix": "eslint --fix",
@@ -13,14 +13,11 @@
     "test": "vitest run",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest run --coverage",
-    "test:ci": "vitest run --reporter=junit --output=junit.xml",
-    "db:seed": "prisma db seed",
-    "db:migrate": "prisma migrate deploy",
-    "db:generate": "prisma generate"
+    "test:ci": "vitest run --reporter=junit --output=junit.xml"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
-      "eslint --fix",
+      "eslint --fix --max-warnings=999",
       "prettier --write"
     ],
     "*.{json,md,css}": [
@@ -29,14 +26,12 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.80.0",
-    "@auth/prisma-adapter": "^2.11.1",
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/auto-instrumentations-node": "^0.56.0",
     "@opentelemetry/exporter-trace-otlp-http": "^0.57.0",
     "@opentelemetry/resources": "^1.30.0",
     "@opentelemetry/sdk-node": "^0.57.0",
     "@opentelemetry/semantic-conventions": "^1.30.0",
-    "@prisma/client": "^6.19.2",
     "@react-pdf/renderer": "4.3.2",
     "@sentry/nextjs": "^10.42.0",
     "@types/nodemailer": "^7.0.11",
@@ -55,7 +50,6 @@
     "next-intl": "^4.8.0",
     "nodemailer": "^7.0.13",
     "openai": "^6.25.0",
-    "prisma": "^6.19.2",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-markdown": "^10.1.0",

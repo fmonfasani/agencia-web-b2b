@@ -33,6 +33,10 @@ const VALID_TRANSITIONS: Record<PipelineStatus, PipelineStatus[]> = {
   CERRADO_GANADO: [PipelineStatus.DESCARTADO],
   CERRADO_PERDIDO: [PipelineStatus.DESCARTADO],
   DESCARTADO: [],
+  // Statuses heredados (compatibilidad)
+  ELEGIDO: [PipelineStatus.LLAMADO, PipelineStatus.DESCARTADO],
+  ENTREVISTA: [PipelineStatus.LLAMADO, PipelineStatus.DESCARTADO],
+  CALIFICADO: [PipelineStatus.PROPUESTA_ENVIADA, PipelineStatus.DESCARTADO],
 };
 
 type JsonRecord = Record<string, unknown>;
@@ -151,7 +155,10 @@ export const LeadPipelineService = {
       {} as Record<PipelineStatus, number>,
     );
 
-    for (const row of grouped as Array<{ pipelineStatus: PipelineStatus; _count: { _all: number } }>) {
+    for (const row of grouped as Array<{
+      pipelineStatus: PipelineStatus;
+      _count: { _all: number };
+    }>) {
       byStatus[row.pipelineStatus] = row._count._all;
     }
 

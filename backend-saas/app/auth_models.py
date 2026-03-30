@@ -26,6 +26,7 @@ class LoginRequest(BaseModel):
 
 
 class LoginResponse(BaseModel):
+    id: str
     api_key: str
     email: str
     nombre: str

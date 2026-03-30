@@ -91,21 +91,105 @@ NEXT_PUBLIC_APP_URL="http://localhost:3001"
 
 ---
 
-## 🛠️ Comandos Útiles
+## 🛠️ Comandos Útiles (Levantar el Entorno Local)
 
+Para ejecutar la plataforma completa localmente, debes levantar los 3 servicios en terminales separadas. Asegúrate de tener también **Ollama** (`ollama serve` y `ollama run gemma3`) corriendo de fondo si vas a ejecutar consultas de IA, así como una instancia de PostgreSQL y Qdrant:
+
+### 1️⃣ Frontend (Next.js)
 ```bash
-# Sincronizar esquema con Supabase
+# Sincronizar esquema DB Prisma (opcional primera vez)
 npx prisma db push
-
-# Regenerar cliente Prisma
 npx prisma generate
 
-# Inyectar datos reales de simulación de impacto
-node scripts/seed-webshooks.mjs
-
-# Levantar entorno de desarrollo
+# Desde la raíz del repositorio
 npm run dev
+# 🌐 Estará disponible en http://localhost:3001
 ```
+
+### 2️⃣ Backend SaaS (Autenticación y Onboarding)
+Procesa la ingesta de documentos a la Base de Conocimiento y Auth.
+```bash
+cd backend-saas
+
+# Activar entorno virtual
+# En Windows: venv\Scripts\activate
+# En Mac/Linux: source venv/bin/activate
+
+# Instalar dependencias 
+pip install -r requirements.txt
+
+# Levantar servidor
+uvicorn app.main:app --port 8000 --reload
+# 📚 Docs Swagger: http://localhost:8000/docs
+```
+
+### 3️⃣ Backend Agents (Motor LangGraph y Qdrant)
+Controla el Agente LLM (Planner), búsqueda RAG vectorial con Qdrant y observabilidad (Traces).
+```bash
+cd backend-agents
+
+# Activar entorno virtual
+# En Windows: venv\Scripts\activate
+
+# Instalar dependencias
+pip install -r requirements.txt
+
+# Levantar servidor
+uvicorn app.main:app --port 8001 --reload
+# 📚 Docs Swagger: http://localhost:8001/docs
+```
+
+---
+
+## 🧠 Arquitectura de Inteligencia Artificial
+La arquitectura se apoya fuertemente en dos flujos, delegados cada uno a su respectivo backend:
+
+### 1. Flujo de Onboarding (Knowledge Base)
+`Frontend -> POST /onboarding/ingest -> backend-saas:8000`
+1. Procesa documentos (PDFs, URLs) del tenant.
+2. Genera *chunks* vectoriales (vía Ollama Embeddings).
+3. Upsert a la base de datos vectorial de Qdrant.
+
+### 2. Flujo de Query RAG (LangGraph)
+`Frontend -> POST /agent/execute -> backend-agents:8001`
+Basado en un grafo determinístico:
+1. **RAG Node**: Utiliza Ollama Embeddings para vectorizar la duda + `search_qdrant()`.
+2. **Planner Node**: Construye el prompt con contexto recabado y herramientas enviándolos al modelo (`llm_call`). Evalúa si ya puede responder o requiere iterar.
+3. Las peticiones validan tokens vía `X-API-Key` con PostgreSQL y dejan un `trace_id` de logs estructurados persistido por LangSmith/Base de datos.
+
+### 3. Testing E2E y Autenticación Unificada (NUEVO)
+Ambos backends (`backend-saas` y `backend-agents`) ahora **comparten la validación de API Keys directamente desde PostgreSQL** en un formato unificado sincronizado contra la misma base de datos manejada por Prisma. Los mocks estáticos en Agents fueron removidos para asegurar consistencia en roles (`cliente`, `admin`, `superadmin`).
+
+Para testear todo el flujo End-to-End, existe la base test unitaria que comprueba Health, Auth, Creación de Tenants, Ingesta en la Base Local y Testing del LLM en vivo:
+```bash
+cd backend-saas
+python test_e2e_30.py
+```
+
+---
+
+## 🚀 Cómo LEVANTAR el proyecto LOCALMENTE
+
+Para utilizar el sistema completo de onboarding y testing de IA, necesitas correr los tres servicios simultáneamente en terminales separadas.
+
+1. **Frontend (Next.js - Puerto 3001)**
+   ```bash
+   cd frontend
+   npm run dev
+   ```
+
+2. **Backend SaaS (FastAPI - Puerto 8000)**
+   ```bash
+   cd backend-saas
+   uvicorn app.main:app --port 8000 --reload
+   ```
+
+3. **Backend Agents (FastAPI - Puerto 8001)**
+   ```bash
+   cd backend-agents
+   uvicorn app.main:app --port 8001 --reload
+   ```
+*(Asegurate de correr `ollama launch claude` u `ollama serve gemma3` u otro LLM de manera nativa para resolver las ingestas en `backend-agents`).*
 
 ---
 
@@ -241,3 +325,115 @@ APIFY_API_TOKEN=<REPLACE_WITH_ACTUAL_VALUE> npx tsx scripts/import-leads.ts
 
 _Desarrollado para Agencia Leads — Transformando Datos en Revenue._
 
+---
+
+GUÍA CLARA - QUÉ ARCHIVO VA A DÓNDE
+====================================
+
+Te voy a decir EXACTAMENTE dónde copiar cada archivo.
+
+---
+
+ARCHIVO 1
+=========
+📥 Descargá: backend-saas-main-FINAL.py
+📍 Copiar a: D:\...\agencia-web-b2b\backend-saas\app\main.py
+❓ Qué es: FastAPI app principal de backend-saas
+📋 Contiene: /health, /auth/*, /onboarding/tenant, /onboarding/upload, /onboarding/status, /tenant/me
+🔧 Comando:
+copy backend-saas-main-FINAL.py "D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\backend-saas\app\main.py"
+
+---
+
+ARCHIVO 2
+=========
+📥 Descargá: backend-saas-onboarding_router-FINAL.py
+📍 Copiar a: D:\...\agencia-web-b2b\backend-saas\app\onboarding_router.py
+❓ Qué es: Router FastAPI para onboarding (sin /ingest)
+📋 Contiene: POST /onboarding/tenant, POST /onboarding/upload, GET /onboarding/status, DELETE /onboarding/tenant
+🔧 Comando:
+copy backend-saas-onboarding_router-FINAL.py "D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\backend-saas\app\onboarding_router.py"
+
+---
+
+ARCHIVO 3
+=========
+📥 Descargá: backend-agents-main-FINAL.py
+📍 Copiar a: D:\...\agencia-web-b2b\backend-agents\app\main.py
+❓ Qué es: FastAPI app principal de backend-agents
+📋 Contiene: /health, /agent/execute, /agent/traces, /metrics/agent, /onboarding/ingest
+🔧 Comando:
+copy backend-agents-main-FINAL.py "D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\backend-agents\app\main.py"
+
+---
+
+ARCHIVO 4
+=========
+📥 Descargá: backend-agents-onboarding_router-FINAL.py
+📍 Copiar a: D:\...\agencia-web-b2b\backend-agents\app\onboarding_router.py
+❓ Qué es: Router FastAPI para onboarding en backend-agents
+📋 Contiene: POST /onboarding/ingest (LLM + Qdrant)
+🔧 Comando:
+copy backend-agents-onboarding_router-FINAL.py "D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\backend-agents\app\onboarding_router.py"
+
+---
+
+ARCHIVO 5
+=========
+📥 Descargá: backend-agents-onboarding_models.py
+📍 Copiar a: D:\...\agencia-web-b2b\backend-agents\app\onboarding_models.py
+❓ Qué es: Modelos Pydantic para formulario de onboarding
+📋 Contiene: OnboardingForm, IngestResponse, Sede, Servicio, etc.
+🔧 Comando:
+copy backend-agents-onboarding_models.py "D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\backend-agents\app\onboarding_models.py"
+
+---
+
+ARCHIVO 6
+=========
+📥 Descargá: backend-agents-onboarding_service.py
+📍 Copiar a: D:\...\agencia-web-b2b\backend-agents\app\onboarding_service.py
+❓ Qué es: Lógica de ingesta (PostgreSQL + LLM + Qdrant)
+📋 Contiene: setup_postgresql(), generate_deterministic_chunks(), process_document_with_llm(), store_in_qdrant(), run_ingestion_pipeline()
+🔧 Comando:
+copy backend-agents-onboarding_service.py "D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\backend-agents\app\onboarding_service.py"
+
+---
+
+RESUMEN VISUAL
+==============
+
+backend-saas\app\
+├── main.py                    ← ARCHIVO 1 (backend-saas-main-FINAL.py)
+├── onboarding_router.py       ← ARCHIVO 2 (backend-saas-onboarding_router-FINAL.py)
+├── auth_router.py             (YA EXISTE, no toques)
+├── auth_service.py            (YA EXISTE, no toques)
+├── onboarding_service.py      (YA EXISTE, pero verifica que setup_postgresql() esté aquí)
+└── ...
+
+backend-agents\app\
+├── main.py                    ← ARCHIVO 3 (backend-agents-main-FINAL.py)
+├── onboarding_router.py       ← ARCHIVO 4 (backend-agents-onboarding_router-FINAL.py)
+├── onboarding_models.py       ← ARCHIVO 5 (backend-agents-onboarding_models.py)
+├── onboarding_service.py      ← ARCHIVO 6 (backend-agents-onboarding_service.py)
+├── engine/
+├── tools/
+├── auth/
+├── db/
+├── lib/
+└── ...
+
+---
+
+ORDEN DE COPIA (IMPORTANTE):
+============================
+
+1. Primero: backend-saas (2 archivos)
+   - Copiar main.py
+   - Copiar onboarding_router.py
+
+2. Después: backend-agents (4 archivos)
+   - Copiar onboarding_models.py
+   - Copiar onboarding_service.py
+   - Copiar onboarding_router.py
+   - Copiar main.py (ÚLTIMO porque importa todo lo anterior)

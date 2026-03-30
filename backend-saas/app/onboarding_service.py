@@ -21,7 +21,9 @@ from qdrant_client.models import (
 )
 
 from app.onboarding_models import OnboardingForm, IngestResponse
-from app.qdrant.client import _normalize_tenant_id
+
+def _normalize_tenant_id(tenant_id: str) -> str:
+    return tenant_id.lower().replace("-", "_").replace(" ", "_")
 
 logger = logging.getLogger(__name__)
 

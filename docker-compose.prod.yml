@@ -2,8 +2,6 @@ version: '3.8'
 
 services:
   # Base de datos PostgreSQL
-  # ⚠️ IMPORTANTE: Si ya tenés multidb-postgres corriendo, NO ejecutes este servicio
-  # Comentá o eliminá esta sección si usás la DB existente
   db:
     image: postgres:16-alpine
     container_name: agencia-db
@@ -12,7 +10,6 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${DB_PASSWORD:-cambiar_password}
       POSTGRES_DB: agencia_web_b2b
-    # No exponer puerto públicamente - usar docker exec si necesitas acceder
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -22,19 +19,32 @@ services:
       retries: 5
     networks:
       - app-network
-    profiles:
-      - init  # Solo para inicializar, luego deshabilitar
+
+  # Vector Database (Qdrant)
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: agencia-qdrant
+    restart: always
+    ports:
+      - "127.0.0.1:6333:6333"
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    networks:
+      - app-network
 
   # Frontend Next.js
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_SAAS_API_URL: ${NEXT_PUBLIC_SAAS_API_URL:-http://localhost:8000}
+        NEXT_PUBLIC_AGENT_API_URL: ${NEXT_PUBLIC_AGENT_API_URL:-http://localhost:8001}
     container_name: agencia-frontend
     ports:
       - "127.0.0.1:3001:3001"
     env_file:
-      - .env
+      - ./frontend/.env
     depends_on:
       db:
         condition: service_healthy
@@ -42,28 +52,39 @@ services:
     networks:
       - app-network
 
-  # Agent Service (FastAPI/Python)
+  # Backend SaaS (Auth, Onboarding, LangGraph)
+  backend-saas:
+    build:
+      context: ./backend-saas
+      dockerfile: Dockerfile
+    container_name: agencia-backend-saas
+    ports:
+      - "127.0.0.1:8000:8000"
+    env_file:
+      - ./backend-saas/.env
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: always
+    networks:
+      - app-network
+
+  # Agent Service (Scrapers, Chat, Widget)
   agent-service:
     build:
       context: ./agent-service
       dockerfile: Dockerfile
-    container_name: agencia-agents
+    container_name: agencia-agent-service
     ports:
-      - "127.0.0.1:8000:8000"
+      - "127.0.0.1:8001:8000" # Mapeado a 8001 en host para evitar conflicto con saas
     env_file:
-      - .env
+      - ./agent-service/.env
     depends_on:
       db:
         condition: service_healthy
     restart: always
     volumes:
       - ./agent-service/widget:/app/widget
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5)"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
     networks:
       - app-network
 
@@ -73,3 +94,4 @@ networks:
 
 volumes:
   pgdata:
+  qdrant_storage:

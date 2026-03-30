@@ -2,10 +2,11 @@ import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
-import { prisma } from "@/lib/prisma";
-import { verifyPassword } from "@/lib/auth/password";
-import { logAuditEvent } from "@/lib/security/audit";
-import { headers } from "next/headers";
+
+// ────────────────────────────────────────────────────
+// NOTA: El frontend NO accede a la base de datos.
+// La autenticación delega completamente a backend-saas.
+// ────────────────────────────────────────────────────
 
 interface CustomUser {
   id: string;
@@ -36,73 +37,43 @@ export const authConfig = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials): Promise<CustomUser | null> {
-        if (!credentials?.email || !credentials?.password) {
-          return null;
-        }
+        if (!credentials?.email || !credentials?.password) return null;
 
         const email = credentials.email.toString().trim().toLowerCase();
         const password = credentials.password.toString();
+        if (!email || !password) return null;
 
-        if (!email || !password) {
+        const saasUrl =
+          process.env.NEXT_PUBLIC_SAAS_API_URL || "http://localhost:8000";
+
+        try {
+          const res = await fetch(`${saasUrl}/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+          });
+
+          if (!res.ok) {
+            console.warn("[AUTH] backend-saas login failed:", res.status);
+            return null;
+          }
+
+          const data = await res.json();
+          // backend-saas devuelve: { id, api_key, email, nombre, rol, tenant_id, mensaje }
+          const user = data.user ?? data;
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.nombre || user.name || user.email,
+            tenantId: user.tenantId || user.tenant_id || "default",
+            role: user.role || user.rol || "MEMBER",
+            apiKey: user.apiKey || user.api_key || null,
+          };
+        } catch (err) {
+          console.error("[AUTH] Error contacting backend-saas:", err);
           return null;
         }
-
-        const user = await prisma.user.findUnique({
-          where: { email },
-          include: {
-            memberships: {
-              where: { status: "ACTIVE" },
-              orderBy: { createdAt: "asc" },
-              take: 1,
-            },
-          },
-        });
-
-        if (!user) {
-          console.warn("[AUTH_DEBUG] User not found (scrubbed)");
-          return null;
-        }
-
-        if (!user.passwordHash) {
-          console.warn("[AUTH_DEBUG] User found but has NO passwordHash");
-          return null;
-        }
-
-        const isValid = verifyPassword(password, user.passwordHash);
-
-        if (!isValid) {
-          console.warn("[AUTH_DEBUG] Invalid password (scrubbed)");
-          const ip =
-            (await headers()).get("x-forwarded-for")?.split(",")[0] ||
-            "unknown";
-          await logAuditEvent({
-            eventType: "LOGIN_FAILED",
-            userId: user.id,
-            ipAddress: ip,
-            metadata: { reason: "invalid_password" },
-          }).catch(() => {});
-          return null;
-        }
-
-        const defaultTenantId = user.memberships?.[0]?.tenantId || "default";
-
-        const ip =
-          (await headers()).get("x-forwarded-for")?.split(",")[0] || "unknown";
-        await logAuditEvent({
-          eventType: "LOGIN_SUCCESS",
-          userId: user.id,
-          tenantId: defaultTenantId,
-          ipAddress: ip,
-        }).catch(() => {});
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name || user.firstName || user.email,
-          tenantId: defaultTenantId,
-          role: user.memberships?.[0]?.role || "MEMBER",
-          apiKey: user.apiKey,
-        };
       },
     }),
   ],
@@ -125,6 +96,7 @@ export const authConfig = {
         session.user.id = (token.id as string) || (token.sub as string);
         session.user.tenantId = (token.tenantId as string) || "default";
         session.user.role = (token.role as string) || "MEMBER";
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (session.user as any).apiKey = token.apiKey;
       }
       return session;

@@ -15,6 +15,12 @@ COPY next-env.d.ts .
 COPY public ./public/
 COPY messages ./messages/
 
+# Build-time environment variables
+ARG NEXT_PUBLIC_SAAS_API_URL
+ARG NEXT_PUBLIC_AGENT_API_URL
+ENV NEXT_PUBLIC_SAAS_API_URL=$NEXT_PUBLIC_SAAS_API_URL
+ENV NEXT_PUBLIC_AGENT_API_URL=$NEXT_PUBLIC_AGENT_API_URL
+
 RUN npx prisma generate
 RUN npm run build
 

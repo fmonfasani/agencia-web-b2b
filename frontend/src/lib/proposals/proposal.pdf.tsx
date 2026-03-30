@@ -90,7 +90,7 @@ export function ProposalPdfDocument(data: ProposalPdfData) {
     <Document
       title={`${data.title} - ${data.companyName}`}
       author={data.tenantName}
-      keywords={[data.companyName]}
+      keywords={data.companyName}
     >
       <Page size="A4" style={[styles.page, styles.cover]}>
         <View>

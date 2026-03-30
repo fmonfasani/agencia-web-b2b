@@ -1,9 +1,14 @@
-import { Role } from "@prisma/client";
-
 /**
  * Enterprise RBAC Permissions Matrix
  * Defines what each role can do within a Tenant.
  */
+type Role =
+  | "SUPER_ADMIN"
+  | "ADMIN"
+  | "MEMBER"
+  | "VIEWER"
+  | "ANALISTA"
+  | "CLIENTE";
 
 export type Permission =
   | "VIEW_LEADS"
@@ -32,6 +37,8 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "VIEW_AUDIT_LOGS",
     "MANAGE_SETTINGS",
   ],
+  ANALISTA: ["VIEW_LEADS", "EDIT_LEADS", "VIEW_AUDIT_LOGS"],
+  CLIENTE: ["VIEW_LEADS"],
   MEMBER: ["VIEW_LEADS", "EDIT_LEADS"],
   VIEWER: ["VIEW_LEADS"],
 };
@@ -50,7 +57,9 @@ export function hasPermission(role: Role, permission: Permission): boolean {
 const ROLE_RANK: Record<Role, number> = {
   SUPER_ADMIN: 100,
   ADMIN: 80,
+  ANALISTA: 60,
   MEMBER: 40,
+  CLIENTE: 30,
   VIEWER: 20,
 };
 
