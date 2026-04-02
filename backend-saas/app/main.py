@@ -21,6 +21,7 @@ from app.lib.logging_utils import setup_structured_logging, trace_id_var
 from app.auth_router import router as auth_router, get_current_user
 from app.auth_service import get_user_by_api_key
 from app.onboarding_router import router as onboarding_router  # Solo /tenant, /upload, /status, /delete
+from app.tenant_router import router as tenant_router
 
 # Initialize structured logs
 setup_structured_logging()
@@ -98,6 +99,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # Routers
 app.include_router(auth_router)
 app.include_router(onboarding_router)
+app.include_router(tenant_router)
 
 
 # --- Middleware for Trace ID & Performance ---
