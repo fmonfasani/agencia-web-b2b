@@ -18,6 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.engine.langgraph_engine import LangGraphEngine
+from app.llm.factory import get_llm_provider
 from app.lib.logging_utils import setup_structured_logging, trace_id_var
 from app.models import (
     AgentRequest,
@@ -153,7 +154,9 @@ async def execute(
         if any(p in query_clean.lower() for p in malicious_patterns):
             raise HTTPException(status_code=400, detail="Identified potentially malicious input pattern.")
 
-        engine = LangGraphEngine(tenant_id=effective_tenant_id)
+        # Obtener LLM provider configurado
+        llm_provider = get_llm_provider()
+        engine = LangGraphEngine(tenant_id=effective_tenant_id, llm_provider=llm_provider)
         
         agent_exec_start = time.time()
         result, metadata = await asyncio.wait_for(

@@ -9,11 +9,11 @@ from app.engine.planner import run_agent
 
 
 class LangGraphEngine:
-    def __init__(self, tenant_id: str, tracing_context=None):
+    def __init__(self, tenant_id: str, llm_provider, tracing_context=None):
         self.tenant_id = tenant_id
         self.ctx = tracing_context
         self._rag = RagRetriever()
-        self._llm = OllamaAdapter()
+        self._llm_provider = llm_provider
         self._tools = RegistryAdapter()
 
     async def run(self, task: str) -> Tuple[List[Dict[str, str]], Dict[str, Any]]:
@@ -21,7 +21,7 @@ class LangGraphEngine:
             task=task,
             tenant_id=self.tenant_id,
             rag_retriever=self._rag,
-            ollama_adapter=self._llm,
+            llm_provider=self._llm_provider,
             tool_registry=self._tools,
             tracing_context=self.ctx,
         )
