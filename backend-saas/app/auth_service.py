@@ -9,6 +9,14 @@ import os
 from typing import Optional
 from passlib.context import CryptContext
 
+from app.lib.exceptions import (
+    InvalidCredentialsError,
+    UserNotFoundError,
+    UserInactiveError,
+    DuplicateEmailError,
+    WebshooksException,
+)
+
 _pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
 _PREHASH_PREFIX = "sha256$"
 
@@ -96,72 +104,88 @@ def create_user(
     tenant_id: Optional[str] = None,
     activo: bool = False,
 ) -> dict:
-    conn = psycopg2.connect(DB_DSN)
-    cur = conn.cursor()
+    try:
+        conn = psycopg2.connect(DB_DSN)
+        cur = conn.cursor()
 
-    # Verificar email duplicado
-    cur.execute('SELECT id FROM "User" WHERE email = %s', (email,))
-    if cur.fetchone():
+        # Verificar email duplicado
+        cur.execute('SELECT id FROM "User" WHERE email = %s', (email,))
+        if cur.fetchone():
+            conn.close()
+            raise DuplicateEmailError(email)
+
+        api_key = generate_api_key()
+        password_hash = hash_password(password)
+        status = "ACTIVE" if activo else "INACTIVE"
+        user_id = f"c_{secrets.token_hex(10)}" # Generar un ID compatible con cuid-ish strings
+
+        cur.execute("""
+            INSERT INTO "User" (id, email, "passwordHash", name, role, "defaultTenantId", "apiKey", status, "updatedAt")
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW())
+            RETURNING id
+        """, (user_id, email, password_hash, nombre, rol.upper(), tenant_id, api_key, status))
+
+        row = cur.fetchone()
+        conn.commit()
+        cur.close()
         conn.close()
-        raise ValueError(f"El email '{email}' ya está registrado")
 
-    api_key = generate_api_key()
-    password_hash = hash_password(password)
-    status = "ACTIVE" if activo else "INACTIVE"
-    user_id = f"c_{secrets.token_hex(10)}" # Generar un ID compatible con cuid-ish strings
-
-    cur.execute("""
-        INSERT INTO "User" (id, email, "passwordHash", name, role, "defaultTenantId", "apiKey", status, "updatedAt")
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW())
-        RETURNING id
-    """, (user_id, email, password_hash, nombre, rol.upper(), tenant_id, api_key, status))
-
-    row = cur.fetchone()
-    conn.commit()
-    cur.close()
-    conn.close()
-
-    return {
-        "id": row[0],
-        "email": email,
-        "nombre": nombre,
-        "rol": rol,
-        "tenant_id": tenant_id,
-        "api_key": api_key,
-        "activo": activo,
-    }
+        return {
+            "id": row[0],
+            "email": email,
+            "nombre": nombre,
+            "rol": rol,
+            "tenant_id": tenant_id,
+            "api_key": api_key,
+            "activo": activo,
+        }
+    except psycopg2.IntegrityError as e:
+        if "unique_email" in str(e) or "users_email_key" in str(e):
+            raise DuplicateEmailError(email)
+        raise
+    except WebshooksException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating user {email}: {e}")
+        raise
 
 
 def login_user(email: str, password: str) -> dict:
-    conn = psycopg2.connect(DB_DSN)
-    cur = conn.cursor()
+    try:
+        conn = psycopg2.connect(DB_DSN)
+        cur = conn.cursor()
 
-    cur.execute("""
-        SELECT id, email, name, role, "defaultTenantId", "apiKey", status, "passwordHash"
-        FROM "User" WHERE email = %s
-    """, (email,))
-    row = cur.fetchone()
-    conn.close()
+        cur.execute("""
+            SELECT id, email, name, role, "defaultTenantId", "apiKey", status, "passwordHash"
+            FROM "User" WHERE email = %s
+        """, (email,))
+        row = cur.fetchone()
+        conn.close()
 
-    if not row:
-        raise ValueError("Email o contraseña incorrectos")
+        if not row:
+            raise UserNotFoundError(email)
 
-    id_, email_, nombre, rol, tenant_id, api_key, status, password_hash = row
+        id_, email_, nombre, rol, tenant_id, api_key, status, password_hash = row
 
-    if not verify_password(password, password_hash):
-        raise ValueError("Email o contraseña incorrectos")
+        if not verify_password(password, password_hash):
+            raise InvalidCredentialsError()
 
-    if status != "ACTIVE":
-        raise ValueError("Usuario pendiente de activación. Contactá al administrador.")
+        if status != "ACTIVE":
+            raise UserInactiveError(email)
 
-    return {
-        "id": id_,
-        "email": email_,
-        "nombre": nombre or "Usuario",
-        "rol": rol.lower() if rol else "member",
-        "tenant_id": tenant_id,
-        "api_key": api_key,
-    }
+        return {
+            "id": id_,
+            "email": email_,
+            "nombre": nombre or "Usuario",
+            "rol": rol.lower() if rol else "member",
+            "tenant_id": tenant_id,
+            "api_key": api_key,
+        }
+    except WebshooksException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in login_user: {e}")
+        raise
 
 
 def get_user_by_api_key(api_key: str) -> Optional[dict]:
@@ -211,5 +235,5 @@ def activate_user(user_id: str, activo: bool) -> dict:
     conn.commit()
     conn.close()
     if not row:
-        raise ValueError(f"Usuario {user_id} no encontrado")
+        raise UserNotFoundError(f"Usuario {user_id}")
     return {"id": row[0], "email": row[1], "nombre": row[2], "rol": row[3], "activo": row[4] == "ACTIVE"}

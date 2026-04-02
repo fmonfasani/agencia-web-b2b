@@ -14,6 +14,13 @@ from app.auth_service import (
     create_user, login_user, get_user_by_api_key,
     list_users, activate_user, setup_users_table
 )
+from app.lib.exceptions import (
+    WebshooksException,
+    InvalidCredentialsError,
+    UserNotFoundError,
+    UserInactiveError,
+    DuplicateEmailError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -126,11 +133,13 @@ async def register(req: RegisterRequest):
             "rol": user["rol"],
             "tenant_id": user["tenant_id"],
         }
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    except DuplicateEmailError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
+    except WebshooksException as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
-        logger.error(f"Error en register: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Unexpected error in register: {e}")
+        raise HTTPException(status_code=500, detail="Error interno del servidor")
 
 
 @router.post(
@@ -193,8 +202,13 @@ async def login(req: LoginRequest):
             tenant_id=user["tenant_id"],
             mensaje=f"Bienvenido {user['nombre']}. Copiá tu api_key y usala en Authorize.",
         )
-    except ValueError as e:
-        raise HTTPException(status_code=401, detail=str(e))
+    except (InvalidCredentialsError, UserNotFoundError, UserInactiveError) as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
+    except WebshooksException as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
+    except Exception as e:
+        logger.error(f"Unexpected error in login: {e}")
+        raise HTTPException(status_code=500, detail="Error interno del servidor")
 
 
 @router.get(
@@ -243,8 +257,10 @@ async def activate(req: ActivateRequest, admin: dict = Depends(require_admin)):
             "mensaje": f"Usuario {user['email']} {estado} correctamente",
             "user": user,
         }
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+    except UserNotFoundError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
+    except WebshooksException as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
 
 
 @router.post(
@@ -273,5 +289,10 @@ async def create_analista(
             "email": user["email"],
             "api_key": user["api_key"],
         }
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    except DuplicateEmailError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
+    except WebshooksException as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
+    except Exception as e:
+        logger.error(f"Error creating analyst: {e}")
+        raise HTTPException(status_code=500, detail="Error interno del servidor")
