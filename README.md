@@ -1,4 +1,4 @@
-# ⚡ Webshooks — Agencia Leads Management System
+# ⚡ Webshooks — Agencia de Agentes Management System
 
 ![Webshooks Banner](https://img.shields.io/badge/Status-Live%20MVP-emerald?style=for-the-badge&logo=rocket)
 ![Stack](https://img.shields.io/badge/Stack-Next.js%2016%20%7C%20Tailwind%204%20%7C%20Prisma%20%7C%20Supabase-blue?style=for-the-badge)
