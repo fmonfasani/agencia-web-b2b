@@ -18,6 +18,7 @@ from slowapi.errors import RateLimitExceeded
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.lib.logging_utils import setup_structured_logging, trace_id_var
+from app.lib.health_check import get_full_health_status
 from app.auth_router import router as auth_router, get_current_user
 from app.auth_service import get_user_by_api_key
 from app.onboarding_router import router as onboarding_router  # Solo /tenant, /upload, /status, /delete
@@ -127,9 +128,19 @@ async def add_process_time_and_trace_id(request: Request, call_next):
 
 
 @app.get("/health")
-async def health():
-    """Health check endpoint."""
-    return {"status": "ok", "service": "backend-saas"}
+async def health() -> dict:
+    """
+    Comprehensive health check endpoint.
+
+    Returns overall system status and detailed dependency health information.
+
+    Returns:
+        Dict with:
+        - status: "healthy", "degraded", or "unhealthy"
+        - timestamp: ISO 8601 timestamp
+        - dependencies: List of service health checks (postgresql, qdrant, ollama)
+    """
+    return await get_full_health_status()
 
 
 @app.get("/tenant/me", tags=["Tenant"])
