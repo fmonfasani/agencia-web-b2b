@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  backend-saas:
+    environment:
+      - LOG_LEVEL=WARNING
+      - ENVIRONMENT=production
+      - ALLOWED_ORIGINS=https://yourdomain.com
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  backend-agents:
+    environment:
+      - LOG_LEVEL=WARNING
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 4G  # LLM needs more RAM
+
+  qdrant:
+    restart: unless-stopped
+
+  ollama:
+    restart: unless-stopped

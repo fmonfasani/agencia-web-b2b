@@ -1,21 +1,117 @@
 version: '3.8'
+
 services:
-  api:
-    build: .
+  # Backend SaaS (API Gateway)
+  backend-saas:
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
+    environment:
+      - DATABASE_URL=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/agencia_web_b2b
+      - BACKEND_AGENTS_URL=http://backend-agents:8001
+      - QDRANT_URL=http://qdrant:6333
+      - OLLAMA_URL=http://ollama:11434
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3001}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+      ollama:
+        condition: service_started
+      backend-agents:
+        condition: service_started
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Backend Agents (AI Engine)
+  backend-agents:
+    build:
+      context: ../backend-agents
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    environment:
+      - DATABASE_URL=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/agencia_web_b2b
+      - QDRANT_URL=http://qdrant:6333
+      - OLLAMA_URL=http://ollama:11434
+    volumes:
+      - ../backend-agents/uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+      ollama:
+        condition: service_started
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # PostgreSQL
   postgres:
     image: postgres:13
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: agencia_web_b2b
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Qdrant Vector DB
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - app-network
+
+  # Ollama (LLM)
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - app-network
+
+  # Redis for rate limiting/cache
   redis:
     image: redis:6-alpine
     ports:
       - "6379:6379"
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
+  qdrant_data:
+  ollama_data:
+
+networks:
+  app-network:
+    driver: bridge
