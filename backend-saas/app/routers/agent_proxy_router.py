@@ -18,6 +18,12 @@ router = APIRouter(prefix="/agent", tags=["Agent Proxy"])
 # Backend-agents URL from env
 BACKEND_AGENTS_URL = os.getenv("BACKEND_AGENTS_URL", "http://localhost:8001")
 
+# Path constants
+AGENT_EXECUTE_PATH = "/agent/execute"
+AGENT_CONFIG_PATH = "/agent/config"
+AGENT_TRACES_PATH = "/agent/traces"
+AGENT_METRICS_PATH = "/metrics/agent"
+
 
 async def get_proxy_client() -> ProxyClient:
     """Dependency: returns configured proxy client."""
@@ -68,17 +74,24 @@ async def proxy_execute(
 
         result = await proxy.forward(
             "POST",
-            "/agent/execute",
+            AGENT_EXECUTE_PATH,
             json=req.dict(exclude_none=True),
             headers=headers
         )
         return result
     except httpx.HTTPError as e:
-        logger.error(f"Proxy error to backend-agents: {e}")
+        trace_id = request.headers.get("X-Trace-Id", "unknown")
+        tenant_id = current_user.get("tenant_id", "unknown")
+        logger.error(
+            "Proxy error to backend-agents",
+            extra={
+                "trace_id": trace_id,
+                "tenant_id": tenant_id,
+                "error": str(e),
+                "service": "agent_proxy_router"
+            }
+        )
         raise HTTPException(status_code=502, detail=f"Agent service unavailable: {str(e)}")
-    except Exception as e:
-        logger.error(f"Unexpected error in proxy: {e}")
-        raise HTTPException(status_code=500, detail="Internal proxy error")
 
 
 @router.get(
@@ -94,17 +107,29 @@ async def proxy_config(
     """Proxy for backend-agents /agent/config."""
     tenant_id = current_user.get("tenant_id")
     if not tenant_id:
-        raise HTTPException(status_code=400, detail="User has no tenant_id")
+        raise HTTPException(
+            status_code=403,
+            detail=f"User role '{current_user.get('rol')}' does not have tenant access"
+        )
 
     try:
         result = await proxy.forward(
             "GET",
-            "/agent/config",
+            AGENT_CONFIG_PATH,
             headers={"X-API-Key": request.headers.get("X-API-Key")}
         )
         return result
     except httpx.HTTPError as e:
-        logger.error(f"Proxy error to backend-agents: {e}")
+        trace_id = request.headers.get("X-Trace-Id", "unknown")
+        logger.error(
+            "Proxy error to backend-agents",
+            extra={
+                "trace_id": trace_id,
+                "tenant_id": tenant_id,
+                "error": str(e),
+                "service": "agent_proxy_router"
+            }
+        )
         raise HTTPException(status_code=502, detail=f"Agent service unavailable: {str(e)}")
 
 
@@ -122,18 +147,30 @@ async def proxy_traces(
     """Proxy for backend-agents /agent/traces."""
     tenant_id = current_user.get("tenant_id")
     if not tenant_id:
-        raise HTTPException(status_code=400, detail="User has no tenant_id")
+        raise HTTPException(
+            status_code=403,
+            detail=f"User role '{current_user.get('rol')}' does not have tenant access"
+        )
 
     try:
         result = await proxy.forward(
             "GET",
-            "/agent/traces",
+            AGENT_TRACES_PATH,
             params={"limit": limit},
             headers={"X-API-Key": request.headers.get("X-API-Key")}
         )
         return result
     except httpx.HTTPError as e:
-        logger.error(f"Proxy error to backend-agents: {e}")
+        trace_id = request.headers.get("X-Trace-Id", "unknown")
+        logger.error(
+            "Proxy error to backend-agents",
+            extra={
+                "trace_id": trace_id,
+                "tenant_id": tenant_id,
+                "error": str(e),
+                "service": "agent_proxy_router"
+            }
+        )
         raise HTTPException(status_code=502, detail=f"Agent service unavailable: {str(e)}")
 
 
@@ -150,15 +187,27 @@ async def proxy_metrics(
     """Proxy for backend-agents /metrics/agent."""
     tenant_id = current_user.get("tenant_id")
     if not tenant_id:
-        raise HTTPException(status_code=400, detail="User has no tenant_id")
+        raise HTTPException(
+            status_code=403,
+            detail=f"User role '{current_user.get('rol')}' does not have tenant access"
+        )
 
     try:
         result = await proxy.forward(
             "GET",
-            "/metrics/agent",
+            AGENT_METRICS_PATH,
             headers={"X-API-Key": request.headers.get("X-API-Key")}
         )
         return result
     except httpx.HTTPError as e:
-        logger.error(f"Proxy error to backend-agents: {e}")
+        trace_id = request.headers.get("X-Trace-Id", "unknown")
+        logger.error(
+            "Proxy error to backend-agents",
+            extra={
+                "trace_id": trace_id,
+                "tenant_id": tenant_id,
+                "error": str(e),
+                "service": "agent_proxy_router"
+            }
+        )
         raise HTTPException(status_code=502, detail=f"Agent service unavailable: {str(e)}")
