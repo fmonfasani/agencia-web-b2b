@@ -32,12 +32,68 @@ async def get_proxy_client() -> ProxyClient:
 
 @router.post(
     "/execute",
-    summary="Execute agent (proxied to backend-agents)",
+    summary="Consultar al agente especializado",
     description="""
-Executes the intelligent agent with RAG context.
+Ejecuta el agente inteligente con contexto RAG para responder consultas del tenant.
 
-This endpoint proxies the request to backend-agents:8001/agent/execute.
-The API key is validated locally, then the request is forwarded with the same trace_id.
+## Cómo funciona
+
+1. El backend-saas valida tu API Key y permisos de tenant
+2. Reenvía la consulta al backend-agents (interno, no expuesto externamente)
+3. El agente busca contexto en Qdrant (RAG), llama al LLM, y retorna la respuesta
+
+## Ejemplo — Consulta recepcionista
+
+**Request:**
+```json
+{
+  "query": "¿Qué seguros acepta la sede centro?",
+  "tenant_id": "clinica-x-buenos-aires",
+  "enable_detailed_trace": false,
+  "max_iterations": 5,
+  "temperature": 0.7
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "trace_id": "abc123-...",
+  "tenant_id": "clinica-x-buenos-aires",
+  "query": "¿Qué seguros acepta la sede centro?",
+  "iterations": 2,
+  "result": [
+    {
+      "role": "assistant",
+      "content": "La sede centro acepta OSDE, Swiss Medical, Galeno y Medicina Prepaga. Atención: Lun-Vier 8-20hs, Sab 9-14hs."
+    }
+  ],
+  "metadata": {
+    "model": "qwen2.5:0.5b",
+    "finish_reason": "finished",
+    "rag_results_count": 3
+  },
+  "timestamp": "2026-04-02T12:34:56Z",
+  "total_duration_ms": 2340
+}
+```
+
+## Campos del request
+
+| Campo | Tipo | Requerido | Descripción |
+|-------|------|-----------|-------------|
+| query | string | ✅ | Consulta del usuario (3-2000 chars) |
+| tenant_id | string | ✅ | ID del tenant (usa el tuyo si no lo enviás) |
+| enable_detailed_trace | bool | ❌ | Incluir pasos detallados (default: false) |
+| max_iterations | int | ❌ | Máx iteraciones del agente (1-10, default: 5) |
+| temperature | float | ❌ | Temperatura LLM (0.0-2.0, default: 0.7) |
+
+## Errores comunes
+
+- `400`: tenant_id faltante o sin permiso sobre ese tenant
+- `401`: API Key inválida o expirada
+- `403`: Sin acceso al tenant
+- `502`: backend-agents no disponible
     """,
     response_model=dict,
 )
@@ -68,14 +124,19 @@ async def proxy_execute(
 
     # Forward to backend-agents
     try:
-        # Use trace_id from request or generate new
+        # Propagate trace_id and API key to backend-agents for validation
         trace_id = request.headers.get("X-Trace-Id")
-        headers = {"X-Trace-Id": trace_id} if trace_id else {}
+        api_key = request.headers.get("X-API-Key")
+        headers = {}
+        if trace_id:
+            headers["X-Trace-Id"] = trace_id
+        if api_key:
+            headers["X-API-Key"] = api_key
 
         result = await proxy.forward(
             "POST",
             AGENT_EXECUTE_PATH,
-            json=req.dict(exclude_none=True),
+            json=req.model_dump(exclude_none=True),
             headers=headers
         )
         return result
@@ -96,8 +157,31 @@ async def proxy_execute(
 
 @router.get(
     "/config",
-    summary="Get agent configuration (proxied)",
-    description="Returns tenant configuration: services, locations, coverages, routing rules.",
+    summary="Obtener configuración del agente",
+    description="""
+Retorna la configuración del tenant: nombre del negocio, servicios, sedes,
+coberturas disponibles y reglas de routing del agente.
+
+**Response ejemplo:**
+```json
+{
+  "tenant_id": "clinica-x-buenos-aires",
+  "nombre": "Clínica X - Buenos Aires",
+  "servicios": ["Cardiología", "Pediatría", "Odontología"],
+  "sedes": [
+    {
+      "nombre": "Sede Centro",
+      "direccion": "Av. Corrientes 1234, CABA",
+      "telefonos": ["1123456789"],
+      "horario_semana": "Lun-Vier 8:00-20:00"
+    }
+  ],
+  "coberturas": ["OSDE", "Swiss Medical", "Galeno", "Medicina Prepaga"]
+}
+```
+
+Requiere `X-API-Key` con acceso al tenant.
+    """
 )
 async def proxy_config(
     request: Request,
@@ -135,8 +219,38 @@ async def proxy_config(
 
 @router.get(
     "/traces",
-    summary="Get agent traces (proxied)",
-    description="Returns recent execution traces for the tenant.",
+    summary="Obtener trazas de ejecución",
+    description="""
+Retorna las últimas ejecuciones del agente para el tenant.
+Útil para auditoría, debugging y observabilidad.
+
+**Response ejemplo:**
+```json
+[
+  {
+    "trace_id": "abc123-xyz",
+    "query": "¿Qué seguros aceptan?",
+    "result": "Aceptamos OSDE, Swiss Medical, Galeno y Medicina Prepaga",
+    "iterations": 2,
+    "total_duration_ms": 1850,
+    "timestamp": "2026-04-02T12:34:56Z",
+    "success": true
+  },
+  {
+    "trace_id": "def456-uvw",
+    "query": "¿Cuál es el horario de atención?",
+    "result": "Lunes a viernes 8:00 a 20:00. Sábados 9:00 a 14:00.",
+    "iterations": 1,
+    "total_duration_ms": 920,
+    "timestamp": "2026-04-02T12:33:20Z",
+    "success": true
+  }
+]
+```
+
+**Parámetro:**
+- `limit`: número de trazas (1-100, default 50)
+    """
 )
 async def proxy_traces(
     request: Request,
@@ -176,8 +290,26 @@ async def proxy_traces(
 
 @router.get(
     "/metrics/agent",
-    summary="Get agent metrics (proxied)",
-    description="Returns convergence metrics for the tenant.",
+    summary="Obtener métricas del agente",
+    description="""
+Retorna métricas de convergencia del agente para el tenant.
+Incluye promedio de iteraciones, tiempo de respuesta y conteo de errores.
+
+**Response ejemplo:**
+```json
+{
+  "tenant_id": "clinica-x-buenos-aires",
+  "avg_iterations": 2.3,
+  "avg_duration_ms": 1920,
+  "total_executions": 145,
+  "error_count": 2,
+  "success_rate": 0.986,
+  "last_execution": "2026-04-02T12:34:56Z"
+}
+```
+
+Útil para monitoreo y optimización del agente.
+    """
 )
 async def proxy_metrics(
     request: Request,
