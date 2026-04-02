@@ -202,3 +202,7 @@ backend-agents/uploads/
 **/.env.*
 !**/.env.example
 
+DECOUPLING_REPORT.json
+
+# Git worktrees (project-local isolation)
+.worktrees/
