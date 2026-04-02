@@ -2,6 +2,7 @@
 Core agent planner: deterministic termination + LangGraph graph builder.
 """
 import os
+import json
 
 import time
 import psycopg2
@@ -144,8 +145,9 @@ async def rag_node(state: GraphState, rag_retriever) -> Dict[str, Any]:
         return {"context": "Error retrieving context from vector store.", "rag_done": True}
 
 
-async def planner_node(state: GraphState, ollama_adapter, tool_registry) -> Dict[str, Any]:
+async def planner_node(state: GraphState, llm_provider, tool_registry) -> Dict[str, Any]:
     """Decide next action. Uses deterministic check before calling LLM."""
+    from app.models import AgentDecision
     ctx = state.get("tracing_context")
 
     # --- Trace iteration start ---
@@ -182,8 +184,31 @@ async def planner_node(state: GraphState, ollama_adapter, tool_registry) -> Dict
 
     try:
         t0 = time.time()
-        response_dict = await ollama_adapter.chat_json(messages=messages, ctx=ctx)
+
+        # Convertir formato de mensajes para LLMProvider
+        # messages de planner = {"role": "system|user|assistant|tool", "content": "..."}
+        # Para LLMProvider, necesitamos: system_prompt + lista de {role, content}
+        system_prompt = ""
+        llm_messages = []
+        for msg in messages:
+            if msg["role"] == "system":
+                system_prompt = msg["content"]
+            else:
+                llm_messages.append({"role": msg["role"], "content": msg["content"]})
+
+        # Llamar al provider (puede ser OpenRouter, Ollama, Groq)
+        response_text = await llm_provider.complete(
+            system_prompt=system_prompt,
+            messages=llm_messages
+        )
         call_ms = int((time.time() - t0) * 1000)
+
+        # Parsear respuesta JSON del LLM
+        try:
+            response_dict = json.loads(response_text)
+        except json.JSONDecodeError:
+            logger.error(f"LLM devolvió JSON inválido: {response_text[:200]}")
+            response_dict = {"_llm_error": "Invalid JSON from LLM"}
 
         llm_error_update: Dict[str, Any] = {}
         if "_llm_error" in response_dict:
@@ -214,7 +239,7 @@ async def planner_node(state: GraphState, ollama_adapter, tool_registry) -> Dict
 
         content = decision.answer if decision.answer else decision.thought
         new_msg = {"role": "assistant", "content": content}
-        
+
         return {
             "messages": state["messages"] + [new_msg],
             "next_step": decision.action if not finished else "none",
@@ -225,7 +250,7 @@ async def planner_node(state: GraphState, ollama_adapter, tool_registry) -> Dict
             **llm_error_update,
         }
     except Exception as e:
-        print(f"Error in planner_node: {e}")
+        logger.error(f"Error in planner_node: {e}")
         return {"is_finished": True, "next_step": "none", "iterations": state["iterations"] + 1}
 
 
@@ -284,14 +309,14 @@ def should_continue(state: GraphState):
     return "planner"
 
 
-def build_agent_graph(rag_retriever, ollama_adapter, tool_registry):
+def build_agent_graph(rag_retriever, llm_provider, tool_registry):
     """Build and compile the LangGraph agent graph with injected dependencies."""
 
     async def _rag(state):
         return await rag_node(state, rag_retriever)
 
     async def _planner(state):
-        return await planner_node(state, ollama_adapter, tool_registry)
+        return await planner_node(state, llm_provider, tool_registry)
 
     async def _tools(state):
         return await tool_executor_node(state, tool_registry)
@@ -334,12 +359,12 @@ async def run_agent(
     task: str,
     tenant_id: str,
     rag_retriever,
-    ollama_adapter,
+    llm_provider,
     tool_registry,
     tracing_context=None,
 ) -> Tuple[List[Dict[str, str]], Dict[str, Any]]:
     """Run the agent and return (messages, metadata)."""
-    graph = build_agent_graph(rag_retriever, ollama_adapter, tool_registry)
+    graph = build_agent_graph(rag_retriever, llm_provider, tool_registry)
 
     initial_state: GraphState = {
         "task": task,
@@ -384,7 +409,7 @@ async def run_agent(
         "rag_queries": result.get("rag_queries", []),
         "rag_results": result.get("rag_results", []),
         "finish_reason": "llm_error" if agent_error else _finish_reason_from_state(result),
-        "model": ollama_adapter.model,
+        "model": llm_provider.model,
         "tokens_used": 0,
         "embedding_ms": result.get("embedding_ms", 0),
         "rag_ms": result.get("rag_ms", 0),
