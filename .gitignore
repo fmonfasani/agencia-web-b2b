@@ -201,6 +201,7 @@ backend-agents/uploads/
 **/.env.production
 **/.env.*
 !**/.env.example
+!**/.env.production.template
 
 DECOUPLING_REPORT.json
 
