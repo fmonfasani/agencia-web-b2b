@@ -43,14 +43,103 @@ def _normalize_tenant_id(tenant_id: str) -> str:
     "/tenant",
     summary="Crear tenant desde formulario de onboarding",
     description="""
-Recibe el JSON del formulario de onboarding y carga los datos estructurados
-en PostgreSQL. NO procesa documentos todavía.
+Recibe el JSON del formulario de onboarding completo y carga los datos estructurados
+en PostgreSQL. Esto crea el "negocio" (empresa, clínica, etc) en el sistema.
 
-**Flujo recomendado:**
-1. `POST /onboarding/tenant` — crear tenant (backend-saas)
-2. `POST /onboarding/upload` — subir documentos (backend-saas)
-3. `POST /onboarding/ingest` — procesar con LLM y cargar en Qdrant (backend-agents)
-4. `GET /onboarding/status` — verificar resultado (backend-saas)
+## Flujo completo
+
+1. `POST /onboarding/tenant` ← **AQUÍ** (backend-saas)
+2. `POST /onboarding/upload` (backend-saas)
+3. `POST http://backend-agents:8001/onboarding/ingest` (backend-agents con LLM)
+4. `GET /onboarding/status/{tenant_id}` (backend-saas, verifica ambas BDs)
+
+## Ejemplo — Clínica X
+
+```json
+{
+  "tenant_id": "clinica-x-buenos-aires",
+  "tenant_nombre": "Clínica X - Buenos Aires",
+  "created_by": "analista_interno",
+  "industria": "salud",
+  "subcategoria": "clinica_multiespialista",
+  "descripcion_corta": "Clínica privada multiespecialista con 50+ profesionales",
+  "ubicacion": "Buenos Aires, Argentina",
+  "idioma": "es",
+  "proposito_principal": "Agendar turnos y consultar información de coberturas",
+  "acciones_habilitadas": ["agendar_turno", "consultar_cobertura", "ver_especialidades"],
+  "acciones_prohibidas": ["modificar_historia", "acceder_datos_paciente"],
+  "tono": "profesional_y_cercano",
+  "mensaje_fallback": "Lo siento, no puedo ayudarte con eso. Llamá a nuestro whatsapp.",
+  "entidades_clave": [
+    {
+      "nombre": "Especialidades",
+      "descripcion": "Especialidades médicas disponibles",
+      "storage": "postgresql_y_qdrant",
+      "es_consultable_directamente": true,
+      "atributos": ["nombre", "descripcion", "tiempo_consulta"]
+    },
+    {
+      "nombre": "Coberturas",
+      "descripcion": "Seguros y obras sociales aceptadas",
+      "storage": "postgresql",
+      "es_consultable_directamente": true,
+      "atributos": ["nombre", "cobertura_porcentaje"]
+    }
+  ],
+  "coberturas": ["OSDE", "SWISS MEDICAL", "GALENO", "MEDICINA PREPAGA"],
+  "sedes": [
+    {
+      "nombre": "Sede Centro",
+      "direccion": "Av. Corrientes 1234, CABA",
+      "telefonos": ["1123456789", "1187654321"],
+      "mail": "centro@clinica-x.ar",
+      "horario_semana": "Lun-Vier 8:00-20:00",
+      "horario_sabado": "Sab 9:00-14:00",
+      "coberturas_disponibles": "todas"
+    }
+  ],
+  "servicios": [
+    {
+      "nombre": "Cardiología",
+      "categoria": "especialidad",
+      "descripcion": "Diagnóstico y tratamiento de enfermedades cardiovasculares"
+    },
+    {
+      "nombre": "Pediatría",
+      "categoria": "especialidad",
+      "descripcion": "Atención de niños y adolescentes"
+    }
+  ],
+  "instrucciones_chunking": {
+    "granularidad": "atomica_por_entidad",
+    "max_tokens_por_chunk": 200,
+    "idioma_display_text": "español"
+  },
+  "hints": {
+    "industria_context": "Healthcare en Argentina. Regulado por ANMAT. Requiere respeto a privacidad.",
+    "terminos_clave": ["turno", "cobertura", "obra social", "prepagas", "especialista"],
+    "preguntas_frecuentes_esperadas": ["¿Qué seguros atienden?", "¿Cómo agendar?", "¿Horarios?"],
+    "entidades_de_alta_frecuencia": ["Coberturas", "Especialidades", "Sedes"],
+    "datos_ausentes_conocidos": ["Medicamentos específicos", "Protocolos internos"]
+  },
+  "routing_rules": []
+}
+```
+
+Respuesta esperada:
+```json
+{
+  "status": "ok",
+  "tenant_id": "clinica-x-buenos-aires",
+  "mensaje": "Tenant 'Clínica X - Buenos Aires' creado correctamente en PostgreSQL",
+  "datos_cargados": {
+    "coberturas": 4,
+    "sedes": 1,
+    "servicios": 2
+  },
+  "proximo_paso": "POST http://localhost:8001/onboarding/ingest (backend-agents)"
+}
+```
     """,
     response_model=dict,
 )
@@ -77,10 +166,62 @@ async def create_tenant(form: OnboardingForm, _: dict = Depends(require_analista
     "/upload",
     summary="Subir archivos de fuente de verdad",
     description="""
-Sube archivos desde la máquina del analista al servidor.
-Formatos soportados: .txt, .pdf, .xlsx, .csv
+Sube archivos desde tu máquina al servidor. Estos se procesarán en backend-agents
+con LLM para generar embeddings y almacenar en Qdrant (RAG vectorial).
 
-Los archivos se guardan en el servidor y se procesan en backend-agents.
+## Archivos soportados
+
+- `.txt` (texto plano)
+- `.pdf` (PDFs)
+- `.xlsx` (Excel)
+- `.csv` (CSV)
+- `.json` (JSON)
+
+## Pasos
+
+1. POST `/onboarding/tenant` primero (crea el tenant en PostgreSQL)
+2. POST `/onboarding/upload` ← **AQUÍ** (sube archivos)
+3. Luego: POST `http://localhost:8001/onboarding/ingest` (procesa con LLM)
+
+## Cómo usar en Swagger
+
+1. Click en "Try it out"
+2. Ingresá `tenant_id`: `clinica-x-buenos-aires`
+3. Click en "Choose Files" y seleccioná hasta 3 archivos
+4. Click "Execute"
+
+## Ejemplo con cURL
+
+```bash
+curl -X POST "http://localhost:8000/onboarding/upload" \\
+  -H "X-API-Key: wh_xxx" \\
+  -F "tenant_id=clinica-x-buenos-aires" \\
+  -F "file1=@horarios.txt" \\
+  -F "file2=@coberturas.xlsx"
+```
+
+Respuesta:
+```json
+{
+  "status": "ok",
+  "tenant_id": "clinica-x-buenos-aires",
+  "archivos_guardados": [
+    {
+      "nombre": "horarios.txt",
+      "tamaño_bytes": 2048,
+      "tipo": ".txt"
+    },
+    {
+      "nombre": "coberturas.xlsx",
+      "tamaño_bytes": 15360,
+      "tipo": ".xlsx"
+    }
+  ],
+  "errores": [],
+  "mensaje": "2 archivo(s) subido(s) correctamente",
+  "proximo_paso": "POST http://localhost:8001/onboarding/ingest (backend-agents)"
+}
+```
     """,
     response_model=dict,
 )

@@ -70,15 +70,42 @@ router = APIRouter(prefix="/auth", tags=["Autenticación"])
     description="""
 Crea una nueva cuenta. El usuario queda **inactivo** hasta que un admin lo active.
 
-**Roles:**
-- `cliente` → requiere `tenant_id`. Solo puede consultar su propio negocio.
-- `analista` → sin `tenant_id`. Puede gestionar todos los tenants.
-- `admin` → solo puede ser creado por otro admin.
+## Roles
 
-**Flujo:**
+- **cliente** → requiere `tenant_id`. Solo puede consultar su propio negocio.
+- **analista** → sin `tenant_id`. Puede gestionar todos los tenants.
+- **admin** → solo puede ser creado por otro admin.
+
+## Flujo típico
+
 1. Cliente se registra → queda pendiente
 2. Admin activa la cuenta en `POST /auth/activate`
-3. Cliente hace login y obtiene su API key
+3. Cliente hace login y obtiene su API key en `POST /auth/login`
+
+## Ejemplo
+
+**Cliente registrándose para un tenant específico:**
+```json
+{
+  "email": "recepcionista@clinica.ar",
+  "password": "segura123",
+  "nombre": "María García",
+  "rol": "cliente",
+  "tenant_id": "clinica-x-buenos-aires"
+}
+```
+
+Respuesta: Usuario creado pero inactivo. Admin debe activarlo primero.
+
+**Analista registrándose (sin tenant):**
+```json
+{
+  "email": "analista@webshooks.com",
+  "password": "segura456",
+  "nombre": "Juan Analista",
+  "rol": "analista"
+}
+```
     """,
     response_model=dict,
 )
@@ -110,11 +137,47 @@ async def register(req: RegisterRequest):
     "/login",
     summary="Login — obtener API Key",
     description="""
-Autentica al usuario y devuelve la **API Key**.
+Autentica al usuario y devuelve la **API Key** necesaria para todas las siguientes requests.
 
-Copiá el valor de `api_key` y usalo en el botón **Authorize** (arriba a la derecha en Swagger).
+## Paso 1: Login
 
-El header que se envía en cada request es: `X-API-Key: wh_xxxxx`
+Enviá email y password. Recibirás tu `api_key`.
+
+**Ejemplo:**
+```json
+{
+  "email": "recepcionista@clinica.ar",
+  "password": "segura123"
+}
+```
+
+Respuesta:
+```json
+{
+  "id": "user_123",
+  "api_key": "wh_abc123xyz...",
+  "email": "recepcionista@clinica.ar",
+  "nombre": "María García",
+  "rol": "cliente",
+  "tenant_id": "clinica-x-buenos-aires",
+  "mensaje": "Bienvenido María García. Copiá tu api_key y usala en Authorize."
+}
+```
+
+## Paso 2: Usar la API Key
+
+Copiá el valor de `api_key` y:
+
+**Opción A:** Click en botón **Authorize** (arriba a la derecha en Swagger) y pegá el valor.
+
+**Opción B:** Enviá en cada request con header:
+```
+X-API-Key: wh_abc123xyz...
+```
+
+## Vale para siempre
+
+La API key NO expira. Usala en todas tus requests desde ahora.
     """,
     response_model=LoginResponse,
 )

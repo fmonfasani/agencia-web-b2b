@@ -28,7 +28,59 @@ logger = logging.getLogger(__name__)
 
 # Rate limiting setup
 limiter = Limiter(key_func=get_remote_address)
-app = FastAPI(title="Webshooks - SaaS API")
+app = FastAPI(
+    title="Webshooks SaaS API",
+    description="""
+# Backend SaaS - Multitenant Agent Platform
+
+Gestión completa de usuarios, tenants y onboarding para agentes especializados.
+
+## 🔐 Flujo de Autenticación
+
+1. **Registrarse** → `POST /auth/register` (usuario inactivo)
+2. **Admin activa** → `POST /auth/activate` (solo admins)
+3. **Login** → `POST /auth/login` (obtener API Key)
+4. **Usar API Key** → Copiar en header `X-API-Key` o click en "Authorize" arriba
+
+## 🎯 Flujo de Onboarding (Ingestión de Datos)
+
+1. **Crear tenant** → `POST /onboarding/tenant` (guardar empresa/negocio)
+2. **Subir archivos** → `POST /onboarding/upload` (documentos, PDFs, etc.)
+3. **Procesar con LLM** → `POST http://backend-agents:8001/onboarding/ingest`
+4. **Verificar estado** → `GET /onboarding/status/{tenant_id}`
+
+## 👥 Roles
+
+- **cliente**: acceso solo a su propio tenant. Requiere `tenant_id` en registro.
+- **analista**: gestiona todos los tenants. Sin `tenant_id`.
+- **admin/superadmin**: control total de usuarios y tenants.
+
+## 🔑 API Key Format
+
+Obtenida en `POST /auth/login`. Formato: `wh_xxxxxx...`
+
+Usarla en cada request con header: `X-API-Key: wh_xxxxx`
+
+## 📋 Headers Soportados
+
+- `X-API-Key` (requerido): tu API key de login
+- `X-Trace-Id` (opcional): para tracing distribuido. Se genera automáticamente si no se proporciona.
+- `Content-Type` (automático): application/json
+
+## ⚡ Rate Limiting
+
+Limitado a 100 requests por minuto por IP (configurable).
+
+## 📊 Observabilidad
+
+Cada response incluye:
+- `X-Process-Time`: tiempo de procesamiento en segundos
+- `X-Trace-Id`: ID único para tracing distribuido
+    """,
+    version="1.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
+)
 
 # Configure CORS
 allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3001,http://127.0.0.1:3001").split(",")
