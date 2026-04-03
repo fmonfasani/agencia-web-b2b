@@ -1,0 +1,431 @@
+FRONTEND AUDIT ANALYSIS & INTEGRATION PLAN
+===========================================
+
+Fecha: 2026-03-30
+Status: CRÍTICO - DESCONECTADO DE BACKENDS
+
+═══════════════════════════════════════════════════════════════════════════════
+PARTE 1: ESTADO ACTUAL DEL FRONTEND
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ FORTALEZAS:
+   • Estructura profesional (Next.js 14+ con App Router)
+   • Sistema de autenticación robusto (NextAuth + Prisma)
+   • OAuth integrado (Google, Microsoft Entra ID)
+   • Observability: OpenTelemetry, Sentry
+   • 36 dependencias bien organizadas
+   • Múltiples módulos: leads, analytics, payments, proposals, etc.
+
+❌ PROBLEMAS CRÍTICOS:
+   1. NO EXISTE .env.local ⚠️ CRÍTICO
+      └─ El frontend NO TIENE VARIABLES DE ENTORNO
+   
+   2. NO ESTÁ CONECTADO A LOS BACKENDS
+      └─ No veo código que llame a http://localhost:8000 o :8001
+      └─ No tiene cliente HTTP para backend-saas
+      └─ No tiene cliente HTTP para backend-agents
+   
+   3. AUTENTICACIÓN DUPLICADA
+      └─ Frontend: NextAuth + Prisma (su propia DB)
+      └─ Backend-saas: API Keys (su propia DB)
+      └─ No conversan entre sí
+
+   4. BASE DE DATOS DUPLICADA
+      └─ Frontend: PostgreSQL para NextAuth (tabla User)
+      └─ Backend-saas: PostgreSQL para API Keys (tabla User en Prisma)
+      └─ ¿Son la MISMA BD o DIFERENTES?
+
+═══════════════════════════════════════════════════════════════════════════════
+PARTE 2: ARQUITECTURA ACTUAL (QUILOMBO)
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ FRONTEND (localhost:3001)                                               │
+│ ├─ NextAuth (Google + Credentials)                                      │
+│ ├─ Prisma DB (PostgreSQL - tabla "User")                               │
+│ ├─ Admin dashboard                                                      │
+│ ├─ Leads management                                                     │
+│ ├─ Observability dashboard                                              │
+│ └─ ¿Conectado a backends? ❌ NO                                        │
+└─────────────────────────────────────────────────────────────────────────┘
+         ↓ (PROBLEMA: No se hablan)
+┌─────────────────────────────────────────────────────────────────────────┐
+│ BACKEND-SAAS (localhost:8000)                                          │
+│ ├─ FastAPI                                                              │
+│ ├─ API Keys (X-API-Key header)                                         │
+│ ├─ Prisma DB (PostgreSQL - tabla "User")                               │
+│ ├─ /auth/* endpoints                                                    │
+│ └─ /onboarding/* endpoints                                              │
+└─────────────────────────────────────────────────────────────────────────┘
+         ↓ (PROBLEMA: No se comunica con frontend)
+┌─────────────────────────────────────────────────────────────────────────┐
+│ BACKEND-AGENTS (localhost:8001)                                        │
+│ ├─ FastAPI + LangGraph                                                  │
+│ ├─ Ollama (LLM local)                                                   │
+│ ├─ Qdrant (Vector DB)                                                   │
+│ └─ /agent/execute endpoint                                              │
+└─────────────────────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════
+PARTE 3: TABLA COMPARATIVA - FRONTEND vs BACKENDS
+═══════════════════════════════════════════════════════════════════════════════
+
+┌──────────────────┬──────────────────────────┬─────────────────────────┐
+│ ASPECTO          │ FRONTEND (NextAuth)      │ BACKEND-SAAS (API Keys) │
+├──────────────────┼──────────────────────────┼─────────────────────────┤
+│ Usuario Table    │ "User" (Prisma)          │ "User" (Prisma)         │
+│ Auth Method      │ JWT (NextAuth)           │ API Key (X-API-Key)     │
+│ Database         │ ¿Same? PostgreSQL        │ PostgreSQL              │
+│ Provider         │ Google + Credentials     │ API Keys only           │
+│ Session Storage  │ Cookie (HTTP-only)       │ N/A (stateless)         │
+│ User Data        │ Completo (name, email)   │ Solo email, rol         │
+│ API Client       │ ?                        │ No tiene cliente        │
+└──────────────────┴──────────────────────────┴─────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════
+PARTE 4: SOLUCIONES POSIBLES (3 OPCIONES)
+═══════════════════════════════════════════════════════════════════════════════
+
+OPCIÓN A: FRONTEND COMO SPA + BACKENDS COMO API ⭐ RECOMENDADO
+═════════════════════════════════════════════════════════════════════════════════
+
+Quitar NextAuth del frontend, usar solo backends.
+
+FLUJO:
+  1. User abre http://localhost:3001
+  2. Frontend: login form (email/password)
+  3. Frontend POST http://localhost:8000/auth/login
+  4. Backend retorna API Key
+  5. Frontend guarda API Key en localStorage/cookie
+  6. Todos los requests llevan X-API-Key header
+  7. Frontend es "dumb" - solo UI, los backends son la lógica
+
+VENTAJAS:
+  ✓ Arquitectura clara: Frontend ← API
+  ✓ Escalable: múltiples UIs pueden usar mismos backends
+  ✓ Testing más simple
+  ✓ No duplicas usuarios en 2 DBs
+
+DESVENTAJAS:
+  ✗ Perder OAuth (Google, Microsoft)
+  ✗ Refactor grande del frontend
+  ✗ Quitamos NextAuth, que es un trabajo
+
+TIEMPO: 2-3 días
+
+
+OPCIÓN B: FRONTEND MANTIENE NEXTAUTH + BRIDGE A BACKENDS ⚠️ HÍBRIDA
+════════════════════════════════════════════════════════════════════════════════
+
+Frontend sigue con NextAuth pero se conecta a backends.
+
+FLUJO:
+  1. User login con Google en frontend (NextAuth)
+  2. Frontend crea sesión JWT
+  3. Frontend: GET http://localhost:8000/auth/login-or-create
+     → Backend crea user + API Key si no existe
+  4. Frontend obtiene API Key y lo guarda en sesión
+  5. Todos los requests a backends llevan X-API-Key header
+  6. Frontend sincroniza user entre NextAuth y backends
+
+VENTAJAS:
+  ✓ Mantener OAuth
+  ✓ Mantener UI actual del frontend
+  ✓ Refactor más chico
+  ✓ Compatible con ambos sistemas
+
+DESVENTAJAS:
+  ✗ Lógica compleja (dos sistemas de auth)
+  ✗ Hay que sincronizar users
+  ✗ Posibles inconsistencias
+  ✗ Debugging más difícil
+
+TIEMPO: 3-4 días
+
+
+OPCIÓN C: IGNORAR BACKENDS, MANTENER FRONTEND COMO ES ❌ NO RECOMENDADO
+═════════════════════════════════════════════════════════════════════════════════
+
+Dejar el frontend con NextAuth/Prisma tal como está, descartar backends.
+
+FLUJO:
+  1. El frontend sigue siendo un monolito
+  2. Ignora completamente backend-saas:8000 y backend-agents:8001
+  3. TODO se hace en NextAuth + Prisma
+
+VENTAJAS:
+  ✓ Cero cambios en frontend
+  ✓ Rápido (ya funciona)
+
+DESVENTAJAS:
+  ✗ Se pierde TODO el trabajo de los backends
+  ✗ No hay separación de concerns
+  ✗ No escalable
+  ✗ Qdrant/Ollama/RAG no se usan
+  ✗ No sirve para arquitectura B2B multi-tenant moderna
+
+TIEMPO: 0 (nada que hacer)
+
+═══════════════════════════════════════════════════════════════════════════════
+PARTE 5: RECOMENDACIÓN FINAL
+═══════════════════════════════════════════════════════════════════════════════
+
+🎯 OPCIÓN A: FRONTEND COMO SPA + BACKENDS COMO API
+
+POR QUÉ:
+  1. Arquitectura limpia y profesional
+  2. Frontend y backends son independientes
+  3. Escalable: múltiples UIs pueden usar mismos backends
+  4. Testing más fácil (separación de concerns)
+  5. Los backends que hicimos quedan ÚTILES
+  6. Alineado con arquitectura B2B SaaS moderna
+
+SACRIFICIOS:
+  ✗ Perder Google OAuth (por ahora)
+  ✗ Perder sistema de usuarios de NextAuth
+  ✓ (Pero ganamos API Keys que son más seguras para APIs)
+
+REFACTOR DEL FRONTEND:
+  1. Crear .env.local con URLs de backends
+  2. Crear cliente HTTP (fetch wrapper)
+  3. Reemplazar NextAuth por login simple (email/password)
+  4. Guardar API Key en localStorage después de login
+  5. Enviar X-API-Key en todos los requests a backends
+  6. Adaptar componentes para usar backends
+
+═══════════════════════════════════════════════════════════════════════════════
+PARTE 6: PLAN DE ACCIÓN PARA OPCIÓN A (RECOMENDADA)
+═══════════════════════════════════════════════════════════════════════════════
+
+FASE 1: CONFIGURACIÓN BÁSICA (2 horas)
+──────────────────────────────────────
+
+1. Crear .env.local en raíz del proyecto:
+
+   NEXT_PUBLIC_SAAS_API_URL=http://localhost:8000
+   NEXT_PUBLIC_AGENTS_API_URL=http://localhost:8001
+   NEXT_PUBLIC_APP_URL=http://localhost:3001
+
+2. Crear lib/api/client.ts (HTTP client):
+
+   // Wrapper de fetch con X-API-Key automaticamente
+   export const apiClient = {
+     async call(url: string, options: RequestInit = {}) {
+       const apiKey = localStorage.getItem('api_key');
+       
+       return fetch(url, {
+         ...options,
+         headers: {
+           'Content-Type': 'application/json',
+           ...(apiKey && { 'X-API-Key': apiKey }),
+           ...options.headers
+         }
+       });
+     },
+     
+     get: (url: string) => apiClient.call(url),
+     post: (url: string, data: any) => 
+       apiClient.call(url, { method: 'POST', body: JSON.stringify(data) }),
+     // ... más métodos
+   };
+
+3. Crear hook lib/hooks/useApi.ts:
+
+   export function useApi(baseUrl: string) {
+     const [data, setData] = useState(null);
+     const [loading, setLoading] = useState(false);
+     const [error, setError] = useState(null);
+     
+     const fetch = async (endpoint: string, method = 'GET', body = null) => {
+       setLoading(true);
+       try {
+         const response = await apiClient.call(`${baseUrl}${endpoint}`, {
+           method,
+           body: body ? JSON.stringify(body) : undefined
+         });
+         
+         if (!response.ok) {
+           if (response.status === 401) {
+             // Redirigir a login
+           }
+           throw new Error(`API error: ${response.status}`);
+         }
+         
+         const result = await response.json();
+         setData(result);
+         return result;
+       } catch (err) {
+         setError(err);
+       } finally {
+         setLoading(false);
+       }
+     };
+     
+     return { data, loading, error, fetch };
+   }
+
+FASE 2: ADAPTACIÓN DE AUTENTICACIÓN (1 día)
+─────────────────────────────────────────────
+
+1. Crear página de login simple:
+   - Formulario: email + password
+   - POST a http://localhost:8000/auth/login
+   - Recibir API Key
+   - Guardar en localStorage
+   - Redirigir a dashboard
+
+2. Crear hook useAuth:
+   
+   export function useAuth() {
+     const [user, setUser] = useState(null);
+     const apiKey = localStorage.getItem('api_key');
+     
+     useEffect(() => {
+       if (!apiKey) return;
+       
+       // GET /tenant/me para obtener datos del usuario
+       apiClient.call(`${SAAS_API_URL}/tenant/me`)
+         .then(r => r.json())
+         .then(setUser);
+     }, [apiKey]);
+     
+     const login = async (email: string, password: string) => {
+       const res = await apiClient.call(`${SAAS_API_URL}/auth/login`, {
+         method: 'POST',
+         body: JSON.stringify({ email, password })
+       });
+       
+       const { api_key } = await res.json();
+       localStorage.setItem('api_key', api_key);
+       setUser(user);
+     };
+     
+     const logout = () => {
+       localStorage.removeItem('api_key');
+       setUser(null);
+     };
+     
+     return { user, apiKey, login, logout, isLoggedIn: !!apiKey };
+   }
+
+3. Reemplazar NextAuth:
+   - Remover NextAuth de layout
+   - Remover auth.config.ts (por ahora)
+   - Remover Prisma adapter
+   - Usar useAuth hook en lugar de useSession
+
+FASE 3: ADAPTACIÓN DE COMPONENTES (2-3 días)
+──────────────────────────────────────────────
+
+1. Admin dashboard:
+   - Usar useApi para GET /tenant/me
+   - Usar apiClient para requests a backends
+   - Adaptar para que use API Keys en lugar de JWT
+
+2. Onboarding:
+   - POST /onboarding/tenant
+   - POST /onboarding/upload
+   - POST /onboarding/ingest (backend-agents)
+
+3. Agent chat:
+   - POST /agent/execute (backend-agents)
+   - GET /agent/traces (backend-agents)
+
+FASE 4: TESTING E2E FULL (1 día)
+─────────────────────────────────
+
+1. Test login
+2. Test crear tenant
+3. Test upload archivos
+4. Test ingesta LLM
+5. Test query al agente
+6. Test que responda correctamente
+
+═══════════════════════════════════════════════════════════════════════════════
+PARTE 7: CAMBIOS EN BACKENDS (PEQUEÑOS)
+═══════════════════════════════════════════════════════════════════════════════
+
+Los backends necesitan POCO cambio:
+
+1. CORS: ✅ YA HECHO (permite localhost:3001)
+
+2. /auth/login endpoint en backend-saas:
+   - Recibir email + password
+   - Verificar contra DB Prisma
+   - Retornar API Key
+   ✓ YA EXISTE
+
+3. /tenant/me endpoint:
+   - Retornar datos del tenant actual
+   - Validar X-API-Key
+   ✓ YA EXISTE
+
+4. Que /agent/execute valide X-API-Key:
+   ✓ YA EXISTE
+
+5. Que /onboarding/* validen X-API-Key:
+   ✓ YA EXISTE
+
+CONCLUSIÓN: Los backends están 90% listos, solo el frontend necesita refactor.
+
+═══════════════════════════════════════════════════════════════════════════════
+PARTE 8: ARCHIVOS A CREAR
+═══════════════════════════════════════════════════════════════════════════════
+
+NUEVOS ARCHIVOS:
+  □ src/.env.local (variables de entorno)
+  □ src/lib/api/client.ts (HTTP client wrapper)
+  □ src/lib/hooks/useApi.ts (hook para usar APIs)
+  □ src/lib/hooks/useAuth.ts (hook para auth)
+  □ src/app/login/page.tsx (página de login simple)
+  □ src/components/auth/LoginForm.tsx (componente login)
+  □ src/middleware.ts (adaptado para API Keys)
+
+ARCHIVOS A ELIMINAR:
+  □ src/auth.config.ts (NextAuth config)
+  □ src/lib/auth/* (NextAuth helpers)
+  □ pages de NextAuth (/auth/signin, etc)
+
+ARCHIVOS A ADAPTAR:
+  □ next.config.ts (remover NextAuth config si existe)
+  □ Todos los componentes que usan useSession → useAuth
+  □ package.json (remover dependencias NextAuth si no se usan)
+
+═══════════════════════════════════════════════════════════════════════════════
+RESUMEN EJECUTIVO
+═══════════════════════════════════════════════════════════════════════════════
+
+SITUACIÓN ACTUAL:
+  ❌ Frontend desconectado de backends
+  ❌ Dos sistemas de autenticación incompatibles
+  ❌ Dos bases de datos de usuarios
+  ❌ .env.local no existe
+
+RECOMENDACIÓN:
+  ✅ Opción A: Frontend como SPA + Backends como API
+
+TRABAJO A HACER:
+  ✓ Crear .env.local
+  ✓ Crear cliente HTTP con X-API-Key
+  ✓ Reemplazar NextAuth por login simple
+  ✓ Adaptar componentes para usar backends
+
+TIEMPO ESTIMADO:
+  • Fase 1 (Config): 2 horas
+  • Fase 2 (Auth): 1 día
+  • Fase 3 (Componentes): 2-3 días
+  • Fase 4 (Testing): 1 día
+  • TOTAL: ~1 semana
+
+GANANCIA:
+  ✓ Arquitectura limpia y escalable
+  ✓ Frontend y backends desacoplados
+  ✓ Múltiples UIs pueden usar mismos backends
+  ✓ Testing más fácil
+  ✓ Se aprovecha TODO el trabajo de los backends
+
+═══════════════════════════════════════════════════════════════════════════════
+
+¿PROCEDER CON OPCIÓN A?
+
+Si sí, dime y empezamos con el refactor paso a paso.

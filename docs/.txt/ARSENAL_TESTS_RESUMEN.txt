@@ -1,0 +1,247 @@
+ARSENAL DE TESTS - RESUMEN COMPLETO
+====================================
+
+ARCHIVOS QUE DESCARGASTE:
+=========================
+
+1️⃣  test_e2e.py
+    - TESTS AUTOMÁTICOS (recomendado)
+    - Ejecuta 10 tests consecutivos
+    - Prueba TODOS los endpoints end-to-end
+    - Duración: 3-5 minutos
+    - Colorido, fácil de leer
+
+2️⃣  TEST_E2E_GUIA.txt
+    - Instrucciones completas para usar test_e2e.py
+    - Qué prueba cada test
+    - Qué hacer si algo falla
+    - Requisitos previos
+    - Troubleshooting
+
+3️⃣  REQUESTS_MANUALES.txt
+    - TESTS MANUALES (debugging, endpoints específicos)
+    - Comandos curl y PowerShell
+    - Para probar un endpoint sin ejecutar todo
+    - Útil si quieres debuggear algo
+
+---
+
+FLUJO RECOMENDADO
+=================
+
+PASO 1: Verificar requisitos
+→ Ambos backends corriendo en :8000 y :8001
+→ PostgreSQL accesible
+→ Qdrant accesible
+→ Ollama corriendo (para LLM)
+→ API Key válida en la DB
+
+PASO 2: Ejecutar test_e2e.py
+→ python test_e2e.py
+→ Esperar 3-5 minutos
+→ Ver resultados
+
+PASO 3: Analizar resultados
+→ Si 9/9 tests pasan: ✅ TODO OK
+→ Si alguno falla: Leer TEST_E2E_GUIA.txt sección "Qué hacer si falla"
+
+PASO 4 (opcional): Tests manuales
+→ Usar REQUESTS_MANUALES.txt para debuggear endpoints específicos
+
+---
+
+DESGLOSE DE TESTS (test_e2e.py)
+===============================
+
+TEST 1: Health Checks (15 segundos)
+├─ GET http://localhost:8000/health
+└─ GET http://localhost:8001/health
+✓ Verifica que ambos backends estén activos
+
+TEST 2: Autenticación (10 segundos)
+├─ Valida API Key enviándola en header
+├─ GET /tenant/me con X-API-Key
+└─ Verifica que usuario exista
+
+TEST 3: Crear Tenant (10 segundos)
+├─ POST /onboarding/tenant
+├─ Crea datos en PostgreSQL
+├─ Inserta: tenants, coberturas, sedes, servicios
+└─ Retorna: tenant_id, status, datos_cargados
+
+TEST 4: Subir Archivos (5 segundos)
+├─ POST /onboarding/upload
+├─ Crea test_document.txt
+├─ Guarda en servidor (backend-saas)
+└─ Retorna: lista de archivos guardados
+
+TEST 5: Verificar Estado (5 segundos)
+├─ GET /onboarding/status/{tenant_id}
+├─ Lee PostgreSQL: tablas, registros
+├─ Lee Qdrant: colecciones, chunks
+└─ Retorna: status (listo/incompleto), gaps
+
+TEST 6: Ingesta con LLM (60-120 segundos) ⏱️ MÁS LENTO
+├─ POST /onboarding/ingest (backend-agents)
+├─ Lee documentos subidos
+├─ Procesa con LLM (gemma3:latest)
+├─ Genera chunks
+├─ Embeds con Ollama
+├─ Almacena en Qdrant
+└─ Retorna: chunks_generados, chunks_almacenados, tiempo_ms
+
+TEST 7: Ejecutar Queries (30-60 segundos)
+├─ POST /agent/execute (3 queries diferentes)
+├─ Query 1: "¿Atienden con OSDE?"
+├─ Query 2: "¿Cuál es el horario?"
+├─ Query 3: "¿Dónde están ubicados?"
+├─ Cada query hace: RAG search → LLM call → respuesta
+└─ Verifica: iterations, rag_hits_count, respuesta
+
+TEST 8: Listar Traces (5 segundos)
+├─ GET /agent/traces?limit=10
+├─ Lee las últimas trazas ejecutadas
+└─ Verifica: request_id, task, iterations, finish_reason
+
+TEST 9: Métricas (5 segundos)
+├─ GET /metrics/agent
+├─ Lee agregaciones de traces
+└─ Retorna: total, avg_iterations, avg_ms, errors
+
+TEST 10: Cleanup (10 segundos, opcional)
+├─ DELETE /onboarding/tenant/{tenant_id}
+├─ Elimina de PostgreSQL
+├─ Elimina de Qdrant
+├─ Elimina archivos
+└─ Retorna: status ok
+
+TOTAL: ~10-15 minutos si todo OK (la ingesta es la parte lenta)
+
+---
+
+ENDPOINTS PROBADOS
+===================
+
+backend-saas:8000
+✓ GET /health
+✓ GET /tenant/me
+✓ POST /onboarding/tenant
+✓ POST /onboarding/upload
+✓ GET /onboarding/status/{tenant_id}
+✓ DELETE /onboarding/tenant/{tenant_id}
+
+backend-agents:8001
+✓ GET /health
+✓ POST /onboarding/ingest
+✓ POST /agent/execute
+✓ GET /agent/traces
+✓ GET /metrics/agent
+
+TOTAL: 11 endpoints cubiertos
+
+---
+
+CÓMO EJECUTAR
+=============
+
+Opción 1: Test automatizado (RECOMENDADO)
+──────────────────────────────
+1. Descargá test_e2e.py
+2. Copiar a raíz: copy test_e2e.py D:\...\agencia-web-b2b\
+3. cd a la raíz del proyecto
+4. python test_e2e.py
+5. Esperar resultados
+
+Opción 2: Requests manuales
+─────────────────────────
+1. Descargá REQUESTS_MANUALES.txt
+2. Copiar cada comando PowerShell/curl
+3. Ejecutar comando por comando
+4. Ver respuesta en JSON
+
+---
+
+SALIDA DEL TEST (Colores)
+=========================
+
+✅ Verde = OK, test pasó
+❌ Rojo = FALLO, revisar error
+ℹ️  Amarillo = Info adicional (duración, chunks, iterations)
+🔵 Azul = Encabezados, resumen
+
+Ejemplo:
+  ▶ TEST 1: Health Checks
+    ✓ backend-saas:8000 /health - OK
+    Status 200
+  ✓ backend-agents:8001 /health - OK
+    Status 200
+
+---
+
+QMPORTA PARA DEBUGGING
+======================
+
+Si un test falla:
+1. Leer el error (status code + mensaje)
+2. Consultar TEST_E2E_GUIA.txt sección "Qué hacer si falla"
+3. Ejecutar el endpoint manualmente con REQUESTS_MANUALES.txt
+4. Ver logs en la terminal del backend que falló
+5. Reejecutar test_e2e.py cuando arregles
+
+Ejemplo si TEST 6 falla:
+→ Error: "No module 'app.qdrant'"
+→ Solución: Verificar que archivos de backend-agents estén copiados
+→ Reejecutar después de copiar
+
+---
+
+REQUISITOS PREVIOS CHECKLIST
+=============================
+
+Antes de ejecutar test_e2e.py, verificá:
+
+□ Backend-saas corriendo en :8000
+  $ cd backend-saas && uvicorn app.main:app --port 8000 --reload
+
+□ Backend-agents corriendo en :8001
+  $ cd backend-agents && uvicorn app.main:app --port 8001 --reload
+
+□ pip install requests
+  $ pip install requests
+
+□ PostgreSQL corriendo y accesible
+  $ psql -U postgres -d agencia_web_b2b (opcional, solo verificar)
+
+□ Qdrant corriendo en http://localhost:6333
+  $ (verify con curl http://localhost:6333/health)
+
+□ Ollama corriendo en http://localhost:11434
+  $ ollama serve (en otra terminal)
+
+□ Modelo gemma3:latest disponible
+  $ ollama list | grep gemma3 (debería salir gemma3:latest)
+
+□ API Key válida en DB
+  $ psql -c "SELECT * FROM user_credentials WHERE api_key='wh_test_client_key_12345';"
+  (Si no existe, ejecuta el seed script)
+
+---
+
+PRÓXIMO PASO
+============
+
+✅ Si todos los tests pasan:
+   → Los backends funcionan correctamente
+   → Puedes conectar el frontend (frontend:3001)
+   → Flujo end-to-end validado
+
+❌ Si algún test falla:
+   → Consulta TEST_E2E_GUIA.txt
+   → Leer logs del backend
+   → Debuggear con REQUESTS_MANUALES.txt
+   → Reejecutar test_e2e.py
+
+---
+
+¿LISTO? Ejecutá:
+python test_e2e.py

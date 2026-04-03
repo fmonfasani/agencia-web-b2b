@@ -1,0 +1,80 @@
+================================================================================
+FRONTEND SLA-READY AUDIT
+================================================================================
+
+CODEBASE:
+{'files': 261, 'dangerous_imports': 30, 'server_logic': 53, 'api_calls': 43}
+
+PACKAGE:
+{'name': 'agencia-web-b2b', 'deps': 33, 'flags': {'next': True, 'react': True, 'axios': True, 'prisma': False}}
+
+ENV:
+{'exists': True, 'api_urls': ['# API Endpoints (pointing to our backends)', 'NEXT_PUBLIC_SAAS_API_URL=http://localhost:8000', 'NEXT_PUBLIC_AGENTS_API_URL=http://localhost:8001', 'NEXT_PUBLIC_APP_URL=http://localhost:3001', '# API Keys (for testing - NEVER commit these!)', 'NEXT_PUBLIC_TEST_API_KEY=']}
+
+API LAYER:
+{'exists': True, 'files': ['api-client.ts']}
+
+ISSUES:
+- [SERVER LOGIC] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\auth.config.ts contiene 'process.env.'
+- [SERVER LOGIC] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\instrumentation.ts contiene 'process.env.'
+- [SERVER LOGIC] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\proxy.ts contiene 'process.env.'
+- [DB ACCESS] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\app\actions\deals.ts usa @prisma/client
+- [SERVER LOGIC] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\app\actions\deals.ts contiene 'use server'
+- [SERVER LOGIC] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\app\actions\tenant\branding.ts contiene 'use server'
+- [SERVER LOGIC] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\app\api\admin\auditor\route.ts contiene 'process.env.'
+- [DB ACCESS] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\app\api\admin\invitations\route.ts usa @prisma/client
+- [DB ACCESS] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\app\api\appointments\route.ts usa @prisma/client
+- [DB ACCESS] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\app\api\appointments\[id]\route.ts usa @prisma/client
+- [SERVER LOGIC] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\app\api\auth-internal\route.ts contiene 'process.env.'
+- [SERVER LOGIC] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\app\api\chat\sales\route.ts contiene 'process.env.'
+- [DB ACCESS] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\app\api\invitations\accept\route.ts usa @prisma/client
+- [DB ACCESS] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\app\api\leads\pipeline\route.ts usa @prisma/client
+- [DB ACCESS] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\app\api\observability\health\route.ts usa @prisma/client
+- [SERVER LOGIC] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\app\api\observability\health\route.ts contiene 'process.env.'
+- [DB ACCESS] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\app\api\observability\metrics\route.ts usa @prisma/client
+- [DB ACCESS] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\app\api\observability\traces\route.ts usa @prisma/client
+- [SERVER LOGIC] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\app\api\webhooks\mercadopago\route.ts contiene 'process.env.'
+- [DB ACCESS] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\app\[locale]\admin\deals\page.tsx usa @prisma/client
+- [SERVER LOGIC] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\app\[locale]\admin\intelligence\page.tsx contiene 'process.env.'
+- [DB ACCESS] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\app\[locale]\admin\leads\page.tsx usa @prisma/client
+- [DB ACCESS] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\app\[locale]\admin\security\iam\page.tsx usa @prisma/client
+- [SERVER LOGIC] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\app\[locale]\admin\security\iam\page.tsx contiene 'use server'
+- [SERVER LOGIC] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\app\[locale]\admin\security\iam\page.tsx contiene 'process.env.'
+- [DB ACCESS] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\app\[locale]\api\admin\actions\route.ts usa @prisma/client
+- [DB ACCESS] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\app\[locale]\api\admin\agents\[id]\route.ts usa @prisma/client
+- [SERVER LOGIC] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\app\[locale]\api\admin\scrapers\run\route.ts contiene 'process.env.'
+- [SERVER LOGIC] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\app\[locale]\api\admin\scrapers\schedules\route.ts contiene 'process.env.'
+- [SERVER LOGIC] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\app\[locale]\api\admin\scrapers\status\[jobId]\route.ts contiene 'process.env.'
+- [DB ACCESS] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\app\[locale]\api\auth\register-company\route.ts usa @prisma/client
+- [DB ACCESS] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\app\[locale]\api\auth\register-invite\route.ts usa @prisma/client
+- [SERVER LOGIC] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\app\[locale]\api\contact\route.ts contiene 'process.env.'
+- [SERVER LOGIC] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\app\[locale]\api\leads\ingest\route.test.ts contiene 'process.env.'
+- [SERVER LOGIC] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\app\[locale]\api\leads\ingest\route.ts contiene 'process.env.'
+- [DB ACCESS] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\app\[locale]\api\leads\[id]\status\route.ts usa @prisma/client
+- [SERVER LOGIC] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\app\[locale]\api\v1\whatsapp\route.ts contiene 'process.env.'
+- [SERVER LOGIC] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\app\[locale]\sign-out\page.tsx contiene 'use server'
+- [SERVER LOGIC] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\components\GoogleTagManager.tsx contiene 'process.env.'
+- [DB ACCESS] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\components\deals\DealKanban.tsx usa @prisma/client
+- [SERVER LOGIC] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\lib\analytics.ts contiene 'process.env.'
+- [SERVER LOGIC] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\lib\api-auth.ts contiene 'process.env.'
+- [DB ACCESS] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\lib\authz.ts usa @prisma/client
+- [SERVER LOGIC] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\lib\authz.ts contiene 'process.env.'
+- [SERVER LOGIC] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\lib\bridge-client.ts contiene 'process.env.'
+- [DB ACCESS] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\lib\lead-repository.ts usa @prisma/client
+- [SERVER LOGIC] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\lib\logger.ts contiene 'process.env.'
+- [SERVER LOGIC] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\lib\mail.ts contiene 'process.env.'
+- [SERVER LOGIC] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\lib\ratelimit.ts contiene 'process.env.'
+- [SERVER LOGIC] D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\frontend\src\lib\whatsapp.ts contiene 'process.env.'
+
+SLA READINESS:
+❌ DB access detected (invalid for SLA)
+❌ Server logic present (breaks SPA model)
+✔ API usage detected
+
+FINAL SCORE: 4/10
+
+NEXT STEPS:
+- Remove Prisma from frontend
+- Remove server actions and API routes
+- Move logic to backend services
+- Use frontend only as API consumer

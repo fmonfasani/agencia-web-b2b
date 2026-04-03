@@ -1,0 +1,263 @@
+================================================================================
+BACKEND STRUCTURE & CONFIGURATION AUDIT
+================================================================================
+
+
+================================================================================
+BACKEND: BACKEND-SAAS
+================================================================================
+
+📁 PATH: D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\backend-saas
+✓ EXISTS: True
+
+📂 DIRECTORY STRUCTURE:
+----------------------------------------
+├── ARSENAL_TESTS_RESUMEN.txt
+├── CREDENCIALES_SEED.json
+├── Dockerfile
+├── README.md
+├── app
+│   ├── __init__.py
+│   ├── auth_models.py
+│   ├── auth_router.py
+│   ├── auth_service.py
+│   ├── db
+│   │   ├── __init__.py
+│   │   ├── migrations
+│   │   ├── models.py
+│   │   ├── queries.py
+│   │   └── trace_service.py
+│   ├── lib
+│   │   ├── auth_utils.py
+│   │   └── logging_utils.py
+│   ├── main.py
+│   ├── models
+│   │   ├── __init__.py
+│   │   ├── agent_request_model.py
+│   │   └── tracing_context.py
+│   ├── observability
+│   ├── onboarding_models.py
+│   ├── onboarding_router.py
+│   ├── onboarding_service.py
+│   └── routers
+├── backend-saas-main.py
+├── benchmarks
+│   ├── benchmark_models.py
+│   └── results_latest.json
+├── check_users_prisma.py
+├── create_audit_logs.sql
+├── docker-compose.yml
+├── docs
+│   └── observability.sql
+├── output.txt
+├── requirements.txt
+├── seed_admin.py
+├── seed_users.py
+├── seed_users_prisma.py
+├── test_e2e_30.py
+├── tests
+│   ├── __init__.py
+│   ├── conftest.py
+│   ├── test_agent_e2e.py
+│   ├── test_agent_flow.py
+│   ├── test_agent_tracing_complete.py
+│   ├── test_db.py
+│   ├── test_embeddings.py
+│   ├── test_multi_tenant_security.py
+│   ├── test_observability.py
+│   ├── test_phase2_db_integrity.py
+│   ├── test_rag.py
+│   ├── test_rag_real.py
+│   └── test_tenant_isolation_qdrant.py
+└── uploads
+    ├── tenant_cliente_default
+    │   └── test_document.txt
+    └── tenant_test_30
+        └── test_doc.txt
+
+
+📦 DEPENDENCIES (requirements.txt):
+----------------------------------------
+  • fastapi
+  • uvicorn[standard]
+  • pydantic
+  • sqlalchemy
+  • asyncpg
+  • httpx
+  • python-dotenv
+  • psycopg2-binary
+  • redis
+  • typing-extensions
+  • langgraph
+  • qdrant-client
+  • pytest-asyncio
+  • pymupdf
+  • pandas
+  • openpyxl
+  • python-multipart
+  • python-jose[cryptography]
+  • passlib[bcrypt]
+  • slowapi
+  • email-validator
+
+  Total: 21 dependencies
+
+🔐 ENVIRONMENT VARIABLES (.env):
+----------------------------------------
+  GROQ_API_KEY = ***REDACTED***
+  ALLOW_FALLBACK_TENANT = true
+  DEFAULT_TENANT_ID = cmmjbmjep0000uoq4dg2
+  DATABASE_URL = postgresql://postgres:Karaoke27570Echeverria@db:5432/agencia_web_b2b?sslmode=disable
+  DB_PASSWORD = ***REDACTED***
+  ENVIRONMENT = production
+
+  Total: 6 variables
+
+🚀 MAIN ENTRY POINT:
+----------------------------------------
+  Found: app/main.py
+
+📚 KEY IMPORTS (from main.py):
+----------------------------------------
+  import sys
+  import os
+  import time
+  import uuid
+  import logging
+  from datetime import datetime
+  from fastapi import FastAPI, HTTPException, Request, Depends
+  from fastapi.middleware.cors import CORSMiddleware
+  from slowapi import Limiter, _rate_limit_exceeded_handler
+  from slowapi.util import get_remote_address
+
+⚙️ CONFIGURATION:
+----------------------------------------
+  uvicorn.run(app, host="127.0.0.1", port=8000, reload=True)
+
+📡 ENDPOINTS DETECTED:
+----------------------------------------
+  @router.post(
+  @router.post(
+  @router.get(
+  @router.get(
+  @router.post(
+  @router.post(
+  @app.middleware("http")
+  @app.get("/health")
+  @app.get("/tenant/me", tags=["Tenant"])
+  @router.post(
+  ... y 3 más
+
+
+================================================================================
+BACKEND: BACKEND-AGENTS
+================================================================================
+
+📁 PATH: D:\Software Development\Agencia B2B\Agencia B2B\agencia-web-b2b\backend-agents
+✓ EXISTS: True
+
+📂 DIRECTORY STRUCTURE:
+----------------------------------------
+├── app
+│   ├── __init__.py
+│   ├── auth
+│   │   ├── __init__.py
+│   │   └── agent_auth.py
+│   ├── db
+│   │   ├── __init__.py
+│   │   └── trace_service.py
+│   ├── embedding_utils.py
+│   ├── engine
+│   │   ├── __init__.py
+│   │   ├── adapters.py
+│   │   ├── langgraph_engine.py
+│   │   ├── planner.py
+│   │   ├── prompts.py
+│   │   └── state.py
+│   ├── lib
+│   │   └── logging_utils.py
+│   ├── llm
+│   │   └── ollama_client.py
+│   ├── main.py
+│   ├── models.py
+│   ├── onboarding_models.py
+│   ├── onboarding_router.py
+│   ├── onboarding_service.py
+│   ├── qdrant
+│   │   ├── __init__.py
+│   │   └── client.py
+│   ├── routers
+│   │   ├── __init__.py
+│   │   └── rag.py
+│   └── tools
+│       ├── __init__.py
+│       ├── rag.py
+│       ├── registry.py
+│       └── scrape.py
+├── requirements.txt
+└── uploads
+
+
+📦 DEPENDENCIES (requirements.txt):
+----------------------------------------
+  • fastapi
+  • uvicorn[standard]
+  • pydantic
+  • pydantic-settings
+  • langgraph
+  • langchain
+  • langchain-core
+  • langsmith
+  • qdrant-client
+  • psycopg2-binary
+  • httpx
+  • ollama
+  • openai
+  • python-json-logger
+  • slowapi
+  • python-dotenv
+
+  Total: 16 dependencies
+
+🔐 ENVIRONMENT VARIABLES (.env):
+----------------------------------------
+  DATABASE_URL = postgresql://postgres:Karaoke27570Echeverria@localhost:5432/agencia_web_b2b
+  ALLOWED_ORIGINS = http://localhost:3001,http://127.0.0.1:3001
+  OLLAMA_BASE_URL = http://localhost:11434
+  DEFAULT_MODEL = gemma3:latest
+  ALLOW_FALLBACK_TENANT = false
+  DEFAULT_TENANT_ID = default
+  LOG_LEVEL = INFO
+
+  Total: 7 variables
+
+🚀 MAIN ENTRY POINT:
+----------------------------------------
+  Found: app/main.py
+
+📚 KEY IMPORTS (from main.py):
+----------------------------------------
+  import sys
+  import os
+  import asyncio
+  from datetime import datetime
+  from fastapi import FastAPI, HTTPException, Request, Depends, BackgroundTasks
+  from fastapi.middleware.cors import CORSMiddleware
+  from app.engine.langgraph_engine import LangGraphEngine
+  from app.lib.logging_utils import setup_structured_logging, trace_id_var
+  from app.models import (
+  from app.auth.agent_auth import get_user_by_api_key
+
+⚙️ CONFIGURATION:
+----------------------------------------
+  uvicorn.run(app, host="0.0.0.0", port=8001)
+
+📡 ENDPOINTS DETECTED:
+----------------------------------------
+  @app.on_event("startup")
+  @app.middleware("http")
+  @app.get("/health")
+  @app.post("/agent/execute", response_model=AgentResponse)
+  @app.get("/agent/traces", tags=["Agent"])
+  @app.get("/metrics/agent", tags=["Observability"])
+  @router.post(

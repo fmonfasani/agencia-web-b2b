@@ -1,0 +1,313 @@
+BACKEND AUDIT ANALYSIS & ACTION PLAN
+====================================
+
+Fecha: 2026-03-29
+Status: ANALYSIS COMPLETE
+
+═══════════════════════════════════════════════════════════════════════════════
+PARTE 1: COMPARATIVA ARQUITECTÓNICA
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────┬─────────────────────────┬─────────────────────────┐
+│ ASPECTO         │ BACKEND-SAAS:8000       │ BACKEND-AGENTS:8001     │
+├─────────────────┼─────────────────────────┼─────────────────────────┤
+│ Puerto          │ 8000                    │ 8001                    │
+│ Host            │ 127.0.0.1               │ 0.0.0.0                 │
+│ Dependencies    │ 21                      │ 16                      │
+│ DB              │ PostgreSQL (db:5432)    │ PostgreSQL (localhost)  │
+│ Cache           │ Redis ✓                 │ None                    │
+│ Vector DB       │ Qdrant ✓                │ Qdrant ✓                │
+│ LLM             │ Groq (GROQ_API_KEY)     │ Ollama (localhost:11434)│
+│ Auth            │ API Keys (X-API-Key)    │ API Keys                │
+│ Main Purpose    │ Data + Tenants          │ AI/RAG + Agent Queries  │
+│ Endpoints       │ /auth/*, /onboarding/*  │ /agent/*, /onboarding/*│
+└─────────────────┴─────────────────────────┴─────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════
+PARTE 2: PROBLEMAS IDENTIFICADOS
+═══════════════════════════════════════════════════════════════════════════════
+
+🔴 CRÍTICOS (Deben arreglarse YA)
+════════════════════════════════════════════════════════════════════════════════
+
+1. DATABASE_URL INCONSISTENTE
+   ├─ backend-saas:   DATABASE_URL = postgresql://...@db:5432/...
+   ├─ backend-agents: DATABASE_URL = postgresql://...@localhost:5432/...
+   └─ PROBLEMA: En Windows "db" no resuelve. Usa localhost en ambos.
+      
+      FIX:
+      backend-saas/.env:
+        DATABASE_URL = postgresql://postgres:***@localhost:5432/agencia_web_b2b
+
+2. CREDENCIALES HARDCODEADAS EN DATABASE_URL ⚠️ SECURITY RISK
+   ├─ ACTUAL: postgresql://postgres:Karaoke27570Echeverria@...
+   ├─ PROBLEMA: Password en el archivo .env (git lo ve)
+   └─ FIX: Separar usuario y password
+      
+      Cambiar a:
+        DATABASE_USER = postgres
+        DATABASE_PASSWORD = Karaoke27570Echeverria
+        DATABASE_HOST = localhost
+        DATABASE_PORT = 5432
+        DATABASE_NAME = agencia_web_b2b
+
+3. HOST 127.0.0.1 EN backend-saas
+   ├─ ACTUAL: uvicorn.run(app, host="127.0.0.1", port=8000)
+   ├─ PROBLEMA: Frontend en 3001 puede no alcanzar localhost:8000
+   └─ FIX: Cambiar a 0.0.0.0
+      
+      app/main.py:
+        uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+
+─────────────────────────────────────────────────────────────────────────────
+
+🟡 ALTOS (Debería arreglarse antes de production)
+════════════════════════════════════════════════════════════════════════════════
+
+4. MISSING .env.example EN AMBOS
+   ├─ ACTUAL: Solo .env con valores reales
+   ├─ PROBLEMA: Nuevos devs no saben qué variables necesitan
+   └─ FIX: Crear .env.example con valores dummy
+
+5. CORS MISMATCH EN backend-saas
+   ├─ REVISIÓN NECESARIA: ¿Qué CORS está configurado?
+   ├─ backend-agents tiene: ALLOWED_ORIGINS = http://localhost:3001
+   └─ backend-saas necesita lo mismo
+
+6. DIFERENTE LOG_LEVEL
+   ├─ backend-saas: (no especificado)
+   ├─ backend-agents: LOG_LEVEL = INFO
+   └─ FIX: Estandarizar ambos
+
+─────────────────────────────────────────────────────────────────────────────
+
+🟢 MENORES (Nice to have)
+════════════════════════════════════════════════════════════════════════════════
+
+7. Dependencias potencialmente duplicadas
+   ├─ FastAPI, uvicorn, psycopg2, httpx, slowapi, python-dotenv
+   └─ Esto está OK (cada uno es independiente)
+
+8. Backend-saas tiene Redis pero no se ve usado
+   ├─ Verificar si realmente lo necesita
+   └─ O agregarlo a backend-agents para caché de embeddings
+
+═══════════════════════════════════════════════════════════════════════════════
+PARTE 3: DIAGRAMA DE ARQUITECTURA ACTUAL
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                          FRONTEND (localhost:3001)                       │
+│                               Next.js                                   │
+└──────┬──────────────────────────────────┬──────────────────────────────┘
+       │                                  │
+       │ fetch(http://localhost:8000)     │ fetch(http://localhost:8001)
+       │                                  │
+       ▼                                  ▼
+   ┌─────────────────────────┐    ┌─────────────────────────┐
+   │ BACKEND-SAAS:8000       │    │ BACKEND-AGENTS:8001     │
+   │ (Data + Tenants)        │    │ (AI/RAG Engine)         │
+   ├─────────────────────────┤    ├─────────────────────────┤
+   │ /auth/*                 │    │ /agent/execute          │
+   │ /onboarding/*           │    │ /agent/traces           │
+   │ /tenant/me              │    │ /metrics/agent          │
+   │ /health                 │    │ /onboarding/ingest      │
+   │ /health (CORS: 127.0.0.1)    │ /health (CORS: 0.0.0.0) │
+   └──────────┬──────────────┘    └────────────┬────────────┘
+              │                                 │
+              │ (localhost:5432)                │
+              │                                 │
+              └──────────────┬──────────────────┘
+                             │
+                    ┌────────▼──────────┐
+                    │ PostgreSQL        │
+                    │ (agencia_web_b2b) │
+                    ├──────────────────┤
+                    │ users             │
+                    │ tenants           │
+                    │ onboarding_data   │
+                    │ traces            │
+                    └──────────────────┘
+                    
+       ┌──────────────────┐  ┌──────────────────┐
+       │ Qdrant (RAG)     │  │ Ollama (LLM)     │
+       │ (localhost:6333) │  │ (localhost:11434)│
+       └──────────────────┘  └──────────────────┘
+                ▲                        ▲
+                │                        │
+            Usada por          Usada por
+         backend-agents     backend-agents
+
+═══════════════════════════════════════════════════════════════════════════════
+PARTE 4: LISTA DE ARCHIVOS CRÍTICOS
+═══════════════════════════════════════════════════════════════════════════════
+
+BACKEND-SAAS:
+  ✓ app/main.py ........................... Entry point
+  ✓ app/auth_router.py .................... Endpoints auth
+  ✓ app/onboarding_router.py .............. Endpoints onboarding
+  ✓ app/db/models.py ...................... Database models
+  ✓ requirements.txt ...................... Dependencies
+  ✗ .env.example (FALTA) .................. Template env
+  ✓ .env ................................. Variables (pero inseguro)
+
+BACKEND-AGENTS:
+  ✓ app/main.py ........................... Entry point
+  ✓ app/engine/langgraph_engine.py ........ LangGraph setup
+  ✓ app/onboarding_router.py .............. Ingesta endpoint
+  ✓ app/tools/rag.py ...................... RAG queries
+  ✓ requirements.txt ...................... Dependencies
+  ✗ .env.example (FALTA) .................. Template env
+  ✓ .env ................................. Variables
+
+═══════════════════════════════════════════════════════════════════════════════
+PARTE 5: PLAN DE ACCIÓN (ORDEN DE PRIORIDAD)
+═══════════════════════════════════════════════════════════════════════════════
+
+PASO 1: ARREGLAR DATABASE_URL (5 minutos)
+──────────────────────────────────────────────────────────────────────────────
+
+backend-saas/.env:
+  CAMBIAR ESTO:
+    DATABASE_URL = postgresql://postgres:Karaoke27570Echeverria@db:5432/agencia_web_b2b?sslmode=disable
+  
+  A ESTO:
+    DATABASE_URL = postgresql://postgres:Karaoke27570Echeverria@localhost:5432/agencia_web_b2b
+
+backend-agents/.env:
+  ✓ YA ESTÁ CORRECTO
+    DATABASE_URL = postgresql://postgres:Karaoke27570Echeverria@localhost:5432/agencia_web_b2b
+
+PASO 2: ARREGLAR HOST EN backend-saas (2 minutos)
+──────────────────────────────────────────────────────────────────────────────
+
+app/main.py (línea final):
+  CAMBIAR:
+    uvicorn.run(app, host="127.0.0.1", port=8000, reload=True)
+  
+  A:
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+
+PASO 3: CREAR .env.example EN AMBOS (5 minutos)
+──────────────────────────────────────────────────────────────────────────────
+
+backend-saas/.env.example:
+  GROQ_API_KEY = your_groq_api_key_here
+  DATABASE_URL = postgresql://postgres:password@localhost:5432/agencia_web_b2b
+  ALLOW_FALLBACK_TENANT = true
+  DEFAULT_TENANT_ID = your_default_tenant_id
+  ENVIRONMENT = development
+
+backend-agents/.env.example:
+  DATABASE_URL = postgresql://postgres:password@localhost:5432/agencia_web_b2b
+  ALLOWED_ORIGINS = http://localhost:3001,http://127.0.0.1:3001
+  OLLAMA_BASE_URL = http://localhost:11434
+  DEFAULT_MODEL = gemma3:latest
+  ALLOW_FALLBACK_TENANT = false
+  DEFAULT_TENANT_ID = default
+  LOG_LEVEL = INFO
+
+PASO 4: VERIFICAR CORS EN backend-saas (investigar)
+──────────────────────────────────────────────────────────────────────────────
+
+Buscar en app/main.py:
+  CORSMiddleware.add_middleware(
+    ...
+    allow_origins = [...] 
+  )
+
+Debe incluir: ["http://localhost:3001", "http://127.0.0.1:3001"]
+
+PASO 5: CREAR SCRIPT DE SETUP (opcional pero recomendado)
+──────────────────────────────────────────────────────────────────────────────
+
+setup_backends.ps1 (script PowerShell):
+  # Instalar dependencias
+  cd backend-saas && pip install -r requirements.txt
+  cd ../backend-agents && pip install -r requirements.txt
+  
+  # Crear .env desde .env.example
+  # Verificar PostgreSQL
+  # Verificar Qdrant y Ollama
+
+═══════════════════════════════════════════════════════════════════════════════
+PARTE 6: CHECKLIST ANTES DE INICIAR LOS BACKENDS
+═══════════════════════════════════════════════════════════════════════════════
+
+PREREQUISITOS:
+  ☐ PostgreSQL corriendo en localhost:5432
+  ☐ Qdrant corriendo en localhost:6333
+  ☐ Ollama corriendo en localhost:11434
+  ☐ Redis corriendo (opcional, pero recomendado)
+
+VERIFICACIONES:
+  ☐ Archivo .env correctamente configurado
+  ☐ DATABASE_URL apunta a localhost
+  ☐ backend-saas HOST = 0.0.0.0
+  ☐ CORS incluye localhost:3001
+  ☐ Dependencias instaladas (pip install -r requirements.txt)
+
+STARTUP:
+  ☐ cd backend-saas && uvicorn app.main:app --port 8000 --reload
+  ☐ cd backend-agents && uvicorn app.main:app --port 8001 --reload
+  ☐ Verificar /health en ambos backends
+  ☐ Ejecutar test_e2e_30.py
+
+═══════════════════════════════════════════════════════════════════════════════
+PARTE 7: COMANDOS RÁPIDOS PARA ARREGLAR TODO
+═══════════════════════════════════════════════════════════════════════════════
+
+PowerShell (desde raíz del proyecto):
+
+# 1. Arreglar DATABASE_URL en backend-saas
+$path = ".\backend-saas\.env"
+(Get-Content $path) -replace "@db:5432", "@localhost:5432" | Set-Content $path
+Write-Host "✓ DATABASE_URL arreglado en backend-saas"
+
+# 2. Arreglar HOST en app/main.py
+$path = ".\backend-saas\app\main.py"
+(Get-Content $path) -replace '127\.0\.0\.1', '0.0.0.0' | Set-Content $path
+Write-Host "✓ HOST arreglado en backend-saas"
+
+# 3. Crear .env.example en backend-saas
+@"
+GROQ_API_KEY = your_api_key_here
+DATABASE_URL = postgresql://postgres:password@localhost:5432/agencia_web_b2b
+ALLOW_FALLBACK_TENANT = true
+DEFAULT_TENANT_ID = default
+ENVIRONMENT = development
+"@ | Out-File ".\backend-saas\.env.example"
+Write-Host "✓ .env.example creado en backend-saas"
+
+# 4. Crear .env.example en backend-agents
+@"
+DATABASE_URL = postgresql://postgres:password@localhost:5432/agencia_web_b2b
+ALLOWED_ORIGINS = http://localhost:3001,http://127.0.0.1:3001
+OLLAMA_BASE_URL = http://localhost:11434
+DEFAULT_MODEL = gemma3:latest
+ALLOW_FALLBACK_TENANT = false
+DEFAULT_TENANT_ID = default
+LOG_LEVEL = INFO
+"@ | Out-File ".\backend-agents\.env.example"
+Write-Host "✓ .env.example creado en backend-agents"
+
+═══════════════════════════════════════════════════════════════════════════════
+RESUMEN
+═══════════════════════════════════════════════════════════════════════════════
+
+ESTADO: 3 PROBLEMAS CRÍTICOS + 4 ALTOS + 1 MENOR
+
+FIX TIME: ~15 minutos total
+
+DESPUÉS:
+  ✓ Backends serán accesibles desde cualquier interfaz
+  ✓ Database URLs serán consistentes
+  ✓ Frontend puede conectarse sin problemas
+  ✓ Documentación clara para nuevos devs
+  ✓ Security risk (credenciales hardcodeadas) reducido
+
+SIGUIENTE PASO:
+  → Aplicar estos fixes
+  → Levantar ambos backends
+  → Ejecutar test_e2e_30.py
+  → Auditar FRONTEND (si es necesario)
