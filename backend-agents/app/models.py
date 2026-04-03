@@ -17,12 +17,14 @@ class TraceStepType(str, Enum):
 
 class AgentRequest(BaseModel):
     """Request para ejecutar agent"""
-    query: str = Field(..., description="Pregunta del usuario")
-    tenant_id: str = Field(..., description="ID del tenant")
+    query: str = Field(..., description="Pregunta del usuario", min_length=3, max_length=2000)
+    tenant_id: str = Field(..., description="ID del tenant (empresa)", min_length=3)
     user_id: Optional[str] = Field(None, description="ID del usuario (opcional)")
     conversation_id: Optional[str] = Field(None, description="ID de conversación")
-    max_iterations: int = Field(default=5, ge=1, le=10)
-    enable_detailed_trace: bool = Field(default=False, description="Habilitar trazas detalladas")
+    trace_id: Optional[str] = Field(None, description="ID de tracing externo")
+    enable_detailed_trace: bool = Field(default=False, description="Habilitar trazas detalladas paso a paso")
+    max_iterations: Optional[int] = Field(default=5, ge=1, le=10, description="Máximo de iteraciones del agente")
+    temperature: Optional[float] = Field(default=0.7, ge=0.0, le=2.0, description="Temperatura del LLM")
 
 class RagResult(BaseModel):
     """Resultado de búsqueda RAG"""
@@ -56,13 +58,16 @@ class TraceStep(BaseModel):
 
 class AgentResponse(BaseModel):
     """Response de ejecución agent"""
-    trace_id: str
-    tenant_id: str
-    query: str
-    iterations: int
-    result: List[Dict[str, str]]  # Lista de {role, content}
-    metadata: Dict[str, Any] = Field(default_factory=dict)
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    trace_id: str = Field(description="ID único del request para tracing")
+    tenant_id: str = Field(description="Tenant que hizo el request")
+    query: str = Field(description="Query original del usuario")
+    iterations: int = Field(default=0, description="Número de iteraciones del agente")
+    result: List[Dict[str, str]] = Field(description="Resultado del agente (lista de mensajes)")
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Metadata de ejecución (modelo, tiempo, etc.)")
+    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Timestamp de finalización")
+    total_duration_ms: Optional[int] = Field(None, description="Duración total en milisegundos")
+    timestamp_start: Optional[datetime] = Field(None, description="Timestamp de inicio")
+    x_process_time: Optional[str] = Field(None, description="Header X-Process-Time")
 
 
 class ErrorResponse(BaseModel):

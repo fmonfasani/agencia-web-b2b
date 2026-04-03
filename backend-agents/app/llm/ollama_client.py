@@ -1,10 +1,11 @@
 import asyncio
 import httpx
 import json
+import os
 from typing import Any, Dict, List
 
-OLLAMA_BASE_URL = "http://localhost:11434"
-DEFAULT_MODEL = "qwen2.5:0.5b"
+OLLAMA_BASE_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
+DEFAULT_MODEL = os.getenv("LLM_MODEL", "qwen2.5:0.5b")
 
 async def chat(messages: List[Dict[str, str]], model: str = DEFAULT_MODEL) -> Dict[str, Any]:
     """Send a chat request to Ollama"""

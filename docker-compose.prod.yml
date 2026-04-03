@@ -1,97 +1,156 @@
 version: '3.8'
 
 services:
-  # Base de datos PostgreSQL
-  db:
+  # PostgreSQL - Base de datos principal
+  postgres:
     image: postgres:16-alpine
-    container_name: agencia-db
-    restart: always
+    container_name: agencia_postgres
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-cambiar_password}
-      POSTGRES_DB: agencia_web_b2b
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-agencia_web_b2b}
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d agencia_web_b2b"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-agencia_web_b2b}"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
       - app-network
+    command: ["postgres", "-c", "log_statement=all", "-c", "log_min_duration_statement=1000"]
 
-  # Vector Database (Qdrant)
+  # Qdrant - Vector Database
   qdrant:
     image: qdrant/qdrant:latest
-    container_name: agencia-qdrant
-    restart: always
-    ports:
-      - "127.0.0.1:6333:6333"
+    container_name: agencia_qdrant
+    restart: unless-stopped
+    expose:
+      - "6333"
+      - "6334"
     volumes:
-      - qdrant_storage:/qdrant/storage
+      - qdrant_data:/qdrant/storage
     networks:
       - app-network
+    environment:
+      QDRANT__SERVICE__HTTP_PORT: 6333
+      QDRANT__SERVICE__GRPC_PORT: 6334
 
-  # Frontend Next.js
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_SAAS_API_URL: ${NEXT_PUBLIC_SAAS_API_URL:-http://localhost:8000}
-        NEXT_PUBLIC_AGENT_API_URL: ${NEXT_PUBLIC_AGENT_API_URL:-http://localhost:8001}
-    container_name: agencia-frontend
-    ports:
-      - "127.0.0.1:3001:3001"
-    env_file:
-      - ./frontend/.env
-    depends_on:
-      db:
-        condition: service_healthy
-    restart: always
+  # Redis - Cache y Rate Limiting
+  redis:
+    image: redis:7-alpine
+    container_name: agencia_redis
+    restart: unless-stopped
+    expose:
+      - "6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-}
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # Backend SaaS (Auth, Onboarding, LangGraph)
+  # Ollama - LLM Local
+  ollama:
+    image: ollama/ollama:latest
+    container_name: agencia_ollama
+    restart: unless-stopped
+    expose:
+      - "11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - app-network
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+
+  # Backend SaaS - Auth, Onboarding, Tenant Management
   backend-saas:
     build:
       context: ./backend-saas
       dockerfile: Dockerfile
-    container_name: agencia-backend-saas
+    container_name: agencia_backend_saas
+    restart: unless-stopped
     ports:
-      - "127.0.0.1:8000:8000"
+      - "8000:8000"
     env_file:
-      - ./backend-saas/.env
+      - ./backend-saas/.env.production
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-agencia_web_b2b}
+      - QDRANT_URL=http://qdrant:6333
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-}@redis:6379/0
+      - BACKEND_AGENTS_URL=http://backend-agents:8001
     depends_on:
-      db:
+      postgres:
         condition: service_healthy
-    restart: always
+      qdrant:
+        condition: service_started
+      redis:
+        condition: service_healthy
     networks:
       - app-network
-
-  # Agent Service (Scrapers, Chat, Widget)
-  agent-service:
-    build:
-      context: ./agent-service
-      dockerfile: Dockerfile
-    container_name: agencia-agent-service
-    ports:
-      - "127.0.0.1:8001:8000" # Mapeado a 8001 en host para evitar conflicto con saas
-    env_file:
-      - ./agent-service/.env
-    depends_on:
-      db:
-        condition: service_healthy
-    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     volumes:
-      - ./agent-service/widget:/app/widget
+      - ./backend-saas/uploads:/app/uploads:rw
+
+  # Backend Agents - Agent Engine (LangGraph + RAG)
+  backend-agents:
+    build:
+      context: ./backend-agents
+      dockerfile: Dockerfile
+    container_name: agencia_backend_agents
+    restart: unless-stopped
+    expose:
+      - "8001"
+    env_file:
+      - ./backend-agents/.env.production
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-agencia_web_b2b}
+      - QDRANT_URL=http://qdrant:6333
+      - OLLAMA_URL=http://ollama:11434
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-}@redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+      ollama:
+        condition: service_started
+      redis:
+        condition: service_healthy
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    volumes:
+      - ./backend-agents/openrouter_usage.json:/app/openrouter_usage.json:rw
+      - ./backend-agents/logs:/app/logs:rw
+      - ./backend-saas/uploads:/app/uploads:ro
 
 networks:
   app-network:
     driver: bridge
 
 volumes:
-  pgdata:
-  qdrant_storage:
+  postgres_data:
+    driver: local
+  qdrant_data:
+    driver: local
+  redis_data:
+    driver: local
+  ollama_data:
+    driver: local

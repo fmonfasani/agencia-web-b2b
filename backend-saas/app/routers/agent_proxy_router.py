@@ -95,7 +95,7 @@ Ejecuta el agente inteligente con contexto RAG para responder consultas del tena
 - `403`: Sin acceso al tenant
 - `502`: backend-agents no disponible
     """,
-    response_model=AgentResponse,
+    response_model=None,
 )
 async def proxy_execute(
     req: AgentRequest,

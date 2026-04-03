@@ -3,10 +3,12 @@ Core agent planner: deterministic termination + LangGraph graph builder.
 """
 import os
 import json
-
+import logging
 import time
 import psycopg2
 from typing import Any, Dict, List, Optional, Tuple
+
+logger = logging.getLogger(__name__)
 
 from langgraph.graph import StateGraph, END
 from typing_extensions import TypedDict
@@ -147,7 +149,7 @@ async def rag_node(state: GraphState, rag_retriever) -> Dict[str, Any]:
 
 async def planner_node(state: GraphState, llm_provider, tool_registry) -> Dict[str, Any]:
     """Decide next action. Uses deterministic check before calling LLM."""
-    from app.models import AgentDecision
+    from app.engine.state import AgentDecision
     ctx = state.get("tracing_context")
 
     # --- Trace iteration start ---
@@ -203,9 +205,18 @@ async def planner_node(state: GraphState, llm_provider, tool_registry) -> Dict[s
         )
         call_ms = int((time.time() - t0) * 1000)
 
-        # Parsear respuesta JSON del LLM
+        # Parsear respuesta JSON del LLM (limpia markdown si el LLM lo agrega)
+        clean_text = response_text.strip()
+        if clean_text.startswith("```"):
+            # Remove opening fence (```json or ```)
+            first_newline = clean_text.find("\n")
+            if first_newline != -1:
+                clean_text = clean_text[first_newline + 1:]
+            # Remove closing fence
+            if clean_text.rstrip().endswith("```"):
+                clean_text = clean_text.rstrip()[:-3].rstrip()
         try:
-            response_dict = json.loads(response_text)
+            response_dict = json.loads(clean_text)
         except json.JSONDecodeError:
             logger.error(f"LLM devolvió JSON inválido: {response_text[:200]}")
             response_dict = {"_llm_error": "Invalid JSON from LLM"}

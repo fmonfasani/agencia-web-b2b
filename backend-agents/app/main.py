@@ -27,16 +27,18 @@ from app.models import (
     TraceStepType,
     create_tracing_context,
 )
-from app.auth.agent_auth import get_user_by_api_key
+from app.auth.agent_auth import get_user_by_api_key, validate_tenant_access
 from app.db.trace_service import persist_trace, ensure_traces_table
 from app.onboarding_router import router as onboarding_router  # /onboarding/ingest (procesamiento con LLM)
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+from core.config import settings
 
 import uuid
 import logging
 import time
+import json
 
 # Initialize structured logs
 setup_structured_logging()
@@ -44,7 +46,31 @@ logger = logging.getLogger(__name__)
 
 # Rate limiting setup
 limiter = Limiter(key_func=get_remote_address)
-app = FastAPI(title="Webshooks - Agent Engine API")
+app = FastAPI(
+    title="Webshooks Agent Engine API",
+    description="""
+Motor de agentes inteligentes con RAG y LangGraph.
+
+**Endpoints principales:**
+- POST /agent/execute — Ejecutar agente con contexto RAG
+- GET  /agent/traces  — Ver trazas de ejecución
+- GET  /agent/config  — Obtener configuración del agente (servicios, sedes, coberturas)
+- GET  /metrics/agent — Métricas de convergencia
+- POST /onboarding/ingest — Pipeline de ingesta (LLM + Qdrant)
+
+**Autenticación:**
+Todos los endpoints requieren header `X-API-Key` (obtenido del SaaS).
+
+**Arquitectura:**
+- LangGraph para flujo de agente iterativo
+- RAG con Qdrant (colecciones por tenant)
+- LLMs: Ollama (local) o OpenRouter (cloud con rotation)
+- Trazabilidad completa con PostgreSQL
+    """,
+    version="1.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
+)
 
 # Configure CORS
 allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3001,http://127.0.0.1:3001").split(",")
@@ -91,29 +117,18 @@ async def add_process_time_and_trace_id(request: Request, call_next):
 
 
 async def get_agent_tenant(request: Request) -> dict:
-    """
-    Dependency para /agent/execute.
-    Prioridad:
-      1. X-API-Key → user dict del sistema (tenant_id del token)
-      2. ALLOW_FALLBACK_TENANT=true → testing bypass
-      3. Sin auth → 401
-    """
+    """Dependency — valida API Key y retorna usuario."""
     api_key = request.headers.get("X-API-Key")
-    if api_key:
-        user = await get_user_by_api_key(api_key)
-        if not user:
-            raise HTTPException(status_code=401, detail="API Key inválida o usuario inactivo")
-        return user
-
-    if os.getenv("ALLOW_FALLBACK_TENANT") == "true":
-        fallback_tenant = os.getenv("DEFAULT_TENANT_ID", "default")
-        return {"tenant_id": fallback_tenant, "rol": "cliente", "email": "fallback"}
-
-    raise HTTPException(
-        status_code=401,
-        detail="Autenticación requerida. Usá X-API-Key: <tu_api_key>",
-        headers={"WWW-Authenticate": "ApiKey"},
-    )
+    if not api_key:
+        raise HTTPException(
+            status_code=401,
+            detail="API Key requerida. Usá X-API-Key header.",
+            headers={"WWW-Authenticate": "ApiKey"},
+        )
+    user = await get_user_by_api_key(api_key)
+    if not user:
+        raise HTTPException(status_code=401, detail="API Key inválida o usuario inactivo")
+    return user
 
 
 @app.get("/health")
@@ -131,7 +146,7 @@ async def execute(
 ):
     """
     Execute agent with RAG context.
-    
+
     Request body:
     {
         "query": "¿Qué servicios ofrecen?",
@@ -139,14 +154,28 @@ async def execute(
         "trace_id": "optional-trace-id",
         "enable_detailed_trace": true/false
     }
-    
+
+    Autenticación:
+    - Header: X-API-Key: <tu_api_key>
+
     Ejecuta el agente con LangGraph + Ollama + Qdrant.
     """
     start_time = time.time()
-    effective_tenant_id = current_user.get("tenant_id") or req.tenant_id
+
+    # Determinar tenant_id a usar (prioriza request, pero valida permisos)
+    tenant_id = req.tenant_id or current_user.get("tenant_id")
+    if not tenant_id:
+        raise HTTPException(status_code=400, detail="tenant_id es requerido en el request")
+
+    # VALIDAR ACCESO AL TENANT (solo admin puede usar tenant_id diferente al propio)
+    if not validate_tenant_access(current_user, tenant_id):
+        raise HTTPException(
+            status_code=403,
+            detail=f"No tienes permiso para acceder al tenant '{tenant_id}'"
+        )
 
     trace_id = str(uuid.uuid4())
-    logger.info(f"[TRACE START] {trace_id} | tenant={effective_tenant_id}")
+    logger.info(f"[TRACE START] {trace_id} | tenant={tenant_id}")
 
     try:
         query_clean = req.query.strip()
@@ -156,7 +185,7 @@ async def execute(
 
         # Obtener LLM provider configurado
         llm_provider = get_llm_provider()
-        engine = LangGraphEngine(tenant_id=effective_tenant_id, llm_provider=llm_provider)
+        engine = LangGraphEngine(tenant_id=tenant_id, llm_provider=llm_provider)
         
         agent_exec_start = time.time()
         result, metadata = await asyncio.wait_for(
@@ -167,7 +196,7 @@ async def execute(
         background_tasks.add_task(
             persist_trace,
             trace_id=trace_id,
-            tenant_id=effective_tenant_id,
+            tenant_id=tenant_id,
             query=query_clean,
             iterations=metadata.get("iterations", 0),
             result=result,
@@ -180,11 +209,15 @@ async def execute(
 
         response = AgentResponse(
             trace_id=trace_id,
-            tenant_id=effective_tenant_id,
+            tenant_id=tenant_id,
             query=req.query,
             iterations=metadata.get("iterations", 0),
             result=result,
-            metadata=metadata
+            metadata=metadata,
+            total_duration_ms=agent_exec_ms,
+            timestamp_start=datetime.fromtimestamp(start_time),
+            timestamp_end=datetime.utcnow(),
+            x_process_time=str(process_time) if 'process_time' in locals() else None,
         )
 
         logger.info(f"[TRACE END] {trace_id} | duration={agent_exec_ms}ms")
@@ -196,19 +229,29 @@ async def execute(
         background_tasks.add_task(
             persist_trace,
             trace_id=trace_id,
-            tenant_id=effective_tenant_id,
+            tenant_id=tenant_id,
             query=req.query,
             iterations=0,
             result=[],
             metadata={"total_ms": 60000, "finish_reason": "timeout"}
         )
-        return AgentResponse(trace_id=trace_id, tenant_id=effective_tenant_id, query=req.query, iterations=0, result=[], metadata={"error": "timeout"})
+        return AgentResponse(
+            trace_id=trace_id,
+            tenant_id=tenant_id,
+            query=req.query,
+            iterations=0,
+            result=[],
+            metadata={"error": "timeout", "finish_reason": "timeout"},
+            total_duration_ms=60000,
+            timestamp_start=datetime.fromtimestamp(start_time),
+            timestamp_end=datetime.utcnow(),
+        )
         
     except Exception as e:
         background_tasks.add_task(
             persist_trace,
             trace_id=trace_id,
-            tenant_id=effective_tenant_id,
+            tenant_id=tenant_id,
             query=req.query,
             iterations=0,
             result=[],
@@ -298,6 +341,109 @@ async def get_metrics(
             ]
         }
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ---------------------------------------------------------------------------
+# GET /agent/config — configuración del agente para el frontend
+# ---------------------------------------------------------------------------
+
+@app.get("/agent/config", tags=["Agent"], response_model=dict)
+async def get_agent_config(current_user: dict = Depends(get_agent_tenant)):
+    """
+    Retorna la configuración del agente para el tenant autenticado.
+
+    Esta información la usa el frontend para mostrar:
+    - Nombre y descripción del negocio
+    - Tono del agente
+    - Propósito principal
+    - Servicios disponibles
+    - Sedes y horarios
+    - Coberturas (obras sociales, prepagas)
+    - Acciones habilitadas/prohibidas
+    """
+    tenant_id = current_user["tenant_id"]
+    try:
+        from core.config import settings
+        conn = psycopg2.connect(settings.database_url)
+        cur = conn.cursor()
+
+        # Datos del tenant
+        cur.execute(
+            "SELECT nombre, descripcion, config FROM tenants WHERE id = %s",
+            (tenant_id,)
+        )
+        row = cur.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Tenant no encontrado")
+
+        nombre, descripcion, config = row
+        config = config or {}
+
+        # Servicios
+        cur.execute(
+            "SELECT nombre, categoria, descripcion FROM tenant_servicios WHERE tenant_id = %s",
+            (tenant_id,)
+        )
+        servicios = [
+            {"nombre": r[0], "categoria": r[1], "descripcion": r[2]}
+            for r in cur.fetchall()
+        ]
+
+        # Sedes
+        cur.execute(
+            "SELECT nombre, direccion, telefonos, mail, horario_semana, horario_sabado, coberturas_disponibles FROM tenant_sedes WHERE tenant_id = %s",
+            (tenant_id,)
+        )
+        sedes = []
+        for r in cur.fetchall():
+            sedes.append({
+                "nombre": r[0],
+                "direccion": r[1],
+                "telefonos": json.loads(r[2]) if r[2] else [],
+                "mail": r[3],
+                "horario_semana": r[4],
+                "horario_sabado": r[5],
+                "coberturas_disponibles": r[6],
+            })
+
+        # Coberturas
+        cur.execute(
+            "SELECT nombre, activa, sedes_disponibles FROM tenant_coberturas WHERE tenant_id = %s",
+            (tenant_id,)
+        )
+        coberturas = [
+            {"nombre": r[0], "activa": r[1], "sedes_disponibles": json.loads(r[2]) if r[2] else []}
+            for r in cur.fetchall()
+        ]
+
+        # Routing rules
+        cur.execute(
+            "SELECT patron, estrategia, config FROM tenant_routing_rules WHERE tenant_id = %s",
+            (tenant_id,)
+        )
+        routing_rules = [
+            {"patron": r[0], "estrategia": r[1], "config": r[2]}
+            for r in cur.fetchall()
+        ]
+
+        conn.close()
+
+        return {
+            "tenant_id": tenant_id,
+            "nombre": nombre,
+            "descripcion": descripcion,
+            "config": config,
+            "servicios": servicios,
+            "sedes": sedes,
+            "coberturas": coberturas,
+            "routing_rules": routing_rules,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error obteniendo config para {tenant_id}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

@@ -3,8 +3,8 @@ Factory para crear instancias de LLMProvider según configuración.
 """
 
 from core.config import settings
-# Note: backend-agents/ is in sys.path, so we can import from root modules
-from ollama_provider import OllamaProvider
+# Import from this package
+from .ollama_provider import OllamaProvider
 from .openrouter_provider import OpenRouterProvider
 
 # Nota: GroqProvider no existe aún en el código base actual - solo OllamaProvider está implementado
@@ -48,7 +48,7 @@ def get_available_providers() -> list[str]:
     available = []
     try:
         # Verificar cada provider
-        from ollama_provider import OllamaProvider
+        from .ollama_provider import OllamaProvider
         available.append("ollama")
     except ImportError:
         pass

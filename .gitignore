@@ -52,8 +52,6 @@ next-env.d.ts
 
 .vercel
 
-# Documentation
-/docs/
 # SQLite databases
 *.db
 /intelligence_engine/data/
@@ -188,6 +186,8 @@ frontend/files/
 # Uploads de backend
 backend-saas/uploads/
 backend-agents/uploads/
+backend-agents/logs/
+backend-agents/openrouter_usage.json
 
 # Seeds y scripts de DB sensibles en backend-saas root
 /backend-saas/*.py
