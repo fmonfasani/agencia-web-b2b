@@ -8,7 +8,7 @@ import psycopg2
 
 from app.tenant_models import TenantCreateRequest, TenantUpdateRequest, TenantResponse, TenantListResponse
 from app.auth_router import get_current_user, require_analista_or_admin
-from app.onboarding_service import DB_DSN
+from app.onboarding_service import _get_db_dsn
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/tenant", tags=["Tenant Management"])
@@ -24,7 +24,7 @@ Lista todos los tenants de la plataforma. Solo analistas y admins.
 )
 async def list_tenants(_: dict = Depends(require_analista_or_admin)):
     try:
-        conn = psycopg2.connect(DB_DSN)
+        conn = psycopg2.connect(_get_db_dsn())
         cur = conn.cursor()
 
         cur.execute("SELECT COUNT(*) FROM tenants")
@@ -66,7 +66,7 @@ async def list_tenants(_: dict = Depends(require_analista_or_admin)):
 )
 async def get_tenant(tenant_id: str, _: dict = Depends(require_analista_or_admin)):
     try:
-        conn = psycopg2.connect(DB_DSN)
+        conn = psycopg2.connect(_get_db_dsn())
         cur = conn.cursor()
 
         cur.execute("""
@@ -109,7 +109,7 @@ async def update_tenant(
     _: dict = Depends(require_analista_or_admin),
 ):
     try:
-        conn = psycopg2.connect(DB_DSN)
+        conn = psycopg2.connect(_get_db_dsn())
         cur = conn.cursor()
 
         # Check existence

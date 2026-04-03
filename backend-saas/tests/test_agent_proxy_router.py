@@ -42,13 +42,18 @@ def clear_overrides():
 def test_agent_execute_proxy_success(override_auth, override_proxy_client):
     # Arrange
     override_auth("tenant_test")
+    from datetime import datetime
+    now = datetime.utcnow()
     mock_proxy = override_proxy_client({
         "trace_id": "abc123",
         "tenant_id": "tenant_test",
+        "query": "test query",
         "result": [{"role": "assistant", "content": "Hello"}],
         "iterations": 1,
         "metadata": {"model": "gemma3"},
-        "total_duration_ms": 1000
+        "total_duration_ms": 1000,
+        "timestamp_start": now,
+        "timestamp_end": now,
     })
 
     # Act
@@ -72,7 +77,12 @@ def test_agent_config_proxy_success(override_auth, override_proxy_client):
     mock_proxy = override_proxy_client({
         "tenant_id": "tenant_test",
         "nombre": "Test Clinic",
-        "servicios": []
+        "descripcion": "Clínica de prueba",
+        "config": {"proposito": "Agendar turnos", "tono": "profesional"},
+        "servicios": [],
+        "sedes": [],
+        "coberturas": [],
+        "routing_rules": []
     })
 
     # Act

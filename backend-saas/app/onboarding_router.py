@@ -23,7 +23,7 @@ from app.onboarding_models import (
     OnboardingForm,
     OnboardingStatusResponse,
 )
-from app.onboarding_service import setup_postgresql, UPLOAD_DIR, QDRANT_URL, DB_DSN
+from app.onboarding_service import setup_postgresql, UPLOAD_DIR, QDRANT_URL, _get_db_dsn
 from app.auth_router import require_analista_or_admin
 
 logger = logging.getLogger(__name__)
@@ -284,7 +284,7 @@ async def get_status(tenant_id: str):
 
     # PostgreSQL
     try:
-        conn = psycopg2.connect(DB_DSN)
+        conn = psycopg2.connect(_get_db_dsn())
         cur = conn.cursor()
 
         for tabla in ["tenant_coberturas", "tenant_sedes", "tenant_servicios"]:
@@ -359,7 +359,7 @@ async def get_status(tenant_id: str):
 )
 async def delete_tenant(tenant_id: str, _: dict = Depends(require_analista_or_admin)):
     # PostgreSQL
-    conn = psycopg2.connect(DB_DSN)
+    conn = psycopg2.connect(_get_db_dsn())
     cur = conn.cursor()
     for tabla in ["tenant_coberturas", "tenant_sedes", "tenant_servicios", "tenant_routing_rules"]:
         cur.execute(f"DELETE FROM {tabla} WHERE tenant_id = %s", (tenant_id,))

@@ -2,7 +2,7 @@
 Modelos de Request/Response con trazabilidad completa
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 from enum import Enum
@@ -61,8 +61,8 @@ class AgentRequest(BaseModel):
         description="Temperatura del LLM (default: 0.7)"
     )
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "examples": [
                 {
                     "tenant_id": "tenant_test",
@@ -71,6 +71,7 @@ class AgentRequest(BaseModel):
                 }
             ]
         }
+    )
 
 
 # ============================================================================
@@ -274,8 +275,8 @@ class AgentResponse(BaseModel):
         description="Header X-Process-Time retornado"
     )
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "examples": [
                 {
                     "trace_id": "trace_abc123",
@@ -300,6 +301,7 @@ class AgentResponse(BaseModel):
                 }
             ]
         }
+    )
 
 
 # ============================================================================
@@ -308,24 +310,97 @@ class AgentResponse(BaseModel):
 
 class ErrorResponse(BaseModel):
     """Response de error con contexto de tracing"""
-    
+
     trace_id: str = Field(description="ID del request fallido")
     error_type: str = Field(description="Tipo de error")
     error_message: str = Field(description="Mensaje de error")
     timestamp: datetime = Field(description="Timestamp del error")
-    
+
     # Contexto del error
     failed_at_step: Optional[str] = Field(
         None,
         description="En qué paso falló (ej: 'qdrant_search', 'llm_call')"
     )
-    
+
     partial_trace: Optional[List[TraceStep]] = Field(
         None,
         description="Trazabilidad hasta el punto de falla"
     )
-    
+
     debug_info: Optional[Dict[str, Any]] = Field(
         None,
         description="Info adicional para debugging"
+    )
+
+
+# ============================================================================
+# AGENT CONFIG MODELS
+# ============================================================================
+
+class AgentSede(BaseModel):
+    """Modelo de sede para respuesta de /agent/config"""
+    nombre: str = Field(description="Nombre de la sede")
+    direccion: Optional[str] = Field(None, description="Dirección completa")
+    telefonos: Optional[List[str]] = Field(None, description="Lista de teléfonos de contacto")
+    mail: Optional[str] = Field(None, description="Email de contacto")
+    horario_semana: Optional[str] = Field(None, description="Horario de lunes a viernes")
+    horario_sabado: Optional[str] = Field(None, description="Horario los sábados")
+    coberturas_disponibles: Optional[str] = Field(None, description="'todas' o lista de coberturas")
+
+
+class AgentServicio(BaseModel):
+    """Modelo de servicio para respuesta de /agent/config"""
+    nombre: str = Field(description="Nombre del servicio o especialidad")
+    categoria: Optional[str] = Field(None, description="Categoría del servicio")
+    descripcion: Optional[str] = Field(None, description="Descripción del servicio")
+
+
+class AgentCobertura(BaseModel):
+    """Modelo de cobertura (obra social/prepaga)"""
+    nombre: str = Field(description="Nombre de la cobertura")
+    activa: bool = Field(description="Si está activa actualmente")
+    sedes_disponibles: Optional[List[str]] = Field(None, description="En qué sedes aplica")
+
+
+class AgentConfigResponse(BaseModel):
+    """Respuesta completa de GET /agent/config"""
+    tenant_id: str = Field(description="ID del tenant")
+    nombre: str = Field(description="Nombre del negocio/clínica")
+    descripcion: Optional[str] = Field(None, description="Descripción corta")
+    config: Optional[Dict[str, Any]] = Field(None, description="Configuración adicional del agente")
+    servicios: List[AgentServicio] = Field(description="Lista de servicios ofrecidos")
+    sedes: List[AgentSede] = Field(description="Lista de sedes físicas")
+    coberturas: List[AgentCobertura] = Field(description="Obras sociales y prepagas aceptadas")
+    routing_rules: Optional[List[Dict[str, Any]]] = Field(None, description="Reglas de routing configuradas")
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "tenant_id": "clinica-x-buenos-aires",
+                "nombre": "Clínica X - Buenos Aires",
+                "descripcion": "Clínica privada multiespecialista",
+                "config": {
+                    "proposito": "Agendar turnos y consultar coberturas",
+                    "tono": "profesional_y_cercano"
+                },
+                "servicios": [
+                    {"nombre": "Cardiología", "categoria": "especialidad", "descripcion": "Diagnóstico y tratamiento cardiovascular"}
+                ],
+                "sedes": [
+                    {
+                        "nombre": "Sede Centro",
+                        "direccion": "Av. Corrientes 1234, CABA",
+                        "telefonos": ["1123456789"],
+                        "mail": "centro@clinica-x.ar",
+                        "horario_semana": "Lun-Vier 8:00-20:00",
+                        "coberturas_disponibles": "todas"
+                    }
+                ],
+                "coberturas": [
+                    {"nombre": "OSDE", "activa": True, "sedes_disponibles": ["Sede Centro"]},
+                    {"nombre": "Swiss Medical", "activa": True, "sedes_disponibles": ["Sede Centro"]}
+                ],
+                "routing_rules": []
+            }
+        }
     )

@@ -10,7 +10,7 @@ from typing import Optional
 
 from app.auth_router import get_current_user
 from app.lib.proxy_client import ProxyClient
-from app.models.agent_request_model import AgentRequest
+from app.models.agent_request_model import AgentRequest, AgentResponse, AgentConfigResponse
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/agent", tags=["Agent Proxy"])
@@ -95,7 +95,7 @@ Ejecuta el agente inteligente con contexto RAG para responder consultas del tena
 - `403`: Sin acceso al tenant
 - `502`: backend-agents no disponible
     """,
-    response_model=dict,
+    response_model=AgentResponse,
 )
 async def proxy_execute(
     req: AgentRequest,
@@ -181,7 +181,8 @@ coberturas disponibles y reglas de routing del agente.
 ```
 
 Requiere `X-API-Key` con acceso al tenant.
-    """
+    """,
+    response_model=AgentConfigResponse,
 )
 async def proxy_config(
     request: Request,
@@ -250,7 +251,8 @@ Retorna las últimas ejecuciones del agente para el tenant.
 
 **Parámetro:**
 - `limit`: número de trazas (1-100, default 50)
-    """
+    """,
+    response_model=dict,
 )
 async def proxy_traces(
     request: Request,
@@ -309,7 +311,8 @@ Incluye promedio de iteraciones, tiempo de respuesta y conteo de errores.
 ```
 
 Útil para monitoreo y optimización del agente.
-    """
+    """,
+    response_model=dict,
 )
 async def proxy_metrics(
     request: Request,

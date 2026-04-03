@@ -27,19 +27,21 @@ def _normalize_tenant_id(tenant_id: str) -> str:
 
 logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# CONFIG
-# ---------------------------------------------------------------------------
+# Config
 OLLAMA_URL   = os.getenv("OLLAMA_URL", "http://localhost:11434")
 QDRANT_URL   = os.getenv("QDRANT_URL", "http://localhost:6333")
 EMBED_MODEL  = os.getenv("EMBED_MODEL", "nomic-embed-text")
 LLM_MODEL    = os.getenv("LLM_MODEL", "qwen2.5:0.5b")
-# Default fallback to the hardcoded local dev DB URL
-DB_DSN       = os.getenv("DATABASE_URL")
-if not DB_DSN:
-    raise RuntimeError("DATABASE_URL environment variable is required")
 UPLOAD_DIR   = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
+
+# Helper para obtener DB_DSN (se evalúa en tiempo de ejecución, no al importar)
+def _get_db_dsn() -> str:
+    """Retorna DATABASE_URL, lanzando error si no está configurada."""
+    dsn = os.getenv("DATABASE_URL")
+    if not dsn:
+        raise RuntimeError("DATABASE_URL environment variable is required")
+    return dsn
 
 
 # ---------------------------------------------------------------------------
@@ -112,7 +114,8 @@ def setup_postgresql(form: OnboardingForm):
     Crea tablas dinámicas según las entidades del formulario
     y carga todos los datos estructurados.
     """
-    conn = psycopg2.connect(DB_DSN)
+    dsn = _get_db_dsn()
+    conn = psycopg2.connect(dsn)
     cur = conn.cursor()
 
     # Tabla de tenants
