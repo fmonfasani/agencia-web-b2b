@@ -8,8 +8,10 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
+    env_file:
+      - .env
     environment:
-      - DATABASE_URL=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/agencia_web_b2b
+      - DATABASE_URL=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/agencia_web_b2b_dev
       - BACKEND_AGENTS_URL=http://backend-agents:8001
       - QDRANT_URL=http://qdrant:6333
       - OLLAMA_URL=http://ollama:11434
@@ -39,8 +41,10 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8001:8001"
+    env_file:
+      - ../backend-agents/.env
     environment:
-      - DATABASE_URL=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/agencia_web_b2b
+      - DATABASE_URL=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/agencia_web_b2b_dev
       - QDRANT_URL=http://qdrant:6333
       - OLLAMA_URL=http://ollama:11434
     volumes:

@@ -195,13 +195,22 @@ backend-agents/openrouter_usage.json
 /backend-saas/ARSENAL_TESTS_RESUMEN.txt
 /backend-saas/CREDENCIALES_SEED.json
 
-# Env files (todos los backends)
+# =====================
+# ENVIRONMENT FILES (NUNCA COMMITEAR)
+# =====================
+# Desarrollo local
 **/.env
 **/.env.local
+
+# Producción (CONFIDENCIAL)
 **/.env.production
+**/.env.staging
+
+# Otros (excepto ejemplos y templates)
 **/.env.*
 !**/.env.example
 !**/.env.production.template
+!**/.env.staging.template
 
 DECOUPLING_REPORT.json
 

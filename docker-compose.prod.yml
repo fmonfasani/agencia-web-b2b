@@ -9,7 +9,7 @@ services:
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB:-agencia_web_b2b}
+      POSTGRES_DB: ${POSTGRES_DB:-agencia_web_b2b_prod}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
@@ -82,7 +82,7 @@ services:
     env_file:
       - ./backend-saas/.env.production
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-agencia_web_b2b}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-agencia_web_b2b_prod}
       - QDRANT_URL=http://qdrant:6333
       - REDIS_URL=redis://:${REDIS_PASSWORD:-}@redis:6379/0
       - BACKEND_AGENTS_URL=http://backend-agents:8001
@@ -115,7 +115,7 @@ services:
     env_file:
       - ./backend-agents/.env.production
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-agencia_web_b2b}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-agencia_web_b2b_prod}
       - QDRANT_URL=http://qdrant:6333
       - OLLAMA_URL=http://ollama:11434
       - OLLAMA_BASE_URL=http://ollama:11434
