@@ -1,4 +1,5 @@
 import { Redis } from "@upstash/redis";
+import { logger } from "@/lib/logger";
 
 // Validate URL starts with https:// to avoid crashing with invalid env vars
 function isValidRedisUrl(url: string | undefined): boolean {
@@ -7,12 +8,19 @@ function isValidRedisUrl(url: string | undefined): boolean {
 
 const redis =
   isValidRedisUrl(process.env.UPSTASH_REDIS_REST_URL) &&
-    process.env.UPSTASH_REDIS_REST_TOKEN
+  process.env.UPSTASH_REDIS_REST_TOKEN
     ? new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL!,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN,
-    })
+        url: process.env.UPSTASH_REDIS_REST_URL!,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN,
+      })
     : null;
+
+// In-memory fallback when Redis is unavailable
+// Map<key, { count: number; resetAt: number }>
+const inMemoryStore = new Map<string, { count: number; resetAt: number }>();
+
+// Log warning if Redis is not configured (one-time on first check)
+let redisWarningLogged = false;
 
 export type RateLimitResult = {
   allowed: boolean;
@@ -20,13 +28,47 @@ export type RateLimitResult = {
   retryAfterSec: number;
 };
 
+async function checkRateLimitInMemory(
+  key: string,
+  limit: number,
+  windowSec: number,
+): Promise<RateLimitResult> {
+  const bucketKey = `ratelimit:${key}`;
+  const now = Date.now();
+  const entry = inMemoryStore.get(bucketKey);
+
+  // Reset bucket if window has expired
+  if (!entry || entry.resetAt < now) {
+    inMemoryStore.set(bucketKey, { count: 1, resetAt: now + windowSec * 1000 });
+    return { allowed: true, remaining: limit - 1, retryAfterSec: windowSec };
+  }
+
+  // Increment counter
+  entry.count++;
+  const remaining = Math.max(0, limit - entry.count);
+  const retryAfterSec = Math.ceil((entry.resetAt - now) / 1000);
+
+  return {
+    allowed: entry.count <= limit,
+    remaining,
+    retryAfterSec: Math.max(0, retryAfterSec),
+  };
+}
+
 export async function checkRateLimit(
   key: string,
   limit: number,
   windowSec: number,
 ): Promise<RateLimitResult> {
+  // If Redis is unavailable, use in-memory fallback
   if (!redis) {
-    return { allowed: true, remaining: limit, retryAfterSec: 0 };
+    if (!redisWarningLogged) {
+      logger.warn(
+        "[RATE_LIMIT] Redis not configured — using in-memory fallback. Rate limits will not be shared across instances.",
+      );
+      redisWarningLogged = true;
+    }
+    return checkRateLimitInMemory(key, limit, windowSec);
   }
 
   const bucketKey = `ratelimit:${key}`;

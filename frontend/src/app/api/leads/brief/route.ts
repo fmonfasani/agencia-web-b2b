@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { LeadBriefService } from "@/lib/leads/brief/brief.service";
 import { requireTenantId, TenantContextError } from "@/lib/tenant-context";
+import { requireTenantMembership, AuthorizationError } from "@/lib/authz";
 
 interface BriefSingleRequest {
   leadId: string;
@@ -29,6 +30,19 @@ function hasLimit(body: unknown): body is BriefBatchRequest {
 }
 
 export async function POST(req: NextRequest) {
+  // SECURITY: Require authenticated tenant member
+  try {
+    await requireTenantMembership();
+  } catch (error) {
+    if (error instanceof AuthorizationError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status },
+      );
+    }
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   let body: unknown;
   try {
     body = await req.json();
@@ -40,13 +54,17 @@ export async function POST(req: NextRequest) {
   try {
     tenantId = requireTenantId(req.headers.get("x-tenant-id"));
   } catch (error) {
-    const message = error instanceof TenantContextError ? error.message : "Missing tenantId";
+    const message =
+      error instanceof TenantContextError ? error.message : "Missing tenantId";
     return NextResponse.json({ error: message }, { status: 400 });
   }
 
   try {
     if (hasLeadId(body)) {
-      const result = await LeadBriefService.generateBrief(tenantId, body.leadId);
+      const result = await LeadBriefService.generateBrief(
+        tenantId,
+        body.leadId,
+      );
       const statusCode = result.status === "failed" ? 502 : 200;
       return NextResponse.json(result, { status: statusCode });
     }

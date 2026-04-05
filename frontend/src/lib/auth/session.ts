@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from "crypto";
 import { prisma } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
 export const SESSION_TTL_HOURS = Number(process.env.SESSION_TTL_HOURS ?? 12);
 const ROTATION_WINDOW_MIN = Number(process.env.SESSION_ROTATE_MINUTES ?? 30);
@@ -30,11 +31,14 @@ export async function createSession(userId: string, tenantId?: string) {
       },
     });
 
-    console.log(`SESSION_DEBUG: Session created for user ${userId}`);
+    logger.debug("Session created", { userId });
 
     return { token, session };
   } catch (error: any) {
-    console.error("SESSION_ERROR: Failed to create session:", error);
+    logger.error("Failed to create session", {
+      userId,
+      error: error instanceof Error ? error.message : String(error),
+    });
     throw error;
   }
 }

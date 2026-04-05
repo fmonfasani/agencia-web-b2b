@@ -1,5 +1,6 @@
 import type { Session } from "next-auth";
 import { auth } from "@/lib/auth";
+import { timingSafeEqual } from "crypto";
 
 /**
  * Normalized Internal Secret Validator
@@ -24,7 +25,17 @@ export function validateInternalSecret(request: Request): boolean {
   }
 
   if (!token) return false;
-  return token === expected;
+
+  // Timing-safe comparison to prevent timing attacks
+  try {
+    const tokenBuf = Buffer.from(token);
+    const expectedBuf = Buffer.from(expected);
+    // timingSafeEqual requires buffers of the same length
+    if (tokenBuf.byteLength !== expectedBuf.byteLength) return false;
+    return timingSafeEqual(tokenBuf, expectedBuf);
+  } catch {
+    return false;
+  }
 }
 
 export function requireInternalSecret(request: Request): void {

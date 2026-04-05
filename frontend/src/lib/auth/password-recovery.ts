@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
 import { hashPassword } from "@/lib/auth/password";
 import { IAMService } from "../iam/iam.service";
+import { logger } from "@/lib/logger";
 
 /**
  * Secure Password Recovery Flow
@@ -34,7 +35,7 @@ export const PasswordRecovery = {
     });
 
     // TODO: Send Email with rawToken
-    console.log(`[AUTH] Reset requested for ${email}. Token: ${rawToken}`);
+    logger.warn("[AUTH] Password reset requested", { email });
 
     await IAMService.logAudit(
       user.id,

@@ -1,23 +1,33 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Role } from "@prisma/client";
-import { hashPassword, sha256 } from "@/lib/auth/hash";
+import { sha256 } from "@/lib/auth/hash";
+import { hashPassword } from "@/lib/auth/password";
 import { z } from "zod";
 import { ratelimit } from "@/lib/ratelimit";
 
-const acceptSchema = z.object({
-  token: z.string().min(1),
-  mode: z.enum(["password", "oauth"]),
-  password: z.string().min(8).optional(),
-  oauthProvider: z.string().optional(),
-  oauthProviderId: z.string().optional(),
-}).refine(data => {
-  if (data.mode === "password" && !data.password) return false;
-  if (data.mode === "oauth" && (!data.oauthProvider || !data.oauthProviderId)) return false;
-  return true;
-}, {
-  message: "Faltan credenciales para el modo seleccionado",
-});
+const acceptSchema = z
+  .object({
+    token: z.string().min(1),
+    mode: z.enum(["password", "oauth"]),
+    password: z.string().min(8).optional(),
+    oauthProvider: z.string().optional(),
+    oauthProviderId: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.mode === "password" && !data.password) return false;
+      if (
+        data.mode === "oauth" &&
+        (!data.oauthProvider || !data.oauthProviderId)
+      )
+        return false;
+      return true;
+    },
+    {
+      message: "Faltan credenciales para el modo seleccionado",
+    },
+  );
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -66,7 +76,9 @@ export async function POST(request: Request) {
   try {
     // 0. Rate Limiting
     const ip = request.headers.get("x-forwarded-for") ?? "anonymous";
-    const { success: limitOk } = await ratelimit.limit(`invitation:accept:${ip}`);
+    const { success: limitOk } = await ratelimit.limit(
+      `invitation:accept:${ip}`,
+    );
     if (!limitOk) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }
@@ -75,10 +87,14 @@ export async function POST(request: Request) {
     const result = acceptSchema.safeParse(body);
 
     if (!result.success) {
-      return NextResponse.json({ error: result.error.flatten() }, { status: 400 });
+      return NextResponse.json(
+        { error: result.error.flatten() },
+        { status: 400 },
+      );
     }
 
-    const { token, mode, password, oauthProvider, oauthProviderId } = result.data;
+    const { token, mode, password, oauthProvider, oauthProviderId } =
+      result.data;
 
     const tokenHash = sha256(token);
 
@@ -106,18 +122,18 @@ export async function POST(request: Request) {
         update:
           mode === "password" && password
             ? {
-              passwordHash: hashPassword(password),
-            }
+                passwordHash: hashPassword(password),
+              }
             : {},
         create:
           mode === "password" && password
             ? {
-              email: invitation.email,
-              passwordHash: hashPassword(password),
-            }
+                email: invitation.email,
+                passwordHash: hashPassword(password),
+              }
             : {
-              email: invitation.email,
-            },
+                email: invitation.email,
+              },
       });
 
       const membership = await tx.membership.upsert({

@@ -29,11 +29,11 @@ class ApiClient {
   }
 
   /**
-   * Obtener API Key del localStorage
+   * Obtener API Key del sessionStorage
    */
   private getApiKey(): string | null {
     if (typeof window === "undefined") return null;
-    return localStorage.getItem("api_key");
+    return sessionStorage.getItem("api_key");
   }
 
   /**
@@ -101,7 +101,7 @@ class ApiClient {
       if (!response.ok) {
         if (response.status === 401) {
           // API Key inválida o expirada
-          localStorage.removeItem("api_key");
+          sessionStorage.removeItem("api_key");
           if (typeof window !== "undefined") {
             window.location.href = "/login";
           }
@@ -142,7 +142,7 @@ class ApiClient {
 
       if (!response.ok) {
         if (response.status === 401) {
-          localStorage.removeItem("api_key");
+          sessionStorage.removeItem("api_key");
           if (typeof window !== "undefined") {
             window.location.href = "/login";
           }
