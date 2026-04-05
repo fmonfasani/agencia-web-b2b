@@ -47,3 +47,15 @@ class UserResponse(BaseModel):
 class ActivateRequest(BaseModel):
     user_id: str
     activo: bool
+
+
+class RegisterCompanyRequest(BaseModel):
+    """Registro de nueva empresa + usuario administrador"""
+    firstName: str
+    lastName: str
+    email: EmailStr
+    password: str
+    companyName: str
+    whatsapp: Optional[str] = None
+    website: Optional[str] = None
+    plan: Optional[str] = "STARTER"

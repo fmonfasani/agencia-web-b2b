@@ -237,3 +237,85 @@ def activate_user(user_id: str, activo: bool) -> dict:
     if not row:
         raise UserNotFoundError(f"Usuario {user_id}")
     return {"id": row[0], "email": row[1], "nombre": row[2], "rol": row[3], "activo": row[4] == "ACTIVE"}
+
+
+def register_company(
+    email: str,
+    password: str,
+    firstName: str,
+    lastName: str,
+    companyName: str,
+    website: Optional[str] = None,
+) -> dict:
+    """
+    Registra una nueva empresa y su usuario administrador.
+    Crea: Usuario, Tenant, Membresía, Pipeline por defecto.
+    """
+    try:
+        conn = psycopg2.connect(DB_DSN)
+        cur = conn.cursor()
+
+        # Verificar email duplicado
+        cur.execute('SELECT id FROM "User" WHERE email = %s', (email,))
+        if cur.fetchone():
+            conn.close()
+            raise DuplicateEmailError(email)
+
+        api_key = generate_api_key()
+        password_hash = hash_password(password)
+
+        # Generar slug para la empresa
+        slug = companyName.lower().replace(" ", "-").replace("_", "-")[:50]
+
+        # Verificar slug duplicado
+        cur.execute('SELECT id FROM "Tenant" WHERE slug = %s', (slug,))
+        if cur.fetchone():
+            slug = f"{slug}-{secrets.token_hex(4)}"
+
+        # Generar IDs
+        user_id = f"u_{secrets.token_hex(12)}"
+        tenant_id = f"t_{secrets.token_hex(12)}"
+
+        # 1. Crear usuario
+        cur.execute("""
+            INSERT INTO "User" (id, email, "passwordHash", "firstName", "lastName",
+                                role, status, "apiKey", "defaultTenantId", "createdAt", "updatedAt")
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+        """, (user_id, email, password_hash, firstName, lastName, "ADMIN", "ACTIVE", api_key, tenant_id))
+
+        # 2. Crear tenant (empresa)
+        cur.execute("""
+            INSERT INTO "Tenant" (id, name, slug, website, status, "createdAt", "updatedAt")
+            VALUES (%s, %s, %s, %s, %s, NOW(), NOW())
+        """, (tenant_id, companyName, slug, website or None, "ACTIVE"))
+
+        # 3. Crear membresía (usuario es admin de su empresa)
+        cur.execute("""
+            INSERT INTO "TenantMember" (id, "userId", "tenantId", role, status, "createdAt", "updatedAt")
+            VALUES (%s, %s, %s, %s, %s, NOW(), NOW())
+        """, (f"tm_{secrets.token_hex(12)}", user_id, tenant_id, "ADMIN", "ACTIVE"))
+
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        return {
+            "id": user_id,
+            "email": email,
+            "firstName": firstName,
+            "lastName": lastName,
+            "api_key": api_key,
+            "company_name": companyName,
+            "company_id": tenant_id,
+            "role": "ADMIN",
+            "status": "ACTIVE",
+            "mensaje": "Empresa y usuario creados exitosamente. Por favor, inicia sesión.",
+        }
+    except DuplicateEmailError:
+        raise
+    except psycopg2.IntegrityError as e:
+        logger.error(f"IntegrityError en register_company: {e}")
+        raise WebshooksException("Error al registrar la empresa", 400)
+    except Exception as e:
+        logger.error(f"Error registering company for {email}: {e}")
+        raise WebshooksException("Error interno al registrar la empresa", 500)

@@ -8,7 +8,7 @@ from fastapi.security import APIKeyHeader
 
 from app.auth_models import (
     RegisterRequest, LoginRequest, LoginResponse,
-    UserResponse, ActivateRequest, Rol
+    UserResponse, ActivateRequest, Rol, RegisterCompanyRequest
 )
 from app.auth_service import (
     create_user, login_user, get_user_by_api_key,
@@ -139,6 +139,69 @@ async def register(req: RegisterRequest):
         raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
         logger.error(f"Unexpected error in register: {e}")
+        raise HTTPException(status_code=500, detail="Error interno del servidor")
+
+
+@router.post(
+    "/register-company",
+    summary="Registrar nueva empresa",
+    description="""
+Crea una nueva empresa y un usuario administrador en un solo paso.
+
+**Flujo:**
+1. Proporciona datos de la empresa y el administrador
+2. Se crea automáticamente la empresa (Tenant)
+3. Se crea el usuario como ADMIN de la empresa
+4. Recibís la API Key para usar inmediatamente
+
+**Ejemplo:**
+```json
+{
+  "firstName": "Juan",
+  "lastName": "Pérez",
+  "email": "admin@miempresa.com",
+  "password": "Segura123!",
+  "companyName": "Mi Empresa S.A.",
+  "website": "https://miempresa.com"
+}
+```
+
+**Respuesta exitosa:**
+```json
+{
+  "id": "u_xxx",
+  "email": "admin@miempresa.com",
+  "firstName": "Juan",
+  "lastName": "Pérez",
+  "api_key": "wh_xxx",
+  "company_name": "Mi Empresa S.A.",
+  "company_id": "t_xxx",
+  "role": "ADMIN",
+  "status": "ACTIVE",
+  "mensaje": "Empresa y usuario creados exitosamente. Por favor, inicia sesión."
+}
+```
+    """,
+    response_model=dict,
+)
+async def register_company(req: RegisterCompanyRequest):
+    try:
+        from app.auth_service import register_company as create_company
+        result = create_company(
+            email=req.email,
+            password=req.password,
+            firstName=req.firstName,
+            lastName=req.lastName,
+            companyName=req.companyName,
+            website=req.website,
+        )
+        return result
+    except DuplicateEmailError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
+    except WebshooksException as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
+    except Exception as e:
+        logger.error(f"Unexpected error in register_company: {e}")
         raise HTTPException(status_code=500, detail="Error interno del servidor")
 
 
