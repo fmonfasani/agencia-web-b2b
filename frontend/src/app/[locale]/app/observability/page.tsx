@@ -7,7 +7,6 @@ import {
   PageTransition,
   StaggerItem,
 } from "@/components/animations/PageTransition";
-import { useSession } from "next-auth/react";
 import { saasClientFor } from "@/lib/saas-client";
 
 const MOCK_METRICS = [
@@ -25,55 +24,67 @@ const TOP_AGENTS = [
 ];
 
 export default function ObservabilityPage() {
-  const { data: session } = useSession();
   const [traces, setTraces] = useState<any[]>([]);
   const [metricsData, setMetricsData] = useState(MOCK_METRICS);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const apiKey = (session?.user as any)?.apiKey;
-    if (!apiKey) {
-      setLoading(false);
-      return;
-    }
+    // Fetch session from API endpoint — no SessionProvider needed
+    fetch("/api/auth/session")
+      .then((r) => r.json())
+      .then((session) => {
+        const apiKey = (session?.user as any)?.apiKey;
+        if (!apiKey) {
+          setLoading(false);
+          return;
+        }
 
-    const client = saasClientFor(apiKey);
-    client.agent
-      .traces()
-      .then((data) => {
-        if (!data?.length) return;
-        setTraces(data);
+        const client = saasClientFor(apiKey);
+        client.agent
+          .traces()
+          .then((data) => {
+            if (!data?.length) return;
+            setTraces(data);
 
-        const byDate: Record<string, any> = {};
-        data.forEach((trace: any) => {
-          const date = new Date(trace.created_at).toLocaleDateString("es-ES", {
-            day: "numeric",
-            month: "short",
-          });
-          if (!byDate[date])
-            byDate[date] = { queries: 0, duration: 0, errors: 0, count: 0 };
-          byDate[date].queries++;
-          byDate[date].duration += trace.total_duration_ms || 0;
-          if (trace.success === false) byDate[date].errors++;
-          byDate[date].count++;
-        });
+            const byDate: Record<string, any> = {};
+            data.forEach((trace: any) => {
+              const date = new Date(trace.created_at).toLocaleDateString(
+                "es-ES",
+                { day: "numeric", month: "short" },
+              );
+              if (!byDate[date])
+                byDate[date] = {
+                  queries: 0,
+                  duration: 0,
+                  errors: 0,
+                  count: 0,
+                };
+              byDate[date].queries++;
+              byDate[date].duration += trace.total_duration_ms || 0;
+              if (trace.success === false) byDate[date].errors++;
+              byDate[date].count++;
+            });
 
-        const computed = Object.entries(byDate)
-          .map(([date, d]) => ({
-            date,
-            queries: d.queries * 100,
-            avgDuration: Math.round(d.duration / d.count),
-            errorRate: parseFloat(((d.errors / d.count) * 100).toFixed(1)),
-          }))
-          .slice(-5);
+            const computed = Object.entries(byDate)
+              .map(([date, d]) => ({
+                date,
+                queries: (d as any).queries * 100,
+                avgDuration: Math.round((d as any).duration / (d as any).count),
+                errorRate: parseFloat(
+                  (((d as any).errors / (d as any).count) * 100).toFixed(1),
+                ),
+              }))
+              .slice(-5);
 
-        if (computed.length > 0) setMetricsData(computed);
+            if (computed.length > 0) setMetricsData(computed);
+          })
+          .catch(() => {
+            /* backend not ready, use mock */
+          })
+          .finally(() => setLoading(false));
       })
-      .catch(() => {
-        /* backend not ready, use mock */
-      })
-      .finally(() => setLoading(false));
-  }, [session]);
+      .catch(() => setLoading(false));
+  }, []);
 
   return (
     <PageTransition>
@@ -146,7 +157,11 @@ export default function ObservabilityPage() {
                         </td>
                         <td className="py-3 px-4">
                           <span
-                            className={`px-2 py-1 rounded text-xs font-medium ${trace.success === false ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}
+                            className={`px-2 py-1 rounded text-xs font-medium ${
+                              trace.success === false
+                                ? "bg-red-100 text-red-700"
+                                : "bg-green-100 text-green-700"
+                            }`}
                           >
                             {trace.success === false ? "✗ Error" : "✓ Exitoso"}
                           </span>
