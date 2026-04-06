@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { getOnboardingStatus, uploadDocuments } from "@/app/actions/onboarding";
+import { useToast } from "@/components/ui/toast";
 import { Upload, CheckCircle, AlertCircle } from "lucide-react";
 
 interface OnboardingData {
@@ -16,6 +18,7 @@ interface OnboardingData {
 }
 
 export default function OnboardingPage() {
+  const { addToast } = useToast();
   const [statusData, setStatusData] = useState<OnboardingData | null>(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -47,11 +50,13 @@ export default function OnboardingPage() {
   const handleUpload = async () => {
     if (selectedFiles.length === 0) {
       setUploadError("Selecciona al menos un archivo");
+      addToast("Selecciona al menos un archivo", "error");
       return;
     }
 
     setUploading(true);
     setUploadError(null);
+    addToast(`Subiendo ${selectedFiles.length} archivo${selectedFiles.length > 1 ? "s" : ""}...`, "info");
 
     const formData = new FormData();
     selectedFiles.forEach((file) => {
@@ -66,9 +71,11 @@ export default function OnboardingPage() {
       const statusResult = await getOnboardingStatus();
       if (statusResult.success && statusResult.data) {
         setStatusData(statusResult.data);
+        addToast("✅ Archivos subidos correctamente. Procesando...", "success");
       }
     } else {
       setUploadError(result.error || "Error uploading files");
+      addToast(result.error || "Error al subir archivos", "error");
     }
 
     setUploading(false);
@@ -166,12 +173,16 @@ export default function OnboardingPage() {
       {/* Status Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Documents Card */}
-        <div
+        <motion.div
           className={`border rounded-lg p-6 ${
             statusData.documentsCount > 0
               ? "border-green-200 bg-green-50"
               : "border-gray-200 bg-gray-50"
           }`}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          whileHover={{ translateY: -4 }}
         >
           <div className="flex items-start justify-between mb-3">
             <h3 className="font-bold text-gray-900">Documentos</h3>
@@ -190,13 +201,17 @@ export default function OnboardingPage() {
               ? "Sube archivos PDF, TXT o CSV"
               : "Documentos cargados correctamente"}
           </p>
-        </div>
+        </motion.div>
 
         {/* PostgreSQL Card */}
-        <div
+        <motion.div
           className={`border rounded-lg p-6 ${
             statusData.postgresOk ? "border-green-200 bg-green-50" : "border-yellow-200 bg-yellow-50"
           }`}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+          whileHover={{ translateY: -4 }}
         >
           <div className="flex items-start justify-between mb-3">
             <h3 className="font-bold text-gray-900">PostgreSQL</h3>
@@ -210,13 +225,17 @@ export default function OnboardingPage() {
             {statusData.postgresOk ? "✓ Conectado" : "⏳ Conectando..."}
           </p>
           <p className="text-xs text-gray-500">Base de datos para contexto</p>
-        </div>
+        </motion.div>
 
         {/* Qdrant Card */}
-        <div
+        <motion.div
           className={`border rounded-lg p-6 ${
             statusData.qdrantOk ? "border-green-200 bg-green-50" : "border-yellow-200 bg-yellow-50"
           }`}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4, delay: 0.3 }}
+          whileHover={{ translateY: -4 }}
         >
           <div className="flex items-start justify-between mb-3">
             <h3 className="font-bold text-gray-900">Qdrant</h3>
@@ -230,7 +249,7 @@ export default function OnboardingPage() {
             {statusData.qdrantOk ? `${statusData.vectorsCount} vectores` : "⏳ Indexando..."}
           </p>
           <p className="text-xs text-gray-500">Base de datos vectorial (RAG)</p>
-        </div>
+        </motion.div>
       </div>
 
       {/* Upload Section */}
