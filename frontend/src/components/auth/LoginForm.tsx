@@ -16,6 +16,10 @@ interface FloatingInputProps {
   rightSlot?: React.ReactNode;
 }
 
+interface FloatingInputTheme {
+  dark: boolean;
+}
+
 function FloatingInput({
   label,
   type = "text",
@@ -24,7 +28,8 @@ function FloatingInput({
   disabled,
   autoComplete,
   rightSlot,
-}: FloatingInputProps) {
+  dark = true,
+}: FloatingInputProps & { dark?: boolean }) {
   const [focused, setFocused] = useState(false);
   const floating = focused || value.length > 0;
 
@@ -38,20 +43,26 @@ function FloatingInput({
         onBlur={() => setFocused(false)}
         disabled={disabled}
         autoComplete={autoComplete}
-        className={`w-full rounded-lg border bg-white/[0.03] px-4 pt-6 pb-2 text-sm text-white outline-none transition-all duration-200 font-medium disabled:opacity-30 ${
+        className={`w-full rounded-lg border px-4 pt-6 pb-2 text-sm outline-none transition-all duration-200 font-medium disabled:opacity-30 ${
           rightSlot ? "pr-11" : ""
         } ${
-          focused
-            ? "border-white/20 shadow-[0_0_0_1px_rgba(255,255,255,0.08)]"
-            : "border-white/[0.08] hover:border-white/[0.12]"
+          dark
+            ? `bg-white/[0.03] text-white ${focused ? "border-white/20 shadow-[0_0_0_1px_rgba(255,255,255,0.08)]" : "border-white/[0.08] hover:border-white/[0.12]"}`
+            : `bg-gray-50 text-gray-900 ${focused ? "border-gray-400 shadow-[0_0_0_1px_rgba(0,0,0,0.06)]" : "border-gray-200 hover:border-gray-300"}`
         }`}
       />
       <label
         className={`absolute left-4 pointer-events-none transition-all duration-200 ${
           floating
             ? "top-2 text-[9px] font-semibold uppercase tracking-widest " +
-              (focused ? "text-white/50" : "text-white/30")
-            : "top-1/2 -translate-y-1/2 text-sm text-white/30"
+              (dark
+                ? focused
+                  ? "text-white/50"
+                  : "text-white/30"
+                : focused
+                  ? "text-gray-500"
+                  : "text-gray-400")
+            : `top-1/2 -translate-y-1/2 text-sm ${dark ? "text-white/30" : "text-gray-400"}`
         }`}
       >
         {label}
@@ -118,6 +129,8 @@ export function LoginForm({
     }
   };
 
+  const dark = darkMode;
+
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <FloatingInput
@@ -127,6 +140,7 @@ export function LoginForm({
         onChange={setEmail}
         disabled={status !== "idle"}
         autoComplete="email"
+        dark={dark}
       />
 
       <FloatingInput
@@ -136,11 +150,12 @@ export function LoginForm({
         onChange={setPassword}
         disabled={status !== "idle"}
         autoComplete="current-password"
+        dark={dark}
         rightSlot={
           <button
             type="button"
             onClick={() => setShowPass(!showPass)}
-            className="text-white/20 hover:text-white/50 transition-colors"
+            className={`transition-colors ${dark ? "text-white/20 hover:text-white/50" : "text-gray-400 hover:text-gray-600"}`}
             tabIndex={-1}
           >
             {showPass ? <EyeOff size={14} /> : <Eye size={14} />}
@@ -153,7 +168,7 @@ export function LoginForm({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1, x: [0, -5, 5, -5, 5, 0] }}
           transition={{ duration: 0.35 }}
-          className="px-3 py-2.5 rounded-lg bg-red-500/8 border border-red-500/15 text-red-400/80 text-xs"
+          className={`px-3 py-2.5 rounded-lg text-xs border ${dark ? "bg-red-500/8 border-red-500/15 text-red-400/80" : "bg-red-50 border-red-200 text-red-600"}`}
         >
           {error}
         </motion.div>
@@ -165,8 +180,12 @@ export function LoginForm({
         whileTap={{ scale: 0.99 }}
         className={`w-full rounded-lg py-3 font-medium text-sm transition-all duration-300 flex items-center justify-center gap-2 ${
           status === "success"
-            ? "bg-emerald-500/15 border border-emerald-500/20 text-emerald-400"
-            : "bg-white text-black hover:bg-white/90 disabled:opacity-40"
+            ? dark
+              ? "bg-emerald-500/15 border border-emerald-500/20 text-emerald-400"
+              : "bg-emerald-50 border border-emerald-200 text-emerald-700"
+            : dark
+              ? "bg-white text-black hover:bg-white/90 disabled:opacity-40"
+              : "bg-black text-white hover:bg-gray-900 disabled:opacity-40"
         }`}
       >
         {status === "loading" ? (
@@ -187,7 +206,7 @@ export function LoginForm({
       <p className="text-center pt-1">
         <button
           type="button"
-          className="text-white/25 hover:text-white/50 transition-colors text-xs"
+          className={`transition-colors text-xs ${dark ? "text-white/25 hover:text-white/50" : "text-gray-400 hover:text-gray-600"}`}
         >
           ¿Olvidaste tu contraseña?
         </button>

@@ -14,6 +14,7 @@ import {
   Users,
   Webhook,
   Activity,
+  BrainCircuit,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -34,6 +35,11 @@ export default async function ClientLayout({
   const navItems = [
     { href: `/${locale}/app`, label: "Dashboard", icon: Home },
     { href: `/${locale}/app/agents`, label: "Mis Agentes", icon: Cpu },
+    {
+      href: `/${locale}/app/training`,
+      label: "Entrenamiento",
+      icon: BrainCircuit,
+    },
     { href: `/${locale}/app/chat`, label: "Chat IA", icon: Zap },
     {
       href: `/${locale}/app/marketplace`,

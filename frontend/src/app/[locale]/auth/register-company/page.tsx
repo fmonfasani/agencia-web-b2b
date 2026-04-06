@@ -29,11 +29,14 @@ export default async function RegisterCompanyPage({
 
   return (
     <div className="min-h-screen bg-black flex">
-      {/* ── LEFT — Form ── */}
-      <div className="w-full lg:w-[520px] flex items-start justify-center px-8 py-12 overflow-y-auto border-r border-white/[0.04]">
-        <div className="w-full max-w-[420px]">
+      {/* ── LEFT — Neural Grid + Live Feed ── */}
+      <AuthRightPanel tagline={tagline} stats={stats} activeDot={1} />
+
+      {/* ── RIGHT — Floating Form Card ── */}
+      <div className="w-full lg:flex-1 flex items-start justify-center px-6 py-12 bg-[#070707] overflow-y-auto">
+        <div className="w-full max-w-[420px] bg-[#111111] rounded-2xl border border-white/[0.07] p-8 shadow-2xl shadow-black/60">
           {/* Logo */}
-          <div className="flex items-center gap-3 mb-12">
+          <div className="flex items-center gap-3 mb-10">
             <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center">
               <svg
                 viewBox="0 0 24 24"
@@ -109,9 +112,6 @@ export default async function RegisterCompanyPage({
           </div>
         </div>
       </div>
-
-      {/* ── RIGHT — Neural Grid + Live Feed ── */}
-      <AuthRightPanel tagline={tagline} stats={stats} activeDot={1} />
     </div>
   );
 }

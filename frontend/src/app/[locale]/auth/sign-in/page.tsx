@@ -29,11 +29,14 @@ export default async function SignInPage({
 
   return (
     <div className="min-h-screen bg-black flex">
-      {/* ── LEFT — Form ── */}
-      <div className="w-full lg:w-[480px] flex items-center justify-center px-8 py-12 overflow-y-auto border-r border-white/[0.04]">
-        <div className="w-full max-w-[360px]">
+      {/* ── LEFT — Neural Grid + Live Feed ── */}
+      <AuthRightPanel tagline={tagline} stats={stats} activeDot={0} />
+
+      {/* ── RIGHT — Floating Form Card ── */}
+      <div className="w-full lg:flex-1 flex items-center justify-center px-6 py-12 bg-white overflow-y-auto">
+        <div className="w-full max-w-[460px] bg-[#111111] rounded-2xl border border-white/[0.07] p-8 shadow-2xl shadow-black/30">
           {/* Logo */}
-          <div className="flex items-center gap-3 mb-12">
+          <div className="flex items-center gap-3 mb-10">
             <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center">
               <svg
                 viewBox="0 0 24 24"
@@ -81,7 +84,7 @@ export default async function SignInPage({
             <LoginForm locale={locale} darkMode />
           </div>
 
-          <div className="mt-10 flex items-center gap-3">
+          <div className="mt-8 flex items-center gap-3">
             <div className="flex items-center gap-1.5">
               <svg
                 viewBox="0 0 16 16"
@@ -110,9 +113,6 @@ export default async function SignInPage({
           </div>
         </div>
       </div>
-
-      {/* ── RIGHT — Neural Grid + Live Feed ── */}
-      <AuthRightPanel tagline={tagline} stats={stats} activeDot={0} />
     </div>
   );
 }

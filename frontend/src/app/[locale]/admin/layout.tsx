@@ -30,9 +30,9 @@ export default async function AdminLayout({
     brandingEnabled?: boolean;
   };
 
-  let branding: AdminBranding = {};
-  let tenantName = "Webshooks";
-  let userRole = "ADMIN";
+  const branding: AdminBranding = {};
+  const tenantName = "Webshooks";
+  const userRole = "ADMIN";
 
   const membership = { role: userRole };
 
@@ -237,6 +237,11 @@ export default async function AdminLayout({
               href={`/${locale}/admin/agents`}
               iconName="Bot"
               label="AI Factory"
+            />
+            <SidebarNavItem
+              href={`/${locale}/admin/training`}
+              iconName="BrainCircuit"
+              label="Entrenamiento"
             />
             <SidebarNavItem
               href="#"

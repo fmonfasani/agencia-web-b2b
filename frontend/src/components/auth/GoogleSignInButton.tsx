@@ -13,7 +13,7 @@ export default function GoogleSignInButton({
     <form action={signInWithGoogle}>
       <button
         type="submit"
-        className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border border-[#2a2f3e] bg-[#161923] text-white text-sm font-medium hover:bg-[#1e2435] hover:border-[#3a4055] transition-all"
+        className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border border-[#dadce0] bg-white text-[#3c4043] text-sm font-medium hover:bg-[#f8f9fa] hover:shadow-sm transition-all"
       >
         <svg
           viewBox="0 0 24 24"

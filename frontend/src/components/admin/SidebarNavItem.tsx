@@ -23,6 +23,7 @@ const ICONS: Record<string, React.ElementType> = {
   History: LucideIcons.History,
   ShieldCheck: LucideIcons.ShieldCheck,
   Palette: LucideIcons.Palette,
+  BrainCircuit: LucideIcons.BrainCircuit,
 };
 
 interface NavItemProps {
@@ -46,12 +47,13 @@ export default function SidebarNavItem({
     <div className="relative group px-1">
       <Link
         href={isLocked ? "#" : href}
-        className={`flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-sm transition-all ${isActive
+        className={`flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
+          isActive
             ? "bg-white/10 text-white shadow-sm font-bold"
             : isLocked
               ? "text-slate-500 cursor-not-allowed opacity-60"
               : "text-slate-400 hover:text-white hover:bg-white/5"
-          }`}
+        }`}
       >
         <div className="flex items-center gap-3">
           <Icon
