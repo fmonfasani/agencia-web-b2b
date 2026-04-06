@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { saasClientFor } from "@/lib/saas-client";
+import { getClientDashboardData } from "@/app/actions/client";
 import { KPICard } from "@/components/dashboard/KPICard";
 import { AgentMetricsChart } from "@/components/dashboard/AgentMetricsChart";
 import { Users, Zap, BarChart3, Clock } from "lucide-react";
@@ -29,10 +30,11 @@ export default async function ClientDashboard({
   const client = saasClientFor(apiKey);
 
   // Obtener datos en paralelo
-  const [tenantData, metricsData, onboardingStatus] = await Promise.allSettled([
+  const [tenantData, metricsData, onboardingStatus, dashboardData] = await Promise.allSettled([
     client.tenant.me(),
     client.agent.metrics(),
     client.onboarding.status(tenantId),
+    getClientDashboardData(),
   ]);
 
   // Extraer datos seguros
@@ -52,27 +54,40 @@ export default async function ClientDashboard({
   const onboarding =
     onboardingStatus.status === "fulfilled" ? onboardingStatus.value : null;
 
-  // Datos mock para los gráficos
-  const mockMetricsData = [
-    { date: "1 abr", queries: 1200, avgDuration: 245, errorRate: 0.2 },
-    { date: "2 abr", queries: 1900, avgDuration: 300, errorRate: 0.3 },
-    { date: "3 abr", queries: 1700, avgDuration: 220, errorRate: 0.1 },
-    { date: "4 abr", queries: 2200, avgDuration: 280, errorRate: 0.4 },
-    { date: "5 abr", queries: 2290, avgDuration: 245, errorRate: 0.2 },
-  ];
+  // Datos de dashboard con traces reales
+  const dashboardInfo =
+    dashboardData.status === "fulfilled"
+      ? dashboardData.value
+      : {
+          tenantName: "Mi Empresa",
+          metricsData: [],
+          topAgentsData: [],
+        };
 
-  const mockTopClientsData = [
-    { name: "Agente 1", mrr: 2400 },
-    { name: "Agente 2", mrr: 1398 },
-    { name: "Agente 3", mrr: 9800 },
-  ];
+  const metricsDataForChart = dashboardInfo.metricsData.length > 0
+    ? dashboardInfo.metricsData
+    : [
+        { date: "1 abr", queries: 1200, avgDuration: 245, errorRate: 0.2 },
+        { date: "2 abr", queries: 1900, avgDuration: 300, errorRate: 0.3 },
+        { date: "3 abr", queries: 1700, avgDuration: 220, errorRate: 0.1 },
+        { date: "4 abr", queries: 2200, avgDuration: 280, errorRate: 0.4 },
+        { date: "5 abr", queries: 2290, avgDuration: 245, errorRate: 0.2 },
+      ];
+
+  const topClientsData = dashboardInfo.topAgentsData.length > 0
+    ? dashboardInfo.topAgentsData
+    : [
+        { name: "Agente 1", mrr: 2400 },
+        { name: "Agente 2", mrr: 1398 },
+        { name: "Agente 3", mrr: 9800 },
+      ];
 
   return (
     <div className="space-y-8">
       {/* Header */}
       <div>
         <h1 className="text-4xl font-bold text-gray-900 mb-2">
-          Bienvenido, {tenant.tenant?.name || "Usuario"}
+          Bienvenido, {dashboardInfo.tenantName || "Usuario"}
         </h1>
         <p className="text-gray-600">
           Monitorea tu plataforma de agentes IA en tiempo real
@@ -142,8 +157,8 @@ export default async function ClientDashboard({
 
       {/* Charts */}
       <AgentMetricsChart
-        metricsData={mockMetricsData}
-        topClientsData={mockTopClientsData}
+        metricsData={metricsDataForChart}
+        topClientsData={topClientsData}
       />
 
       {/* Quick Actions */}

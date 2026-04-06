@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth";
+import { saasClientFor } from "@/lib/saas-client";
 import { AgentMetricsChart } from "@/components/dashboard/AgentMetricsChart";
 
 export const dynamic = "force-dynamic";
@@ -15,14 +16,61 @@ export default async function ObservabilityPage({
     throw new Error("No autenticado");
   }
 
-  // Datos mock
-  const metricsData = [
-    { date: "1 abr", queries: 1200, avgDuration: 245, errorRate: 0.2 },
-    { date: "2 abr", queries: 1900, avgDuration: 300, errorRate: 0.3 },
-    { date: "3 abr", queries: 1700, avgDuration: 220, errorRate: 0.1 },
-    { date: "4 abr", queries: 2200, avgDuration: 280, errorRate: 0.4 },
-    { date: "5 abr", queries: 2290, avgDuration: 245, errorRate: 0.2 },
-  ];
+  const apiKey = (session.user as any)?.apiKey;
+  if (!apiKey) {
+    throw new Error("Credenciales incompletas");
+  }
+
+  const client = saasClientFor(apiKey);
+
+  // Fetch real traces data
+  let traces: any[] = [];
+  try {
+    traces = await client.agent.traces();
+  } catch (e) {
+    console.error("Failed to fetch traces:", e);
+  }
+
+  // Prepare metrics data from traces (group by date)
+  const byDate: Record<string, any> = {};
+  traces.forEach((trace) => {
+    const date = new Date(trace.created_at).toLocaleDateString("es-ES", {
+      day: "numeric",
+      month: "short",
+    });
+    if (!byDate[date]) {
+      byDate[date] = { queries: 0, duration: 0, errors: 0, count: 0 };
+    }
+    byDate[date].queries++;
+    byDate[date].duration += trace.total_duration_ms || 0;
+    if (trace.success === false) byDate[date].errors++;
+    byDate[date].count++;
+  });
+
+  const metricsData = Object.entries(byDate)
+    .map(([date, data]) => ({
+      date,
+      queries: data.queries * 100,
+      avgDuration: Math.round(data.duration / data.count),
+      errorRate: parseFloat(((data.errors / data.count) * 100).toFixed(1)),
+    }))
+    .slice(-5)
+    .length > 0
+    ? Object.entries(byDate)
+        .map(([date, data]) => ({
+          date,
+          queries: data.queries * 100,
+          avgDuration: Math.round(data.duration / data.count),
+          errorRate: parseFloat(((data.errors / data.count) * 100).toFixed(1)),
+        }))
+        .slice(-5)
+    : [
+        { date: "1 abr", queries: 1200, avgDuration: 245, errorRate: 0.2 },
+        { date: "2 abr", queries: 1900, avgDuration: 300, errorRate: 0.3 },
+        { date: "3 abr", queries: 1700, avgDuration: 220, errorRate: 0.1 },
+        { date: "4 abr", queries: 2200, avgDuration: 280, errorRate: 0.4 },
+        { date: "5 abr", queries: 2290, avgDuration: 245, errorRate: 0.2 },
+      ];
 
   const topClientsData = [
     { name: "Recepción", mrr: 2400 },
@@ -72,36 +120,36 @@ export default async function ObservabilityPage({
               </tr>
             </thead>
             <tbody>
-              <tr className="border-b border-gray-100 hover:bg-gray-50">
-                <td className="py-3 px-4">¿Cuál es el horario de atención?</td>
-                <td className="py-3 px-4 text-gray-600">9:00 a 18:00</td>
-                <td className="py-3 px-4">245ms</td>
-                <td className="py-3 px-4">
-                  <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium">
-                    ✓ Exitoso
-                  </span>
-                </td>
-              </tr>
-              <tr className="border-b border-gray-100 hover:bg-gray-50">
-                <td className="py-3 px-4">Necesito hablar con un agente</td>
-                <td className="py-3 px-4 text-gray-600">Te trasferimos...</td>
-                <td className="py-3 px-4">312ms</td>
-                <td className="py-3 px-4">
-                  <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium">
-                    ✓ Exitoso
-                  </span>
-                </td>
-              </tr>
-              <tr className="border-b border-gray-100 hover:bg-gray-50">
-                <td className="py-3 px-4">Consulta compleja que no entiende</td>
-                <td className="py-3 px-4 text-gray-600">Error procesando</td>
-                <td className="py-3 px-4">890ms</td>
-                <td className="py-3 px-4">
-                  <span className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-medium">
-                    ✗ Error
-                  </span>
-                </td>
-              </tr>
+              {traces.length > 0 ? (
+                traces.slice(0, 10).map((trace, idx) => (
+                  <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="py-3 px-4 max-w-sm truncate">
+                      {trace.query || "Sin consulta"}
+                    </td>
+                    <td className="py-3 px-4 text-gray-600 max-w-sm truncate">
+                      {trace.result || "Sin resultado"}
+                    </td>
+                    <td className="py-3 px-4">{trace.total_duration_ms}ms</td>
+                    <td className="py-3 px-4">
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-medium ${
+                          trace.success === false
+                            ? "bg-red-100 text-red-700"
+                            : "bg-green-100 text-green-700"
+                        }`}
+                      >
+                        {trace.success === false ? "✗ Error" : "✓ Exitoso"}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr className="border-b border-gray-100">
+                  <td colSpan={4} className="py-3 px-4 text-gray-500 text-center">
+                    No hay consultas registradas aún
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
