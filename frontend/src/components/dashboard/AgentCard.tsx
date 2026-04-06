@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { Cog, MoreVertical } from "lucide-react";
 import Image from "next/image";
 
@@ -41,7 +42,13 @@ export function AgentCard({
   onMore,
 }: AgentCardProps) {
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+    <motion.div
+      className="border border-gray-200 rounded-lg overflow-hidden"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      whileHover={{ y: -4, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)" }}
+    >
       {/* Image Container */}
       <div className="relative h-48 bg-gray-100 overflow-hidden group">
         <Image
@@ -112,6 +119,6 @@ export function AgentCard({
           </button>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

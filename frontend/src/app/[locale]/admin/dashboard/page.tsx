@@ -3,6 +3,7 @@ import { getAdminDashboardData } from "@/app/actions/admin";
 import { KPICard } from "@/components/dashboard/KPICard";
 import { AgentMetricsChart } from "@/components/dashboard/AgentMetricsChart";
 import { SystemHealth } from "@/components/dashboard/SystemHealth";
+import { SkeletonKPICard } from "@/components/ui/skeleton";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -51,33 +52,38 @@ export default async function AdminDashboard({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <KPICard
           label="Clientes Activos"
-          value={metrics.totalClients.toLocaleString()}
+          value={metrics.totalClients}
           trend={{ value: 12, isPositive: true }}
           color="blue"
+          animated
         />
         <KPICard
           label="Revenue MRR"
           value={`$${(metrics.revenue / 1000).toFixed(0)}K`}
           trend={{ value: 8, isPositive: true }}
           color="green"
+          animated={false}
         />
         <KPICard
           label="Queries Hoy"
-          value={metrics.queriesPerDay.toLocaleString()}
+          value={metrics.queriesPerDay}
           trend={{ value: 3, isPositive: false }}
           color="yellow"
+          animated
         />
         <KPICard
           label="Uptime Platform"
           value={`${metrics.uptime}%`}
           trend={{ value: 0.02, isPositive: true }}
           color="green"
+          animated={false}
         />
         <KPICard
           label="Agentes en Producción"
           value={metrics.activeAgents}
           trend={{ value: 5, isPositive: true }}
           color="purple"
+          animated
         />
       </div>
 
