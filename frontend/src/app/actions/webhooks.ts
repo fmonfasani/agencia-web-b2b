@@ -55,9 +55,30 @@ const mockWebhooks: Webhook[] = [
 ];
 
 const mockLogs: WebhookLog[] = [
-  { id: "l1", event: "agent.query.executed", status: "success", statusCode: 200, timestamp: "2026-04-06T10:23:00Z", duration: 123 },
-  { id: "l2", event: "payment.failed", status: "success", statusCode: 200, timestamp: "2026-04-06T09:10:00Z", duration: 89 },
-  { id: "l3", event: "agent.query.executed", status: "failed", statusCode: 500, timestamp: "2026-04-05T22:00:00Z", duration: 5000 },
+  {
+    id: "l1",
+    event: "agent.query.executed",
+    status: "success",
+    statusCode: 200,
+    timestamp: "2026-04-06T10:23:00Z",
+    duration: 123,
+  },
+  {
+    id: "l2",
+    event: "payment.failed",
+    status: "success",
+    statusCode: 200,
+    timestamp: "2026-04-06T09:10:00Z",
+    duration: 89,
+  },
+  {
+    id: "l3",
+    event: "agent.query.executed",
+    status: "failed",
+    statusCode: 500,
+    timestamp: "2026-04-05T22:00:00Z",
+    duration: 5000,
+  },
 ];
 
 export async function getWebhooks(): Promise<Webhook[]> {
@@ -67,10 +88,12 @@ export async function getWebhooks(): Promise<Webhook[]> {
 export async function createWebhook(
   name: string,
   url: string,
-  events: WebhookEvent[]
+  events: WebhookEvent[],
 ): Promise<{ success: boolean; data?: Webhook; error?: string }> {
-  if (!url.startsWith("https://")) return { success: false, error: "URL debe usar HTTPS" };
-  if (events.length === 0) return { success: false, error: "Selecciona al menos un evento" };
+  if (!url.startsWith("https://"))
+    return { success: false, error: "URL debe usar HTTPS" };
+  if (events.length === 0)
+    return { success: false, error: "Selecciona al menos un evento" };
 
   const wh: Webhook = {
     id: `wh_${Date.now()}`,
@@ -86,15 +109,20 @@ export async function createWebhook(
 }
 
 export async function testWebhook(
-  webhookId: string
-): Promise<{ success: boolean; response?: string; latency?: number; error?: string }> {
+  webhookId: string,
+): Promise<{
+  success: boolean;
+  response?: string;
+  latency?: number;
+  error?: string;
+}> {
   // Simula envío de payload de prueba
   await new Promise((r) => setTimeout(r, 800));
   return { success: true, response: '{"received": true}', latency: 124 };
 }
 
 export async function deleteWebhook(
-  webhookId: string
+  webhookId: string,
 ): Promise<{ success: boolean; error?: string }> {
   return { success: true };
 }
@@ -102,12 +130,3 @@ export async function deleteWebhook(
 export async function getWebhookLogs(webhookId: string): Promise<WebhookLog[]> {
   return mockLogs;
 }
-
-export const ALL_WEBHOOK_EVENTS: { value: WebhookEvent; label: string }[] = [
-  { value: "agent.query.executed", label: "Query ejecutada" },
-  { value: "agent.status.changed", label: "Estado del agente cambia" },
-  { value: "subscription.created", label: "Suscripción creada" },
-  { value: "subscription.cancelled", label: "Suscripción cancelada" },
-  { value: "payment.failed", label: "Pago fallido" },
-  { value: "usage.threshold_exceeded", label: "Límite de uso superado" },
-];
