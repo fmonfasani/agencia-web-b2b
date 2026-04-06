@@ -120,8 +120,8 @@ export async function generateReport(
   // Simula generación del archivo
   await new Promise((r) => setTimeout(r, 1500));
 
-  const report = REPORT_TYPES.find((r) => r.id === reportId);
-  if (!report)
+  const validIds = ["usage", "billing", "performance"];
+  if (!validIds.includes(reportId))
     return { success: false, error: "Tipo de reporte no encontrado" };
 
   const fileName = `${reportId}_${dateRange.startDate}_${dateRange.endDate}.${format}`;
