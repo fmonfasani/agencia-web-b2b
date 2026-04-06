@@ -25,11 +25,14 @@ export interface ClientDashboardData {
 export async function getClientDashboardData(): Promise<ClientDashboardData> {
   try {
     const session = await auth();
-    if (!session?.backendApiKey) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const apiKey =
+      (session?.user as any)?.apiKey || (session as any)?.backendApiKey;
+    if (!apiKey) {
       throw new Error("API Key not found in session");
     }
 
-    const client = saasClientFor(session.backendApiKey);
+    const client = saasClientFor(apiKey);
 
     // Fetch tenant info
     let tenantName = "Mi Empresa";
@@ -80,7 +83,9 @@ export async function getClientDashboardData(): Promise<ClientDashboardData> {
             date,
             queries: data.queries * 100, // Scale for visibility
             avgDuration: Math.round(data.duration / data.count),
-            errorRate: parseFloat(((data.errors / data.count) * 100).toFixed(1)),
+            errorRate: parseFloat(
+              ((data.errors / data.count) * 100).toFixed(1),
+            ),
           }))
           .slice(-5); // Last 5 days
       }

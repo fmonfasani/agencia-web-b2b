@@ -37,11 +37,14 @@ export interface DashboardData {
 export async function getAdminDashboardData(): Promise<DashboardData> {
   try {
     const session = await auth();
-    if (!session?.backendApiKey) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const apiKey =
+      (session?.user as any)?.apiKey || (session as any)?.backendApiKey;
+    if (!apiKey) {
       throw new Error("API Key not found in session");
     }
 
-    const client = saasClientFor(session.backendApiKey);
+    const client = saasClientFor(apiKey);
 
     // Fetch health status
     let health = {
@@ -53,7 +56,10 @@ export async function getAdminDashboardData(): Promise<DashboardData> {
 
     try {
       const healthResponse = await client.health();
-      if (healthResponse.status === "ok" || healthResponse.status === "degraded") {
+      if (
+        healthResponse.status === "ok" ||
+        healthResponse.status === "degraded"
+      ) {
         // Map backend response to our format
         health = {
           PostgreSQL: true, // If health endpoint responds, DB is connected
@@ -68,7 +74,7 @@ export async function getAdminDashboardData(): Promise<DashboardData> {
     }
 
     // Fetch agent metrics for KPIs
-    let metrics = {
+    const metrics = {
       totalClients: 247,
       revenue: 124560,
       queriesPerDay: 12456,
@@ -80,7 +86,7 @@ export async function getAdminDashboardData(): Promise<DashboardData> {
       const agentMetrics = await client.agent.metrics();
       if (agentMetrics) {
         metrics.queriesPerDay = Math.round(
-          (agentMetrics.total_executions || 0) / 30
+          (agentMetrics.total_executions || 0) / 30,
         );
       }
     } catch (e) {
@@ -125,7 +131,9 @@ export async function getAdminDashboardData(): Promise<DashboardData> {
             date,
             queries: data.queries * 100, // Scale for visibility
             avgDuration: Math.round(data.duration / data.count),
-            errorRate: parseFloat(((data.errors / data.count) * 100).toFixed(1)),
+            errorRate: parseFloat(
+              ((data.errors / data.count) * 100).toFixed(1),
+            ),
           }))
           .slice(-5); // Last 5 days
       }

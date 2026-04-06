@@ -151,9 +151,10 @@ export const authConfig = {
       return session;
     },
     async redirect({ url, baseUrl }) {
-      // If callbackUrl is explicitly provided, honour it
-      if (url.startsWith(baseUrl)) return url;
-      // Default: smart-redirect page decides admin vs client based on role
+      // Always route through smart-redirect which decides by role.
+      // Exception: explicit deep links that aren't the legacy admin default.
+      const isLegacyDefault = url.includes("/admin/dashboard");
+      if (url.startsWith(baseUrl) && !isLegacyDefault) return url;
       return `${baseUrl}/es/redirect`;
     },
   },
