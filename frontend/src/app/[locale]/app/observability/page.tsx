@@ -1,6 +1,8 @@
 import { auth } from "@/lib/auth";
 import { saasClientFor } from "@/lib/saas-client";
 import { AgentMetricsChart } from "@/components/dashboard/AgentMetricsChart";
+import { PageTransition, StaggerItem } from "@/components/animations/PageTransition";
+import { motion } from "framer-motion";
 
 export const dynamic = "force-dynamic";
 
@@ -79,16 +81,19 @@ export default async function ObservabilityPage({
   ];
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">
-          Observabilidad
-        </h1>
-        <p className="text-gray-600">
-          Monitorea el rendimiento y salud de tus agentes
-        </p>
-      </div>
+    <PageTransition>
+      <div className="space-y-8">
+        {/* Header */}
+        <StaggerItem>
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">
+              Observabilidad
+            </h1>
+            <p className="text-gray-600">
+              Monitorea el rendimiento y salud de tus agentes
+            </p>
+          </div>
+        </StaggerItem>
 
       {/* Charts */}
       <AgentMetricsChart
@@ -97,32 +102,44 @@ export default async function ObservabilityPage({
       />
 
       {/* Recent Queries */}
-      <div className="border border-gray-200 rounded-lg p-6 bg-white">
-        <h2 className="text-lg font-bold text-gray-900 mb-4">
-          Últimas Consultas
-        </h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-4 font-semibold text-gray-900">
-                  Consulta
-                </th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-900">
-                  Resultado
-                </th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-900">
-                  Duración
-                </th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-900">
-                  Status
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {traces.length > 0 ? (
-                traces.slice(0, 10).map((trace, idx) => (
-                  <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50">
+      <StaggerItem>
+        <motion.div
+          className="border border-gray-200 rounded-lg p-6 bg-white"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+        >
+          <h2 className="text-lg font-bold text-gray-900 mb-4">
+            Últimas Consultas
+          </h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="text-left py-3 px-4 font-semibold text-gray-900">
+                    Consulta
+                  </th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-900">
+                    Resultado
+                  </th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-900">
+                    Duración
+                  </th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-900">
+                    Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {traces.length > 0 ? (
+                  traces.slice(0, 10).map((trace, idx) => (
+                    <motion.tr
+                      key={idx}
+                      className="border-b border-gray-100 hover:bg-gray-50"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, delay: idx * 0.05 }}
+                    >
                     <td className="py-3 px-4 max-w-sm truncate">
                       {trace.query || "Sin consulta"}
                     </td>
@@ -141,19 +158,21 @@ export default async function ObservabilityPage({
                         {trace.success === false ? "✗ Error" : "✓ Exitoso"}
                       </span>
                     </td>
+                    </motion.tr>
+                  ))
+                ) : (
+                  <tr className="border-b border-gray-100">
+                    <td colSpan={4} className="py-3 px-4 text-gray-500 text-center">
+                      No hay consultas registradas aún
+                    </td>
                   </tr>
-                ))
-              ) : (
-                <tr className="border-b border-gray-100">
-                  <td colSpan={4} className="py-3 px-4 text-gray-500 text-center">
-                    No hay consultas registradas aún
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </motion.div>
+      </StaggerItem>
       </div>
-    </div>
+    </PageTransition>
   );
 }

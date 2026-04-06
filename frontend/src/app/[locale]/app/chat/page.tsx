@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Send } from "lucide-react";
 import { executeAgent } from "@/app/actions/agent";
+import { PageTransition } from "@/components/animations/PageTransition";
 
 interface Message {
   id: string;
@@ -79,14 +81,19 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="space-y-4 flex flex-col h-screen max-h-screen">
-      {/* Header */}
-      <div>
-        <h1 className="text-4xl font-bold text-gray-900">Chat con tu Agente IA</h1>
-        <p className="text-gray-600">
-          Consulta directamente con tu agente especializado
-        </p>
-      </div>
+    <PageTransition>
+      <div className="space-y-4 flex flex-col h-screen max-h-screen">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <h1 className="text-4xl font-bold text-gray-900">Chat con tu Agente IA</h1>
+          <p className="text-gray-600">
+            Consulta directamente con tu agente especializado
+          </p>
+        </motion.div>
 
       {/* Error Message */}
       {error && (
@@ -96,15 +103,24 @@ export default function ChatPage() {
       )}
 
       {/* Messages Container */}
-      <div className="flex-1 bg-white border border-gray-200 rounded-lg p-6 overflow-y-auto">
-        <div className="space-y-4">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${
-                message.role === "user" ? "justify-end" : "justify-start"
-              }`}
-            >
+      <motion.div
+        className="flex-1 bg-white border border-gray-200 rounded-lg p-6 overflow-y-auto"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4, delay: 0.1 }}
+      >
+        <AnimatePresence mode="popLayout">
+          <div className="space-y-4">
+            {messages.map((message) => (
+              <motion.div
+                key={message.id}
+                className={`flex ${
+                  message.role === "user" ? "justify-end" : "justify-start"
+                }`}
+                initial={{ opacity: 0, x: message.role === "user" ? 20 : -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3 }}
+              >
               <div
                 className={`max-w-md px-4 py-3 rounded-lg ${
                   message.role === "user"
@@ -129,27 +145,33 @@ export default function ChatPage() {
                   {message.timestamp.toLocaleTimeString()}
                 </p>
               </div>
-            </div>
-          ))}
-          {isLoading && (
-            <div className="flex justify-start">
-              <div className="bg-gray-100 text-gray-900 px-4 py-3 rounded-lg rounded-bl-none">
-                <div className="flex gap-2">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                  <div
-                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                    style={{ animationDelay: "0.1s" }}
-                  ></div>
-                  <div
-                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                    style={{ animationDelay: "0.2s" }}
-                  ></div>
+              </motion.div>
+            ))}
+            {isLoading && (
+              <motion.div
+                className="flex justify-start"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <div className="bg-gray-100 text-gray-900 px-4 py-3 rounded-lg rounded-bl-none">
+                  <div className="flex gap-2">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div
+                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.1s" }}
+                    ></div>
+                    <div
+                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.2s" }}
+                    ></div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+              </motion.div>
+            )}
+          </div>
+        </AnimatePresence>
+      </motion.div>
 
       {/* Input Area */}
       <div className="flex gap-2">
@@ -176,6 +198,7 @@ export default function ChatPage() {
           Enviar
         </button>
       </div>
-    </div>
+      </div>
+    </PageTransition>
   );
 }

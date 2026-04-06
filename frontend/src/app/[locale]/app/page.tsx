@@ -3,6 +3,7 @@ import { saasClientFor } from "@/lib/saas-client";
 import { getClientDashboardData } from "@/app/actions/client";
 import { KPICard } from "@/components/dashboard/KPICard";
 import { AgentMetricsChart } from "@/components/dashboard/AgentMetricsChart";
+import { StaggerContainer, StaggerItem, PageTransition } from "@/components/animations/PageTransition";
 import { Users, Zap, BarChart3, Clock } from "lucide-react";
 import Link from "next/link";
 
@@ -83,19 +84,23 @@ export default async function ClientDashboard({
       ];
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">
-          Bienvenido, {dashboardInfo.tenantName || "Usuario"}
-        </h1>
-        <p className="text-gray-600">
-          Monitorea tu plataforma de agentes IA en tiempo real
-        </p>
-      </div>
+    <PageTransition>
+      <div className="space-y-8">
+        {/* Header */}
+        <StaggerItem>
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">
+              Bienvenido, {dashboardInfo.tenantName || "Usuario"}
+            </h1>
+            <p className="text-gray-600">
+              Monitorea tu plataforma de agentes IA en tiempo real
+            </p>
+          </div>
+        </StaggerItem>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* KPI Cards */}
+        <StaggerContainer>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
           label="Queries Procesadas"
           value={metrics.total_executions || 0}
@@ -124,9 +129,10 @@ export default async function ClientDashboard({
           icon={Users}
           color="purple"
         />
-      </div>
+          </div>
+        </StaggerContainer>
 
-      {/* Estado del Onboarding */}
+        {/* Estado del Onboarding */}
       {onboarding && (
         <div className="border border-blue-200 bg-blue-50 rounded-lg p-6">
           <h2 className="text-lg font-bold text-blue-900 mb-3">
@@ -162,8 +168,10 @@ export default async function ClientDashboard({
       />
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Link
+      <StaggerContainer>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <StaggerItem>
+            <Link
           href={`/${locale}/app/chat`}
           className="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer"
         >
@@ -172,9 +180,11 @@ export default async function ClientDashboard({
           <p className="text-sm text-gray-600">
             Consulta directamente con tu agente
           </p>
-        </Link>
+            </Link>
+          </StaggerItem>
 
-        <Link
+          <StaggerItem>
+            <Link
           href={`/${locale}/app/agents`}
           className="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer"
         >
@@ -185,17 +195,22 @@ export default async function ClientDashboard({
           <p className="text-sm text-gray-600">
             Gestiona y configura tus agentes
           </p>
-        </Link>
+            </Link>
+          </StaggerItem>
 
-        <Link
+          <StaggerItem>
+            <Link
           href={`/${locale}/app/marketplace`}
           className="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer"
         >
           <div className="text-3xl mb-2">🛍️</div>
           <h3 className="text-lg font-bold text-gray-900 mb-1">Marketplace</h3>
           <p className="text-sm text-gray-600">Descubre nuevos agentes</p>
-        </Link>
+            </Link>
+          </StaggerItem>
+        </div>
+      </StaggerContainer>
       </div>
-    </div>
+    </PageTransition>
   );
 }
