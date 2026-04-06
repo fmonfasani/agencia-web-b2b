@@ -1,6 +1,6 @@
-import CompanySignUpForm from "@/components/auth/CompanySignUpForm";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
-import Image from "next/image";
+import AuthRightPanel from "@/components/auth/AuthRightPanel";
+import SignupWizard from "@/components/auth/SignupWizard";
 import Link from "next/link";
 
 export default async function RegisterCompanyPage({
@@ -11,46 +11,34 @@ export default async function RegisterCompanyPage({
   const { locale } = await params;
   const en = locale === "en";
 
-  const t = {
-    heading: en ? "Create your company" : "Registrá tu empresa",
-    sub: en
-      ? "Deploy your Webshooks instance in 30 seconds."
-      : "Creá tu instancia privada en 30 segundos.",
-    signIn: en ? "Already have an account?" : "¿Ya tenés cuenta?",
-    signInLink: en ? "Sign in" : "Iniciá sesión",
-    google: en ? "Sign up with Google" : "Registrate con Google",
-    or: "or",
-    badge: en
-      ? "Protected by Webshooks IAM · TLS 1.3"
-      : "Protegido por Webshooks IAM · TLS 1.3",
-    tagline: en
-      ? "Scale your agency with humans and AI\nworking together in the same pipeline."
-      : "Escalá tu agencia con humanos e IA\ntrabajando juntos en el mismo pipeline.",
-    stats: en
-      ? [
-          { label: "Active companies", value: "2,400+" },
-          { label: "MRR generated", value: "$1.2M" },
-          { label: "AI agents", value: "12K+" },
-        ]
-      : [
-          { label: "Empresas activas", value: "2,400+" },
-          { label: "MRR generado", value: "$1.2M" },
-          { label: "Agentes IA", value: "12K+" },
-        ],
-  };
+  const stats = en
+    ? [
+        { label: "Active companies", value: "2,400+" },
+        { label: "MRR generated", value: "$1.2M" },
+        { label: "AI agents", value: "12K+" },
+      ]
+    : [
+        { label: "Empresas activas", value: "2,400+" },
+        { label: "MRR generado", value: "$1.2M" },
+        { label: "Agentes IA", value: "12K+" },
+      ];
+
+  const tagline = en
+    ? "Scale your agency with\nhumans and AI in one pipeline."
+    : "Escalá tu agencia con humanos e IA\ntrabajando en el mismo pipeline.";
 
   return (
-    <div className="min-h-screen bg-[#0d0f14] flex">
-      {/* ── LEFT — Form Card ── */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 overflow-y-auto">
+    <div className="min-h-screen bg-[#070a10] flex">
+      {/* ── LEFT — Form ── */}
+      <div className="w-full lg:w-1/2 flex items-start justify-center px-6 py-12 overflow-y-auto">
         <div className="w-full max-w-[460px]">
           {/* Logo */}
-          <div className="flex items-center gap-2.5 mb-8">
-            <div className="w-8 h-8 rounded-lg bg-[#135bec] flex items-center justify-center">
+          <div className="flex items-center gap-2.5 mb-10">
+            <div className="w-9 h-9 rounded-xl bg-[#135bec] flex items-center justify-center shadow-lg shadow-[#135bec]/30">
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
-                className="w-4 h-4 text-white"
+                className="w-4.5 h-4.5 text-white"
                 stroke="currentColor"
                 strokeWidth={2.5}
               >
@@ -66,88 +54,66 @@ export default async function RegisterCompanyPage({
             </span>
           </div>
 
-          <h1 className="text-[2rem] font-black text-white leading-tight">
-            {t.heading}
+          <h1 className="text-[2rem] font-black text-white leading-tight tracking-tight">
+            {en ? "Create your company" : "Registrá tu empresa"}
           </h1>
-          <p className="text-[#8b92a5] mt-1.5 text-sm">
-            {t.sub}{" "}
+          <p className="text-[#4a5168] mt-2 text-sm mb-8">
+            {en ? "Already have an account? " : "¿Ya tenés cuenta? "}
             <Link
               href={`/${locale}/auth/sign-in`}
               className="text-[#135bec] font-semibold hover:text-blue-400 transition-colors"
             >
-              {t.signIn}
+              {en ? "Sign in" : "Iniciá sesión"}
             </Link>
           </p>
 
-          <div className="mt-8 space-y-4">
-            <GoogleSignInButton label={t.google} />
-
-            {/* Divider */}
+          {/* Google OAuth */}
+          <div className="space-y-4 mb-6">
+            <GoogleSignInButton
+              label={en ? "Sign up with Google" : "Registrate con Google"}
+            />
             <div className="flex items-center gap-3">
-              <div className="flex-1 h-px bg-[#2a2f3e]" />
-              <span className="text-[#4a5168] text-xs font-medium">{t.or}</span>
-              <div className="flex-1 h-px bg-[#2a2f3e]" />
+              <div className="flex-1 h-px bg-[#1e2535]" />
+              <span className="text-[#2a3048] text-xs font-medium">o</span>
+              <div className="flex-1 h-px bg-[#1e2535]" />
             </div>
-
-            <CompanySignUpForm darkMode locale={locale} />
           </div>
 
-          <p className="mt-6 text-center text-[10px] text-[#3a4055] font-medium uppercase tracking-widest">
-            {t.badge}
-          </p>
+          <SignupWizard locale={locale} />
+
+          {/* Security badges */}
+          <div className="mt-8 flex items-center justify-center gap-4">
+            <div className="flex items-center gap-1.5">
+              <svg
+                viewBox="0 0 16 16"
+                fill="none"
+                className="w-3.5 h-3.5 text-[#2a3048]"
+              >
+                <path
+                  d="M8 1L2 4v4c0 3.5 2.5 6.7 6 7.5C11.5 14.7 14 11.5 14 8V4L8 1z"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                  strokeLinejoin="round"
+                />
+              </svg>
+              <span className="text-[#2a3048] text-[10px] font-medium uppercase tracking-widest">
+                TLS 1.3
+              </span>
+            </div>
+            <div className="w-px h-3 bg-[#1e2535]" />
+            <span className="text-[#2a3048] text-[10px] font-medium uppercase tracking-widest">
+              SOC 2
+            </span>
+            <div className="w-px h-3 bg-[#1e2535]" />
+            <span className="text-[#2a3048] text-[10px] font-medium uppercase tracking-widest">
+              ISO 27001
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* ── RIGHT — Illustration (identical to sign-in) ── */}
-      <div className="hidden lg:flex w-1/2 relative flex-col items-center justify-center overflow-hidden bg-[#0a0d13]">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#135bec]/8 rounded-full blur-[140px] pointer-events-none" />
-
-        <div className="absolute inset-0 z-0">
-          <Image
-            src="/signin-hero.png"
-            alt="Webshooks AI Agent"
-            fill
-            sizes="(max-width: 1024px) 100vw, 50vw"
-            className="object-cover object-center"
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0d13] via-[#0a0d13]/40 to-transparent" />
-          <div
-            className="absolute inset-0 bg-gradient-to-r from-[#0a0d13] via-transparent to-transparent"
-            style={{ width: "30%" }}
-          />
-        </div>
-
-        <div className="relative z-10 mt-auto mb-40 text-center px-12">
-          <p className="text-[#8b92a5] text-sm leading-relaxed whitespace-pre-line">
-            {t.tagline}
-          </p>
-          <div className="mt-5 flex items-center justify-center gap-2">
-            {[...Array(3)].map((_, i) => (
-              <div
-                key={i}
-                className={`rounded-full ${i === 1 ? "w-6 h-1.5 bg-[#135bec]" : "w-1.5 h-1.5 bg-[#2a2f3e]"}`}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div className="absolute bottom-8 left-8 right-8 z-10 grid grid-cols-3 gap-3">
-          {t.stats.map((stat) => (
-            <div
-              key={stat.label}
-              className="bg-[#161923]/90 border border-[#2a2f3e] rounded-2xl px-4 py-3 backdrop-blur-sm"
-            >
-              <p className="text-[#135bec] font-black text-lg leading-none">
-                {stat.value}
-              </p>
-              <p className="text-[#4a5168] text-[10px] mt-1 uppercase tracking-widest font-semibold">
-                {stat.label}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* ── RIGHT — Neural Grid + Live Feed ── */}
+      <AuthRightPanel tagline={tagline} stats={stats} activeDot={1} />
     </div>
   );
 }

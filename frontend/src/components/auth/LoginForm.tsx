@@ -3,7 +3,67 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Mail, Lock } from "lucide-react";
+import { Eye, EyeOff, Check, Loader2 } from "lucide-react";
+import { motion } from "framer-motion";
+
+interface FloatingInputProps {
+  label: string;
+  type?: string;
+  value: string;
+  onChange: (v: string) => void;
+  disabled?: boolean;
+  autoComplete?: string;
+  rightSlot?: React.ReactNode;
+}
+
+function FloatingInput({
+  label,
+  type = "text",
+  value,
+  onChange,
+  disabled,
+  autoComplete,
+  rightSlot,
+}: FloatingInputProps) {
+  const [focused, setFocused] = useState(false);
+  const floating = focused || value.length > 0;
+
+  return (
+    <div className="relative">
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        disabled={disabled}
+        autoComplete={autoComplete}
+        className={`w-full rounded-xl border bg-[#0d1017] px-4 pt-5 pb-2 text-sm text-white outline-none transition-all duration-200 font-medium disabled:opacity-40 ${
+          rightSlot ? "pr-11" : ""
+        } ${
+          focused
+            ? "border-[#135bec] ring-2 ring-[#135bec]/20 shadow-[0_0_20px_rgba(19,91,236,0.12)]"
+            : "border-[#2a2f3e] hover:border-[#3a4055]"
+        }`}
+      />
+      <label
+        className={`absolute left-4 pointer-events-none transition-all duration-200 ${
+          floating
+            ? "top-2 text-[10px] font-semibold uppercase tracking-widest " +
+              (focused ? "text-[#135bec]" : "text-[#4a5168]")
+            : "top-1/2 -translate-y-1/2 text-sm text-[#4a5168]"
+        }`}
+      >
+        {label}
+      </label>
+      {rightSlot && (
+        <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
+          {rightSlot}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function LoginForm({
   locale = "es",
@@ -15,19 +75,20 @@ export function LoginForm({
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [status, setStatus] = useState<"idle" | "loading" | "success">("idle");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setIsLoading(true);
 
     if (!email || !password) {
       setError("Email y contraseña son requeridos");
-      setIsLoading(false);
       return;
     }
+
+    setStatus("loading");
 
     try {
       const result = await signIn("credentials", {
@@ -37,87 +98,111 @@ export function LoginForm({
       });
 
       if (result?.error) {
-        setError(result.error || "Login fallido");
-        setIsLoading(false);
+        setError("Credenciales incorrectas. Verificá tu email y contraseña.");
+        setStatus("idle");
         return;
       }
 
       if (result?.ok) {
-        router.push(`/${locale}/admin/dashboard`);
+        setStatus("success");
+        setTimeout(() => {
+          router.push(`/${locale}/redirect`);
+        }, 600);
       } else {
-        setError("Login fallido");
-        setIsLoading(false);
+        setError("Login fallido. Intentá de nuevo.");
+        setStatus("idle");
       }
-    } catch (err) {
-      setError("Error de conexión");
-      setIsLoading(false);
+    } catch {
+      setError("Error de conexión. Revisá tu red.");
+      setStatus("idle");
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0d0f14]">
-      <div className="bg-[#161923] p-8 rounded-2xl shadow-lg w-full max-w-md border border-[#2a2f3e]">
-        <h1 className="text-2xl font-bold text-white text-center mb-2">
-          Webshooks
-        </h1>
-        <p className="text-center text-[#8b92a5] text-sm mb-6">
-          Ingresa a tu cuenta
-        </p>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <FloatingInput
+        label="Email"
+        type="email"
+        value={email}
+        onChange={setEmail}
+        disabled={status !== "idle"}
+        autoComplete="email"
+      />
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Email Input */}
-          <div>
-            <label className="block text-xs font-semibold text-[#8b92a5] uppercase tracking-widest mb-2">
-              Email
-            </label>
-            <div className="relative">
-              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#4a5168]" size={15} />
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="tu@email.com"
-                disabled={isLoading}
-                className="w-full rounded-xl border border-[#2a2f3e] bg-[#161923] pl-10 pr-4 py-3 text-sm text-white placeholder-[#4a5168] outline-none focus:ring-2 focus:ring-[#135bec]/50 focus:border-[#135bec]/50 transition-all font-medium disabled:opacity-50"
-              />
-            </div>
-          </div>
-
-          {/* Password Input */}
-          <div>
-            <label className="block text-xs font-semibold text-[#8b92a5] uppercase tracking-widest mb-2">
-              Contraseña
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#4a5168]" size={15} />
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                disabled={isLoading}
-                className="w-full rounded-xl border border-[#2a2f3e] bg-[#161923] pl-10 pr-4 py-3 text-sm text-white placeholder-[#4a5168] outline-none focus:ring-2 focus:ring-[#135bec]/50 focus:border-[#135bec]/50 transition-all font-medium disabled:opacity-50"
-              />
-            </div>
-          </div>
-
-          {/* Error Message */}
-          {error && (
-            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-              {error}
-            </div>
-          )}
-
-          {/* Submit Button */}
+      <FloatingInput
+        label="Contraseña"
+        type={showPass ? "text" : "password"}
+        value={password}
+        onChange={setPassword}
+        disabled={status !== "idle"}
+        autoComplete="current-password"
+        rightSlot={
           <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full rounded-xl bg-[#135bec] hover:bg-[#0e45b5] text-white py-3.5 font-bold text-sm disabled:opacity-50 transition-all shadow-lg shadow-[#135bec]/25"
+            type="button"
+            onClick={() => setShowPass(!showPass)}
+            className="text-[#4a5168] hover:text-[#8b92a5] transition-colors"
+            tabIndex={-1}
           >
-            {isLoading ? "Autenticando..." : "Ingresar"}
+            {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
           </button>
-        </form>
-      </div>
-    </div>
+        }
+      />
+
+      {/* Error */}
+      {error && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1, x: [0, -6, 6, -6, 6, -3, 3, 0] }}
+          transition={{ duration: 0.4 }}
+          className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center gap-2"
+        >
+          <svg
+            viewBox="0 0 16 16"
+            fill="currentColor"
+            className="w-3.5 h-3.5 flex-shrink-0"
+          >
+            <path d="M8 1a7 7 0 110 14A7 7 0 018 1zm0 3a.75.75 0 00-.75.75v3.5a.75.75 0 001.5 0v-3.5A.75.75 0 008 4zm0 8a1 1 0 110-2 1 1 0 010 2z" />
+          </svg>
+          {error}
+        </motion.div>
+      )}
+
+      {/* Submit */}
+      <motion.button
+        type="submit"
+        disabled={status !== "idle"}
+        whileTap={{ scale: 0.98 }}
+        className={`w-full rounded-xl py-3.5 font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 shadow-lg ${
+          status === "success"
+            ? "bg-[#10B981] shadow-[#10B981]/25 text-white"
+            : "bg-[#135bec] hover:bg-[#0e45b5] shadow-[#135bec]/25 text-white disabled:opacity-60"
+        }`}
+      >
+        {status === "loading" ? (
+          <>
+            <Loader2 size={15} className="animate-spin" />
+            Autenticando...
+          </>
+        ) : status === "success" ? (
+          <>
+            <Check size={15} />
+            ¡Bienvenido!
+          </>
+        ) : (
+          "Ingresar"
+        )}
+      </motion.button>
+
+      {/* Forgot password */}
+      <p className="text-center text-xs text-[#3a4055]">
+        <button
+          type="button"
+          className="hover:text-[#135bec] transition-colors"
+          onClick={() => {}}
+        >
+          ¿Olvidaste tu contraseña?
+        </button>
+      </p>
+    </form>
   );
 }
