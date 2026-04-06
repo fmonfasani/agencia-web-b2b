@@ -3,9 +3,38 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Download, Loader2, CheckCircle } from "lucide-react";
-import { PageTransition, StaggerItem } from "@/components/animations/PageTransition";
+import {
+  PageTransition,
+  StaggerItem,
+} from "@/components/animations/PageTransition";
 import { useToast } from "@/hooks/useToast";
-import { generateReport, REPORT_TYPES, ReportType } from "@/app/actions/reports";
+import { generateReport, ReportType } from "@/app/actions/reports";
+
+// Defined here to avoid importing a non-serializable "use server" constant in a Client Component
+const REPORT_TYPES: ReportType[] = [
+  {
+    id: "usage",
+    name: "Reporte de Uso",
+    description:
+      "Queries procesadas, costos y errores por agente en el período",
+    formats: ["csv", "pdf"],
+    icon: "📊",
+  },
+  {
+    id: "billing",
+    name: "Reporte de Facturación",
+    description: "Desglose de suscripciones, pagos e impuestos",
+    formats: ["pdf"],
+    icon: "💳",
+  },
+  {
+    id: "performance",
+    name: "Reporte de Performance",
+    description: "KPIs principales, latencia, tasa de éxito y comparativa",
+    formats: ["csv", "html"],
+    icon: "⚡",
+  },
+];
 
 export default function ReportsPage() {
   const { addToast } = useToast();
@@ -16,7 +45,10 @@ export default function ReportsPage() {
     endDate: new Date().toISOString().split("T")[0],
   });
 
-  const handleGenerate = async (report: ReportType, format: "csv" | "pdf" | "html") => {
+  const handleGenerate = async (
+    report: ReportType,
+    format: "csv" | "pdf" | "html",
+  ) => {
     const key = `${report.id}_${format}`;
     setGenerating(key);
     try {
@@ -25,7 +57,10 @@ export default function ReportsPage() {
         setGenerated((prev) => [...prev, key]);
         addToast(`Reporte "${res.fileName}" generado`, "success");
         // Simulate download
-        setTimeout(() => setGenerated((prev) => prev.filter((k) => k !== key)), 3000);
+        setTimeout(
+          () => setGenerated((prev) => prev.filter((k) => k !== key)),
+          3000,
+        );
       } else {
         addToast(res.error ?? "Error al generar", "error");
       }
@@ -40,30 +75,48 @@ export default function ReportsPage() {
         <StaggerItem>
           <div>
             <h1 className="text-4xl font-bold text-gray-900 mb-2">Reportes</h1>
-            <p className="text-gray-600">Genera y descarga reportes exportables de tu plataforma</p>
+            <p className="text-gray-600">
+              Genera y descarga reportes exportables de tu plataforma
+            </p>
           </div>
         </StaggerItem>
 
         {/* Date Range */}
         <StaggerItem>
           <div className="border border-gray-200 rounded-lg p-5 bg-white">
-            <h3 className="font-semibold text-gray-900 mb-3">Rango de fechas</h3>
+            <h3 className="font-semibold text-gray-900 mb-3">
+              Rango de fechas
+            </h3>
             <div className="flex gap-4 flex-wrap">
               <div>
-                <label className="text-xs text-gray-500 block mb-1">Desde</label>
+                <label className="text-xs text-gray-500 block mb-1">
+                  Desde
+                </label>
                 <input
                   type="date"
                   value={dateRange.startDate}
-                  onChange={(e) => setDateRange((prev) => ({ ...prev, startDate: e.target.value }))}
+                  onChange={(e) =>
+                    setDateRange((prev) => ({
+                      ...prev,
+                      startDate: e.target.value,
+                    }))
+                  }
                   className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm"
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-500 block mb-1">Hasta</label>
+                <label className="text-xs text-gray-500 block mb-1">
+                  Hasta
+                </label>
                 <input
                   type="date"
                   value={dateRange.endDate}
-                  onChange={(e) => setDateRange((prev) => ({ ...prev, endDate: e.target.value }))}
+                  onChange={(e) =>
+                    setDateRange((prev) => ({
+                      ...prev,
+                      endDate: e.target.value,
+                    }))
+                  }
                   className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm"
                 />
               </div>
@@ -84,7 +137,9 @@ export default function ReportsPage() {
               <div className="text-4xl">{report.icon}</div>
               <div>
                 <h3 className="font-bold text-gray-900">{report.name}</h3>
-                <p className="text-sm text-gray-500 mt-1">{report.description}</p>
+                <p className="text-sm text-gray-500 mt-1">
+                  {report.description}
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -114,8 +169,8 @@ export default function ReportsPage() {
                       {isGenerating
                         ? "Generando..."
                         : isDone
-                        ? "Descargado"
-                        : `Descargar ${fmt.toUpperCase()}`}
+                          ? "Descargado"
+                          : `Descargar ${fmt.toUpperCase()}`}
                     </button>
                   );
                 })}
@@ -130,16 +185,35 @@ export default function ReportsPage() {
             <h3 className="font-bold text-gray-900 mb-4">Reportes recientes</h3>
             <div className="space-y-3">
               {[
-                { name: "usage_2026-03-01_2026-03-31.csv", date: "5 abr 2026", size: "24 KB" },
-                { name: "billing_2026-03-01_2026-03-31.pdf", date: "4 abr 2026", size: "156 KB" },
-                { name: "performance_2026-02-01_2026-02-28.html", date: "1 mar 2026", size: "48 KB" },
+                {
+                  name: "usage_2026-03-01_2026-03-31.csv",
+                  date: "5 abr 2026",
+                  size: "24 KB",
+                },
+                {
+                  name: "billing_2026-03-01_2026-03-31.pdf",
+                  date: "4 abr 2026",
+                  size: "156 KB",
+                },
+                {
+                  name: "performance_2026-02-01_2026-02-28.html",
+                  date: "1 mar 2026",
+                  size: "48 KB",
+                },
               ].map((f, i) => (
-                <div key={i} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                <div
+                  key={i}
+                  className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"
+                >
                   <div className="flex items-center gap-3">
                     <Download size={16} className="text-gray-400" />
                     <div>
-                      <p className="text-sm font-medium text-gray-900">{f.name}</p>
-                      <p className="text-xs text-gray-500">{f.date} · {f.size}</p>
+                      <p className="text-sm font-medium text-gray-900">
+                        {f.name}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {f.date} · {f.size}
+                      </p>
                     </div>
                   </div>
                   <button className="text-xs text-blue-600 hover:text-blue-700">
