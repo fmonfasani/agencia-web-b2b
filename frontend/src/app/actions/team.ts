@@ -1,5 +1,8 @@
 "use server";
 
+import { auth } from "@/lib/auth";
+import { saasClientFor, SaasApiError } from "@/lib/saas-client";
+
 export type TeamRole = "owner" | "admin" | "manager" | "analyst" | "viewer";
 
 export interface TeamMember {
@@ -12,34 +15,88 @@ export interface TeamMember {
   joinedAt: string;
 }
 
-const mockTeam: TeamMember[] = [
-  { id: "u1", email: "admin@empresa.com", name: "Admin Principal", role: "owner", status: "active", lastAccess: "2026-04-06", joinedAt: "2026-01-01" },
-  { id: "u2", email: "maria@empresa.com", name: "María García", role: "admin", status: "active", lastAccess: "2026-04-05", joinedAt: "2026-02-10" },
-  { id: "u3", email: "carlos@empresa.com", name: "Carlos Méndez", role: "manager", status: "active", lastAccess: "2026-04-04", joinedAt: "2026-03-01" },
-  { id: "u4", email: "nuevo@empresa.com", name: "Invitado Pendiente", role: "analyst", status: "pending", joinedAt: "2026-04-05" },
-];
+// Map backend rol → TeamRole
+function mapRol(rol: string): TeamRole {
+  const map: Record<string, TeamRole> = {
+    superadmin: "owner",
+    admin: "admin",
+    analista: "analyst",
+    cliente: "viewer",
+  };
+  return map[rol] ?? "viewer";
+}
+
+async function getClient() {
+  const session = await auth();
+  const apiKey =
+    (session?.user as any)?.apiKey || (session as any)?.backendApiKey;
+  if (!apiKey) throw new Error("No API key in session");
+  return saasClientFor(apiKey);
+}
 
 export async function getTeamMembers(): Promise<TeamMember[]> {
-  return mockTeam;
+  try {
+    const client = await getClient();
+    const users = await client.auth.users();
+    return users.map((u) => ({
+      id: u.id,
+      email: u.email,
+      name: u.nombre ?? u.email.split("@")[0],
+      role: mapRol(u.rol),
+      status: u.is_active ? "active" : "revoked",
+      joinedAt: u.created_at,
+    }));
+  } catch (e) {
+    if (e instanceof SaasApiError && e.status === 404) return [];
+    console.warn("[team] getTeamMembers:", e);
+    return [];
+  }
 }
 
 export async function inviteTeamMember(
   email: string,
-  role: TeamRole
+  role: TeamRole,
 ): Promise<{ success: boolean; error?: string }> {
   if (!email.includes("@")) return { success: false, error: "Email inválido" };
-  return { success: true };
+  try {
+    const client = await getClient();
+    // Map TeamRole → backend Rol
+    const rolMap: Record<TeamRole, string> = {
+      owner: "admin",
+      admin: "admin",
+      manager: "analista",
+      analyst: "analista",
+      viewer: "cliente",
+    };
+    await client.auth.createAnalista({
+      email,
+      password: Math.random().toString(36).slice(-10) + "A1!",
+      rol: rolMap[role] as any,
+    });
+    return { success: true };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return { success: false, error: msg };
+  }
 }
 
 export async function updateTeamMemberRole(
   userId: string,
-  role: TeamRole
+  role: TeamRole,
 ): Promise<{ success: boolean; error?: string }> {
+  // Backend doesn't have a role-update endpoint yet
   return { success: true };
 }
 
 export async function removeTeamMember(
-  userId: string
+  userId: string,
 ): Promise<{ success: boolean; error?: string }> {
-  return { success: true };
+  try {
+    const client = await getClient();
+    await client.auth.activate(userId, false);
+    return { success: true };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return { success: false, error: msg };
+  }
 }

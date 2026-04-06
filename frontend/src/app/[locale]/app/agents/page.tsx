@@ -1,52 +1,73 @@
-"use client";
-
+import { auth } from "@/lib/auth";
+import { saasClientFor, SaasApiError } from "@/lib/saas-client";
 import { AgentCard } from "@/components/dashboard/AgentCard";
 import Link from "next/link";
-import { useParams } from "next/navigation";
 
-const mockAgents = [
-  {
-    id: "1",
-    name: "Recepción IA",
-    type: "Recepción",
-    image:
-      "https://images.unsplash.com/photo-1552664730-d307ca884978?w=200&h=200&fit=crop",
-    status: "online" as const,
-    queries: 1243,
-    latency: 245,
-    errorRate: 0.2,
-  },
-  {
-    id: "2",
-    name: "Soporte IA",
-    type: "Soporte",
-    image:
-      "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=200&h=200&fit=crop",
-    status: "online" as const,
-    queries: 892,
-    latency: 312,
-    errorRate: 0.1,
-  },
-  {
-    id: "3",
-    name: "Ventas IA",
-    type: "Ventas",
-    image:
-      "https://images.unsplash.com/photo-1552664730-d307ca884978?w=200&h=200&fit=crop",
-    status: "degraded" as const,
-    queries: 45,
-    latency: 890,
-    errorRate: 2.5,
-  },
-];
+export default async function AgentsPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  const session = await auth();
+  const apiKey =
+    (session?.user as any)?.apiKey || (session as any)?.backendApiKey;
 
-export default function AgentsPage() {
-  const params = useParams();
-  const locale = params.locale as string;
+  // Fetch real agent config + metrics from backend
+  let agentName = "Agente Principal";
+  let agentDescription = "Agente IA configurado para tu negocio";
+  let totalQueries = 0;
+  let avgLatency = 0;
+  let errorRate = 0;
+  let agentStatus: "active" | "inactive" = "active";
+
+  if (apiKey) {
+    const client = saasClientFor(apiKey);
+    try {
+      const [config, metrics] = await Promise.allSettled([
+        client.agent.config(),
+        client.agent.metrics(),
+      ]);
+
+      if (config.status === "fulfilled") {
+        agentName = config.value.nombre ?? agentName;
+        agentDescription = config.value.descripcion ?? agentDescription;
+      }
+
+      if (metrics.status === "fulfilled") {
+        const m = metrics.value;
+        totalQueries = m.total_executions ?? 0;
+        avgLatency = Math.round(m.avg_duration_ms ?? 0);
+        errorRate = parseFloat(
+          (
+            ((m.error_count ?? 0) / Math.max(m.total_executions ?? 1, 1)) *
+            100
+          ).toFixed(1),
+        );
+        agentStatus = totalQueries > 0 ? "active" : "inactive";
+      }
+    } catch (e) {
+      if (!(e instanceof SaasApiError && e.status === 404))
+        console.warn("[agents] fetch:", e);
+    }
+  }
+
+  // In the current architecture each tenant has exactly 1 agent
+  const agents = [
+    {
+      id: "main",
+      name: agentName,
+      type: "IA Conversacional",
+      status:
+        agentStatus === "active" ? ("online" as const) : ("offline" as const),
+      queries: totalQueries,
+      latency: avgLatency,
+      errorRate,
+    },
+  ];
 
   return (
     <div className="space-y-8">
-      {/* Header */}
       <div>
         <h1 className="text-4xl font-bold text-gray-900 mb-2">Mis Agentes</h1>
         <p className="text-gray-600">
@@ -54,20 +75,18 @@ export default function AgentsPage() {
         </p>
       </div>
 
-      {/* Grid de Agentes */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {mockAgents.map((agent) => (
+        {agents.map((agent) => (
           <Link
             key={agent.id}
             href={`/${locale}/app/agents/${agent.id}`}
             className="block hover:no-underline"
           >
-            <AgentCard {...agent} onConfig={() => {}} onMore={() => {}} />
+            <AgentCard {...agent} />
           </Link>
         ))}
       </div>
 
-      {/* Agregar nuevo agente */}
       <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
         <div className="text-4xl mb-4">➕</div>
         <h3 className="text-lg font-bold text-gray-900 mb-2">

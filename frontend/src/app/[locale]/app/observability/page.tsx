@@ -9,30 +9,24 @@ import {
 } from "@/components/animations/PageTransition";
 import { saasClientFor } from "@/lib/saas-client";
 
-const MOCK_METRICS = [
-  { date: "1 abr", queries: 1200, avgDuration: 245, errorRate: 0.2 },
-  { date: "2 abr", queries: 1900, avgDuration: 300, errorRate: 0.3 },
-  { date: "3 abr", queries: 1700, avgDuration: 220, errorRate: 0.1 },
-  { date: "4 abr", queries: 2200, avgDuration: 280, errorRate: 0.4 },
-  { date: "5 abr", queries: 2290, avgDuration: 245, errorRate: 0.2 },
-];
-
-const TOP_AGENTS = [
-  { name: "Recepción", mrr: 2400 },
-  { name: "Soporte", mrr: 1398 },
-  { name: "Ventas", mrr: 980 },
-];
+type MetricPoint = {
+  date: string;
+  queries: number;
+  avgDuration: number;
+  errorRate: number;
+};
 
 export default function ObservabilityPage() {
   const [traces, setTraces] = useState<any[]>([]);
-  const [metricsData, setMetricsData] = useState(MOCK_METRICS);
+  const [metricsData, setMetricsData] = useState<MetricPoint[]>([]);
+  const [agentName, setAgentName] = useState("Mi Agente");
+  const [totalExecutions, setTotalExecutions] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch session from API endpoint — no SessionProvider needed
     fetch("/api/auth/session")
       .then((r) => r.json())
-      .then((session) => {
+      .then(async (session) => {
         const apiKey = (session?.user as any)?.apiKey;
         if (!apiKey) {
           setLoading(false);
@@ -40,50 +34,57 @@ export default function ObservabilityPage() {
         }
 
         const client = saasClientFor(apiKey);
-        client.agent
-          .traces()
-          .then((data) => {
-            if (!data?.length) return;
-            setTraces(data);
 
-            const byDate: Record<string, any> = {};
-            data.forEach((trace: any) => {
-              const date = new Date(trace.created_at).toLocaleDateString(
-                "es-ES",
-                { day: "numeric", month: "short" },
-              );
-              if (!byDate[date])
-                byDate[date] = {
-                  queries: 0,
-                  duration: 0,
-                  errors: 0,
-                  count: 0,
-                };
-              byDate[date].queries++;
-              byDate[date].duration += trace.total_duration_ms || 0;
-              if (trace.success === false) byDate[date].errors++;
-              byDate[date].count++;
-            });
+        // Fetch config, metrics, and traces in parallel
+        const [configRes, metricsRes, tracesRes] = await Promise.allSettled([
+          client.agent.config(),
+          client.agent.metrics(),
+          client.agent.traces(),
+        ]);
 
-            const computed = Object.entries(byDate)
-              .map(([date, d]) => ({
-                date,
-                queries: (d as any).queries * 100,
-                avgDuration: Math.round((d as any).duration / (d as any).count),
-                errorRate: parseFloat(
-                  (((d as any).errors / (d as any).count) * 100).toFixed(1),
-                ),
-              }))
-              .slice(-5);
+        if (configRes.status === "fulfilled") {
+          setAgentName(configRes.value.nombre ?? "Mi Agente");
+        }
 
-            if (computed.length > 0) setMetricsData(computed);
-          })
-          .catch(() => {
-            /* backend not ready, use mock */
-          })
-          .finally(() => setLoading(false));
+        if (metricsRes.status === "fulfilled") {
+          setTotalExecutions(metricsRes.value.total_executions ?? 0);
+        }
+
+        if (tracesRes.status === "fulfilled" && tracesRes.value?.length) {
+          const data = tracesRes.value;
+          setTraces(data);
+
+          const byDate: Record<
+            string,
+            { queries: number; duration: number; errors: number; count: number }
+          > = {};
+          data.forEach((trace: any) => {
+            const date = new Date(trace.created_at).toLocaleDateString(
+              "es-ES",
+              { day: "numeric", month: "short" },
+            );
+            if (!byDate[date])
+              byDate[date] = { queries: 0, duration: 0, errors: 0, count: 0 };
+            byDate[date].queries++;
+            byDate[date].duration += trace.total_duration_ms || 0;
+            if (trace.success === false) byDate[date].errors++;
+            byDate[date].count++;
+          });
+
+          const computed = Object.entries(byDate)
+            .slice(-14)
+            .map(([date, d]) => ({
+              date,
+              queries: d.queries,
+              avgDuration: Math.round(d.duration / d.count),
+              errorRate: parseFloat(((d.errors / d.count) * 100).toFixed(1)),
+            }));
+
+          setMetricsData(computed);
+        }
       })
-      .catch(() => setLoading(false));
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   return (
@@ -102,7 +103,7 @@ export default function ObservabilityPage() {
 
         <AgentMetricsChart
           metricsData={metricsData}
-          topClientsData={TOP_AGENTS}
+          topClientsData={[{ name: agentName, mrr: totalExecutions }]}
         />
 
         <StaggerItem>
