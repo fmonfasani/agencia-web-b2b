@@ -2,21 +2,23 @@ import { ReactNode } from "react";
 import "./globals.css";
 import { RumProvider } from "@/components/providers/RumProvider";
 import { ToastContainer } from "@/components/ui/toast";
-import { Geist } from "next/font/google";
-import { cn } from "@/lib/utils";
+import { Manrope } from "next/font/google";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+const manrope = Manrope({
+  subsets: ["latin"],
+  variable: "--font-manrope",
+});
 
-
-// This layout is used when no locale is matched,
-// and it satisfying Next.js requirement for a root layout.
+// Root layout — must own <html> and <body> in Next.js app router.
+// The [locale]/layout.tsx renders providers inside <body> without re-declaring these tags.
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="es" className={cn("font-sans", geist.variable)}>
-      <body>
-        <RumProvider>
-          {children}
-        </RumProvider>
+    <html lang="es" suppressHydrationWarning>
+      <body
+        suppressHydrationWarning
+        className={`${manrope.variable} font-sans antialiased`}
+      >
+        <RumProvider>{children}</RumProvider>
         <ToastContainer />
       </body>
     </html>

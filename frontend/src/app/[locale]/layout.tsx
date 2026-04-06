@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import { Manrope } from "next/font/google";
-import "../globals.css";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -12,12 +10,6 @@ import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
 import CookieConsent from "@/components/CookieConsent";
 import SalesChatWidget from "@/components/SalesChatWidget";
 import BrandingProvider from "@/components/BrandingProvider";
-import { auth } from "@/lib/auth";
-
-const manrope = Manrope({
-  subsets: ["latin"],
-  variable: "--font-manrope",
-});
 
 export async function generateMetadata({
   params,
@@ -28,10 +20,12 @@ export async function generateMetadata({
 
   // Branding will be provided by BrandingProvider (client-side from localStorage or context)
   // Don't fetch from DB in server-side metadata - use defaults instead
-  let branding: any = null;
+  const branding: any = null;
 
   const appName = branding?.appName || "Agencia Web";
-  const description = branding?.description || "Potenciamos empresas de servicios B2B con desarrollo web de alto rendimiento. Entrega rápida, soporte directo y enfoque total en conversiones.";
+  const description =
+    branding?.description ||
+    "Potenciamos empresas de servicios B2B con desarrollo web de alto rendimiento. Entrega rápida, soporte directo y enfoque total en conversiones.";
 
   return {
     metadataBase: new URL("https://agenciaweb.com"),
@@ -86,22 +80,16 @@ export default async function RootLayout({
   const branding = null;
 
   return (
-    <html lang={locale} suppressHydrationWarning>
-      <body suppressHydrationWarning>
-        <div className={`${manrope.variable} font-sans antialiased text-text-main bg-white scroll-smooth`}>
-          <NextIntlClientProvider messages={messages} locale={locale}>
-            <BrandingProvider branding={branding}>
-              <GoogleTagManager />
-              <StructuredData />
-              <Analytics />
-              <VercelAnalytics />
-              {children}
-              <CookieConsent />
-              <SalesChatWidget />
-            </BrandingProvider>
-          </NextIntlClientProvider>
-        </div>
-      </body>
-    </html>
+    <NextIntlClientProvider messages={messages} locale={locale}>
+      <BrandingProvider branding={branding}>
+        <GoogleTagManager />
+        <StructuredData />
+        <Analytics />
+        <VercelAnalytics />
+        {children}
+        <CookieConsent />
+        <SalesChatWidget />
+      </BrandingProvider>
+    </NextIntlClientProvider>
   );
 }
