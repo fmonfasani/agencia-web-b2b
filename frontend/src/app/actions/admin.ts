@@ -1,7 +1,7 @@
 "use server";
 
 import { auth } from "@/lib/auth";
-import { saasClientFor } from "@/lib/saas-client";
+import { saasClientFor, SaasApiError } from "@/lib/saas-client";
 
 export interface DashboardData {
   metrics: {
@@ -37,7 +37,7 @@ export interface DashboardData {
 export async function getAdminDashboardData(): Promise<DashboardData> {
   try {
     const session = await auth();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const apiKey =
       (session?.user as any)?.apiKey || (session as any)?.backendApiKey;
     if (!apiKey) {
@@ -90,7 +90,10 @@ export async function getAdminDashboardData(): Promise<DashboardData> {
         );
       }
     } catch (e) {
-      console.error("Failed to fetch agent metrics:", e);
+      // 404 means endpoint not yet implemented in backend — use mock data silently
+      if (!(e instanceof SaasApiError && e.status === 404)) {
+        console.warn("Failed to fetch agent metrics:", e);
+      }
     }
 
     // Fetch traces for timeline data
@@ -129,16 +132,18 @@ export async function getAdminDashboardData(): Promise<DashboardData> {
         metricsData = Object.entries(byDate)
           .map(([date, data]) => ({
             date,
-            queries: data.queries * 100, // Scale for visibility
+            queries: data.queries * 100,
             avgDuration: Math.round(data.duration / data.count),
             errorRate: parseFloat(
               ((data.errors / data.count) * 100).toFixed(1),
             ),
           }))
-          .slice(-5); // Last 5 days
+          .slice(-5);
       }
     } catch (e) {
-      console.error("Failed to fetch traces:", e);
+      if (!(e instanceof SaasApiError && e.status === 404)) {
+        console.warn("Failed to fetch traces:", e);
+      }
     }
 
     // Mock top clients data (would come from accounting/billing system)

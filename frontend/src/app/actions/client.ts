@@ -1,7 +1,7 @@
 "use server";
 
 import { auth } from "@/lib/auth";
-import { saasClientFor } from "@/lib/saas-client";
+import { saasClientFor, SaasApiError } from "@/lib/saas-client";
 
 export interface ClientDashboardData {
   tenantName: string;
@@ -25,7 +25,7 @@ export interface ClientDashboardData {
 export async function getClientDashboardData(): Promise<ClientDashboardData> {
   try {
     const session = await auth();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const apiKey =
       (session?.user as any)?.apiKey || (session as any)?.backendApiKey;
     if (!apiKey) {
@@ -42,7 +42,9 @@ export async function getClientDashboardData(): Promise<ClientDashboardData> {
         tenantName = tenantData.tenant.name;
       }
     } catch (e) {
-      console.error("Failed to fetch tenant data:", e);
+      if (!(e instanceof SaasApiError && e.status === 404)) {
+        console.warn("Failed to fetch tenant data:", e);
+      }
     }
 
     // Fetch traces for timeline data
@@ -90,7 +92,9 @@ export async function getClientDashboardData(): Promise<ClientDashboardData> {
           .slice(-5); // Last 5 days
       }
     } catch (e) {
-      console.error("Failed to fetch traces:", e);
+      if (!(e instanceof SaasApiError && e.status === 404)) {
+        console.warn("Failed to fetch traces:", e);
+      }
     }
 
     // Mock top agents data (would come from actual agent list)
