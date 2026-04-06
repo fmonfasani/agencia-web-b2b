@@ -136,6 +136,9 @@ export const authConfig = {
         session.user.role = (token.role as string) || "MEMBER";
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (session.user as any).apiKey = token.apiKey || "";
+        // Expose at session root for backwards compat with admin.ts / client.ts
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (session as any).backendApiKey = token.apiKey || "";
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const apiKeyValue = (session.user as any).apiKey;
         console.log("[SESSION] Final session state:", {
@@ -148,9 +151,10 @@ export const authConfig = {
       return session;
     },
     async redirect({ url, baseUrl }) {
-      // After login, redirect to dashboard
+      // If callbackUrl is explicitly provided, honour it
       if (url.startsWith(baseUrl)) return url;
-      return `${baseUrl}/es/admin/dashboard`;
+      // Default: smart-redirect page decides admin vs client based on role
+      return `${baseUrl}/es/redirect`;
     },
   },
   session: {
