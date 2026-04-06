@@ -1,7 +1,7 @@
 import React from "react";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { Zap, LogOut, Home, Cpu, ShoppingBag, BarChart3 } from "lucide-react";
+import { Zap, LogOut, Home, Cpu, ShoppingBag, BarChart3, CreditCard } from "lucide-react";
 import Link from "next/link";
 
 export default async function ClientLayout({
@@ -24,6 +24,7 @@ export default async function ClientLayout({
     { href: `/${locale}/app/chat`, label: "Chat IA", icon: Zap },
     { href: `/${locale}/app/marketplace`, label: "Marketplace", icon: ShoppingBag },
     { href: `/${locale}/app/observability`, label: "Observabilidad", icon: BarChart3 },
+    { href: `/${locale}/app/billing`, label: "Facturación", icon: CreditCard },
   ];
 
   return (
