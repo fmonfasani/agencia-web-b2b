@@ -1,6 +1,4 @@
-import { db } from "@/lib/scoped-prisma";
 import { requireTenantMembership } from "@/lib/authz";
-import { EconomicsService } from "@/lib/economics/tracker";
 import LeadsDataTable from "@/components/admin/LeadsDataTable";
 import {
   Users,
@@ -12,6 +10,7 @@ import {
   TrendingUp,
   Database,
   Map as MapIcon,
+  AlertCircle,
 } from "lucide-react";
 
 import Link from "next/link";
@@ -90,89 +89,46 @@ export default async function CommercialHubPage({
   const { locale } = await params;
   const { source } = await searchParams;
 
-  const { user, tenantId } = await requireTenantMembership([
-    "ADMIN",
-    "SUPER_ADMIN",
-  ]);
+  // Validate user session
+  const { user, tenantId } = await requireTenantMembership();
   const userId =
     (user as { id?: string; userId?: string })?.id ??
     (user as { id?: string; userId?: string })?.userId;
   if (!userId || !tenantId) {
     throw new Error("TENANT_CONTEXT_REQUIRED");
   }
-  const scopedDb = await db({ userId, tenantId });
 
-  type LeadType = {
-    sourceType?: string | null;
-    phone?: string | null;
-    website?: string | null;
-    intelligence?: {
-      hasWhatsappLink?: boolean;
-      opportunityScore?: number | null;
-    } | null;
-    potentialScore?: number | null;
-    createdAt: Date;
-  };
-
-  // 1. Fetch Leads with Intelligence
-  const leadsRaw = await scopedDb.lead.findMany({
-    where: {
-      sourceType: source ? (source.toUpperCase() as string) : undefined,
-    },
-    take: 1000,
-    orderBy: { createdAt: "desc" },
-    include: {
-      intelligence: true,
-    },
-  });
-
-  // 2. Aggregate Metrics
-  const totalLeads = leadsRaw.length;
-
-  const scraperLeads = leadsRaw.filter(
-    (l: LeadType) => l.sourceType === "SCRAPER",
-  ).length;
-
-  const avgQuality = totalLeads
-    ? Math.round(
-        leadsRaw.reduce(
-          (a: number, l: LeadType) =>
-            a + (l.intelligence?.opportunityScore || l.potentialScore || 0),
-          0,
-        ) / totalLeads,
-      )
-    : 0;
-
-  // 3. Financial Metrics
-  const dealsStats = await scopedDb.deal.aggregate({
-    _sum: { value: true },
-  });
-  const pipelineValue = Number(dealsStats._sum.value || 0);
-
-  // Get economics data for efficiency metrics
-  const economicsData = await EconomicsService.getTenantROI(tenantId ?? "");
+  // NOTE: Data fetching should be done via backend API with X-API-Key header
+  // For now, showing placeholder data while backend endpoints are being implemented
+  const totalLeads = 0;
+  const scraperLeads = 0;
+  const avgQuality = 0;
+  const pipelineValue = 0;
   const economics = {
-    efficiencyScore: economicsData?.efficiencyScore || 1.0,
-    netProfit: economicsData?.netProfit || 0,
-    totalOpEx: economicsData?.totalOpEx || 0,
+    efficiencyScore: 1.0,
+    netProfit: 0,
+    totalOpEx: 0,
   };
-
-  // 4. Serialize for Client Component
-  const serializedLeads = leadsRaw.map((l: LeadType) => ({
-    ...l,
-    createdAt: l.createdAt.toISOString(),
-    intelligence: l.intelligence
-      ? {
-          ...l.intelligence,
-          analyzedAt: (l.intelligence as any).analyzedAt?.toISOString() ?? null,
-          updatedAt: (l.intelligence as any).updatedAt?.toISOString() ?? null,
-        }
-      : null,
-  }));
+  const serializedLeads: any[] = [];
 
   return (
     <div className="min-h-screen bg-[#f8fafc]">
       <div className="max-w-[1600px] mx-auto px-8 py-10 space-y-10">
+        {/* IMPLEMENTATION NOTICE */}
+        <div className="bg-amber-50 border border-amber-200 rounded-[2rem] p-6 flex items-start gap-4">
+          <AlertCircle className="text-amber-600 shrink-0 mt-1" size={20} />
+          <div className="flex-1">
+            <h3 className="font-bold text-amber-900 mb-1">
+              Dashboard en Construcción
+            </h3>
+            <p className="text-sm text-amber-800">
+              El dashboard está conectando con el backend para obtener datos.
+              Los endpoints de leads, deals y analytics aún se están
+              implementando.
+            </p>
+          </div>
+        </div>
+
         {/* TOP HEADER */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-1">
