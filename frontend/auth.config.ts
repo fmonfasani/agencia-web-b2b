@@ -37,8 +37,7 @@ export const authConfig = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials): Promise<CustomUser | null> {
-        debugger; // PAUSA AQUÍ
-        console.log("[AUTH] === AUTHORIZE CALLED ===", credentials);
+        console.log("[AUTH] === AUTHORIZE CALLED ===");
 
         if (!credentials?.email || !credentials?.password) {
           console.error("[AUTH] Missing email or password");
@@ -98,9 +97,6 @@ export const authConfig = {
             apiKey: apiKey,
           };
           console.log("[AUTH] Returning user object:", JSON.stringify(result));
-
-          // 2 second delay para debugging
-          await new Promise((resolve) => setTimeout(resolve, 2000));
 
           return result;
         } catch (err) {
