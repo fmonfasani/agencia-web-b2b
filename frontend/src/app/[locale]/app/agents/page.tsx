@@ -1,15 +1,16 @@
-import { auth } from "@/lib/auth";
+"use client";
+
 import { AgentCard } from "@/components/dashboard/AgentCard";
 import Link from "next/link";
-
-export const dynamic = "force-dynamic";
+import { useParams } from "next/navigation";
 
 const mockAgents = [
   {
     id: "1",
     name: "Recepción IA",
     type: "Recepción",
-    image: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=200&h=200&fit=crop",
+    image:
+      "https://images.unsplash.com/photo-1552664730-d307ca884978?w=200&h=200&fit=crop",
     status: "online" as const,
     queries: 1243,
     latency: 245,
@@ -19,7 +20,8 @@ const mockAgents = [
     id: "2",
     name: "Soporte IA",
     type: "Soporte",
-    image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=200&h=200&fit=crop",
+    image:
+      "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=200&h=200&fit=crop",
     status: "online" as const,
     queries: 892,
     latency: 312,
@@ -29,7 +31,8 @@ const mockAgents = [
     id: "3",
     name: "Ventas IA",
     type: "Ventas",
-    image: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=200&h=200&fit=crop",
+    image:
+      "https://images.unsplash.com/photo-1552664730-d307ca884978?w=200&h=200&fit=crop",
     status: "degraded" as const,
     queries: 45,
     latency: 890,
@@ -37,17 +40,9 @@ const mockAgents = [
   },
 ];
 
-export default async function AgentsPage({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}) {
-  const { locale } = await params;
-  const session = await auth();
-
-  if (!session?.user) {
-    throw new Error("No autenticado");
-  }
+export default function AgentsPage() {
+  const params = useParams();
+  const locale = params.locale as string;
 
   return (
     <div className="space-y-8">
@@ -62,12 +57,12 @@ export default async function AgentsPage({
       {/* Grid de Agentes */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {mockAgents.map((agent) => (
-          <Link key={agent.id} href={`/${locale}/app/agents/${agent.id}`} className="block hover:no-underline">
-            <AgentCard
-              {...agent}
-              onConfig={() => {}}
-              onMore={() => {}}
-            />
+          <Link
+            key={agent.id}
+            href={`/${locale}/app/agents/${agent.id}`}
+            className="block hover:no-underline"
+          >
+            <AgentCard {...agent} onConfig={() => {}} onMore={() => {}} />
           </Link>
         ))}
       </div>
