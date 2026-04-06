@@ -1,7 +1,7 @@
 import React from "react";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { Zap, LogOut, Home, Cpu, ShoppingBag, BarChart3, CreditCard, Settings } from "lucide-react";
+import { Zap, LogOut, Home, Cpu, ShoppingBag, BarChart3, CreditCard, Settings, FileText, Users, Webhook, Activity } from "lucide-react";
 import Link from "next/link";
 
 export default async function ClientLayout({
@@ -25,7 +25,11 @@ export default async function ClientLayout({
     { href: `/${locale}/app/marketplace`, label: "Marketplace", icon: ShoppingBag },
     { href: `/${locale}/app/observability`, label: "Observabilidad", icon: BarChart3 },
     { href: `/${locale}/app/billing`, label: "Facturación", icon: CreditCard },
+    { href: `/${locale}/app/reports`, label: "Reportes", icon: FileText },
     { href: `/${locale}/app/settings`, label: "Configuración", icon: Settings },
+    { href: `/${locale}/app/settings/team`, label: "Equipo", icon: Users },
+    { href: `/${locale}/app/settings/webhooks`, label: "Webhooks", icon: Webhook },
+    { href: `/${locale}/app/settings/activity`, label: "Activity Log", icon: Activity },
   ];
 
   return (

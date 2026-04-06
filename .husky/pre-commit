@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-cd frontend && npx lint-staged
+cd frontend && npx lint-staged --config package.json

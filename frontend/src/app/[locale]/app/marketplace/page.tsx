@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Star, Users, ShoppingCart } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { getMarketplaceAgents, purchaseAgent } from "@/app/actions/marketplace";
 import { PageTransition, StaggerItem } from "@/components/animations/PageTransition";
 import { useToast } from "@/components/ui/toast";
@@ -287,23 +288,31 @@ export default function MarketplacePage() {
                           ${agent.price}
                         </p>
                       </div>
-                      <button
-                        onClick={() => handlePurchase(agent.id)}
-                        disabled={purchasingId === agent.id}
-                        className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                      >
-                        {purchasingId === agent.id ? (
-                          <>
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            Comprando...
-                          </>
-                        ) : (
-                          <>
-                            <ShoppingCart size={16} />
-                            Comprar
-                          </>
-                        )}
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={`marketplace/${agent.id}`}
+                          className="px-3 py-2 border border-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                        >
+                          Ver detalles
+                        </Link>
+                        <button
+                          onClick={() => handlePurchase(agent.id)}
+                          disabled={purchasingId === agent.id}
+                          className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        >
+                          {purchasingId === agent.id ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                              Comprando...
+                            </>
+                          ) : (
+                            <>
+                              <ShoppingCart size={16} />
+                              Comprar
+                            </>
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </motion.div>

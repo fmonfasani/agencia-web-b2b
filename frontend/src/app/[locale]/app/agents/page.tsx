@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { AgentCard } from "@/components/dashboard/AgentCard";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -61,16 +62,13 @@ export default async function AgentsPage({
       {/* Grid de Agentes */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {mockAgents.map((agent) => (
-          <AgentCard
-            key={agent.id}
-            {...agent}
-            onConfig={() => {
-              console.log("Configurar", agent.id);
-            }}
-            onMore={() => {
-              console.log("Más opciones", agent.id);
-            }}
-          />
+          <Link key={agent.id} href={`/${locale}/app/agents/${agent.id}`} className="block hover:no-underline">
+            <AgentCard
+              {...agent}
+              onConfig={() => {}}
+              onMore={() => {}}
+            />
+          </Link>
         ))}
       </div>
 

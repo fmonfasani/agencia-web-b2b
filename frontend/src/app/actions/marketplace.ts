@@ -151,6 +151,57 @@ export async function getMarketplaceAgent(agentId: string): Promise<MarketplaceA
   return agents.find((a) => a.id === agentId) || null;
 }
 
+// ── Reviews ───────────────────────────────────────────────────────────────────
+
+export interface Review {
+  id: string;
+  authorName: string;
+  authorInitials: string;
+  rating: number;
+  comment: string;
+  date: string;
+  isOwn?: boolean;
+}
+
+const mockReviews: Record<string, Review[]> = {
+  "agent-recepcion-pro": [
+    { id: "r1", authorName: "Carlos Méndez", authorInitials: "CM", rating: 5, comment: "Excelente agente, redujo el tiempo de respuesta a clientes en un 60%. Muy recomendado.", date: "2026-03-15" },
+    { id: "r2", authorName: "María García", authorInitials: "MG", rating: 5, comment: "La integración con nuestro CRM fue perfecta. El soporte técnico es muy rápido.", date: "2026-03-10" },
+    { id: "r3", authorName: "Juan Pérez", authorInitials: "JP", rating: 4, comment: "Muy buen agente. Tarda un poco en responder en horas pico pero en general es excelente.", date: "2026-02-28" },
+    { id: "r4", authorName: "Laura Torres", authorInitials: "LT", rating: 5, comment: "Superó todas nuestras expectativas. La IA entiende perfectamente el contexto.", date: "2026-02-20" },
+    { id: "r5", authorName: "Roberto Silva", authorInitials: "RS", rating: 4, comment: "Buena relación calidad-precio. Lo recomiendo para empresas medianas.", date: "2026-02-10" },
+  ],
+  "agent-ventas-enterprise": [
+    { id: "r6", authorName: "Ana Martínez", authorInitials: "AM", rating: 5, comment: "El forecast de IA es increíblemente preciso. Triplicamos nuestras conversiones.", date: "2026-03-20" },
+    { id: "r7", authorName: "Diego López", authorInitials: "DL", rating: 5, comment: "Mejor inversión del año. El pipeline management es muy intuitivo.", date: "2026-03-05" },
+    { id: "r8", authorName: "Sofía Ruiz", authorInitials: "SR", rating: 4, comment: "Muy completo. La curva de aprendizaje es alta pero vale la pena.", date: "2026-02-25" },
+  ],
+};
+
+export async function getAgentReviews(
+  agentId: string,
+  page: number = 1,
+  ratingFilter: number = 0
+): Promise<{ reviews: Review[]; total: number; totalPages: number }> {
+  const PER_PAGE = 5;
+  let reviews = mockReviews[agentId] ?? mockReviews["agent-recepcion-pro"] ?? [];
+  if (ratingFilter > 0) reviews = reviews.filter((r) => r.rating >= ratingFilter);
+  const total = reviews.length;
+  const paginated = reviews.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+  return { reviews: paginated, total, totalPages: Math.ceil(total / PER_PAGE) };
+}
+
+export async function submitReview(
+  agentId: string,
+  rating: number,
+  comment: string
+): Promise<{ success: boolean; error?: string }> {
+  if (!comment.trim() || rating < 1 || rating > 5) {
+    return { success: false, error: "Rating y comentario son requeridos" };
+  }
+  return { success: true };
+}
+
 /**
  * Comprar un agente (mock - en producción sería un endpoint real)
  */
