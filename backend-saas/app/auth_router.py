@@ -347,7 +347,7 @@ async def create_analista(
             email=email,
             password=password,
             nombre=nombre,
-            rol="analista",
+            rol="ANALISTA",
             activo=True,  # analista creado por admin ya está activo
         )
         return {
