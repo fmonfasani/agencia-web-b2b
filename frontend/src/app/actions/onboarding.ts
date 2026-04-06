@@ -36,7 +36,23 @@ export async function uploadDocuments(formData: FormData) {
   }
 }
 
-export async function getOnboardingStatus() {
+export interface OnboardingStatusData {
+  tenantId: string;
+  status: string;
+  documentsCount: number;
+  vectorsCount: number;
+  postgresOk: boolean;
+  qdrantOk: boolean;
+  completionPercentage: number;
+  step: "upload" | "processing" | "ready";
+  error?: string;
+}
+
+export async function getOnboardingStatus(): Promise<{
+  success: boolean;
+  data?: OnboardingStatusData;
+  error?: string;
+}> {
   const session = await auth();
 
   if (!session?.user) {
@@ -55,9 +71,37 @@ export async function getOnboardingStatus() {
   try {
     const response = await client.onboarding.status(tenantId);
 
+    // Calculate completion percentage and step
+    let completionPercentage = 0;
+    let step: "upload" | "processing" | "ready" = "upload";
+
+    if (response.postgres_ok) completionPercentage += 33;
+    if (response.qdrant_ok) completionPercentage += 33;
+    if ((response.chunks_count || 0) > 0) completionPercentage += 34;
+
+    // Determine current step
+    if ((response.chunks_count || 0) === 0) {
+      step = "upload";
+    } else if (!response.postgres_ok || !response.qdrant_ok) {
+      step = "processing";
+    } else {
+      step = "ready";
+    }
+
+    const data: OnboardingStatusData = {
+      tenantId: response.tenant_id,
+      status: response.status,
+      documentsCount: response.chunks_count || 0,
+      vectorsCount: response.vectors_count || 0,
+      postgresOk: response.postgres_ok || false,
+      qdrantOk: response.qdrant_ok || false,
+      completionPercentage: Math.min(completionPercentage, 100),
+      step,
+    };
+
     return {
       success: true,
-      data: response,
+      data,
     };
   } catch (error) {
     console.error("[Onboarding] Error getting status:", error);
