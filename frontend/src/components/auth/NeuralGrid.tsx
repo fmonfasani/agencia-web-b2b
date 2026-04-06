@@ -22,8 +22,8 @@ export default function NeuralGrid() {
 
     let animId: number;
     let particles: Particle[] = [];
-    const PARTICLE_COUNT = 55;
-    const MAX_DIST = 130;
+    const PARTICLE_COUNT = 50;
+    const MAX_DIST = 120;
 
     const resize = () => {
       canvas.width = canvas.offsetWidth;
@@ -34,10 +34,10 @@ export default function NeuralGrid() {
       particles = Array.from({ length: PARTICLE_COUNT }, () => ({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 0.35,
-        vy: (Math.random() - 0.5) * 0.35,
-        radius: Math.random() * 1.8 + 0.8,
-        opacity: Math.random() * 0.45 + 0.15,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.3,
+        radius: Math.random() * 1.2 + 0.4,
+        opacity: Math.random() * 0.25 + 0.05,
       }));
     };
 
@@ -52,23 +52,7 @@ export default function NeuralGrid() {
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(19, 91, 236, ${p.opacity})`;
-        ctx.fill();
-
-        // Glow
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius * 3, 0, Math.PI * 2);
-        const grd = ctx.createRadialGradient(
-          p.x,
-          p.y,
-          0,
-          p.x,
-          p.y,
-          p.radius * 3,
-        );
-        grd.addColorStop(0, `rgba(19, 91, 236, ${p.opacity * 0.3})`);
-        grd.addColorStop(1, "rgba(19, 91, 236, 0)");
-        ctx.fillStyle = grd;
+        ctx.fillStyle = `rgba(255, 255, 255, ${p.opacity})`;
         ctx.fill();
       }
 
@@ -78,12 +62,12 @@ export default function NeuralGrid() {
           const dy = particles[i].y - particles[j].y;
           const dist = Math.sqrt(dx * dx + dy * dy);
           if (dist < MAX_DIST) {
-            const alpha = (1 - dist / MAX_DIST) * 0.18;
+            const alpha = (1 - dist / MAX_DIST) * 0.07;
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.strokeStyle = `rgba(19, 91, 236, ${alpha})`;
-            ctx.lineWidth = 0.6;
+            ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+            ctx.lineWidth = 0.5;
             ctx.stroke();
           }
         }
@@ -112,7 +96,6 @@ export default function NeuralGrid() {
     <canvas
       ref={canvasRef}
       className="absolute inset-0 w-full h-full pointer-events-none"
-      style={{ opacity: 0.7 }}
     />
   );
 }

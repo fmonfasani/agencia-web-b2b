@@ -125,20 +125,20 @@ function FloatingInput({
         onBlur={() => setFocused(false)}
         disabled={disabled}
         autoComplete={autoComplete}
-        className={`w-full rounded-xl border bg-[#0d1017] px-4 pt-5 pb-2 text-sm text-white outline-none transition-all duration-200 font-medium disabled:opacity-40 ${
+        className={`w-full rounded-lg border bg-white/[0.03] px-4 pt-6 pb-2 text-sm text-white outline-none transition-all duration-200 font-medium disabled:opacity-30 ${
           rightSlot ? "pr-11" : ""
         } ${
           focused
-            ? "border-[#135bec] ring-2 ring-[#135bec]/20 shadow-[0_0_20px_rgba(19,91,236,0.12)]"
-            : "border-[#2a2f3e] hover:border-[#3a4055]"
+            ? "border-white/20 shadow-[0_0_0_1px_rgba(255,255,255,0.08)]"
+            : "border-white/[0.08] hover:border-white/[0.12]"
         }`}
       />
       <label
         className={`absolute left-4 pointer-events-none transition-all duration-200 ${
           floating
-            ? "top-2 text-[10px] font-semibold uppercase tracking-widest " +
-              (focused ? "text-[#135bec]" : "text-[#4a5168]")
-            : "top-1/2 -translate-y-1/2 text-sm text-[#4a5168]"
+            ? "top-2 text-[9px] font-semibold uppercase tracking-widest " +
+              (focused ? "text-white/50" : "text-white/30")
+            : "top-1/2 -translate-y-1/2 text-sm text-white/30"
         }`}
       >
         {label}
@@ -173,7 +173,8 @@ function PasswordStrength({ password }: { password: string }) {
             key={i}
             className="h-1 flex-1 rounded-full transition-all duration-300"
             style={{
-              backgroundColor: i < score ? colors[score - 1] : "#2a2f3e",
+              backgroundColor:
+                i < score ? colors[score - 1] : "rgba(255,255,255,0.08)",
             }}
           />
         ))}
@@ -196,26 +197,26 @@ function StepIndicator({ current, total }: { current: number; total: number }) {
       {Array.from({ length: total }).map((_, i) => (
         <div key={i} className="flex items-center gap-2">
           <div
-            className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
+            className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold transition-all duration-300 ${
               i < current
-                ? "bg-[#135bec] text-white"
+                ? "bg-white text-black"
                 : i === current
-                  ? "bg-[#135bec] text-white ring-2 ring-[#135bec]/30"
-                  : "bg-[#161923] border border-[#2a2f3e] text-[#4a5168]"
+                  ? "bg-white text-black"
+                  : "bg-white/[0.06] border border-white/[0.08] text-white/30"
             }`}
           >
-            {i < current ? <Check size={12} /> : i + 1}
+            {i < current ? <Check size={10} /> : i + 1}
           </div>
           {i < total - 1 && (
             <div
-              className={`h-px w-6 transition-all duration-300 ${
-                i < current ? "bg-[#135bec]" : "bg-[#2a2f3e]"
+              className={`h-px w-5 transition-all duration-300 ${
+                i < current ? "bg-white/30" : "bg-white/[0.06]"
               }`}
             />
           )}
         </div>
       ))}
-      <p className="ml-2 text-xs text-[#4a5168] font-medium">
+      <p className="ml-2 text-xs text-white/30 font-medium">
         {STEP_LABELS[current]}
       </p>
     </div>
@@ -418,13 +419,13 @@ export default function SignupWizard({ locale = "es" }: SignupWizardProps) {
             <select
               value={data.industry}
               onChange={(e) => set("industry")(e.target.value)}
-              className="w-full rounded-xl border border-[#2a2f3e] bg-[#0d1017] px-4 py-3 text-sm text-white outline-none focus:border-[#135bec] focus:ring-2 focus:ring-[#135bec]/20 transition-all appearance-none"
+              className="w-full rounded-lg border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-sm text-white outline-none focus:border-white/20 transition-all appearance-none"
             >
-              <option value="" disabled className="bg-[#0d1017]">
+              <option value="" disabled className="bg-black">
                 Industria / Sector
               </option>
               {INDUSTRIES.map((ind) => (
-                <option key={ind} value={ind} className="bg-[#0d1017]">
+                <option key={ind} value={ind} className="bg-black">
                   {ind}
                 </option>
               ))}
@@ -451,7 +452,7 @@ export default function SignupWizard({ locale = "es" }: SignupWizardProps) {
               type="button"
               onClick={() => set("hasWebsite")(!data.hasWebsite)}
               className={`w-9 h-5 rounded-full transition-all duration-200 relative ${
-                data.hasWebsite ? "bg-[#135bec]" : "bg-[#2a2f3e]"
+                data.hasWebsite ? "bg-white/30" : "bg-white/[0.08]"
               }`}
             >
               <span
@@ -460,7 +461,7 @@ export default function SignupWizard({ locale = "es" }: SignupWizardProps) {
                 }`}
               />
             </button>
-            <span className="text-sm text-[#8b92a5]">Tengo página web</span>
+            <span className="text-sm text-white/40">Tengo página web</span>
           </label>
           {data.hasWebsite && (
             <FloatingInput
@@ -484,12 +485,10 @@ export default function SignupWizard({ locale = "es" }: SignupWizardProps) {
             type="button"
             onClick={() => set("plan")(plan.id)}
             whileTap={{ scale: 0.99 }}
-            className={`w-full text-left p-4 rounded-xl border transition-all duration-200 ${
+            className={`w-full text-left p-4 rounded-lg border transition-all duration-200 ${
               data.plan === plan.id
-                ? plan.highlight
-                  ? "border-[#135bec] bg-[#135bec]/10 shadow-[0_0_20px_rgba(19,91,236,0.15)]"
-                  : "border-[#135bec] bg-[#135bec]/8"
-                : "border-[#2a2f3e] bg-[#0d1017] hover:border-[#3a4055]"
+                ? "border-white/20 bg-white/[0.05]"
+                : "border-white/[0.06] bg-white/[0.02] hover:border-white/[0.10]"
             }`}
           >
             <div className="flex items-start justify-between">
@@ -499,19 +498,17 @@ export default function SignupWizard({ locale = "es" }: SignupWizardProps) {
                     {plan.name}
                   </span>
                   {plan.badge && (
-                    <span className="px-2 py-0.5 bg-[#135bec] text-white text-[9px] font-bold rounded-full uppercase tracking-wider">
+                    <span className="px-2 py-0.5 bg-white/10 text-white/60 text-[9px] font-semibold rounded-full uppercase tracking-wider">
                       {plan.badge}
                     </span>
                   )}
                 </div>
-                <p className="text-[#4a5168] text-xs mb-2">
-                  {plan.description}
-                </p>
+                <p className="text-white/30 text-xs mb-2">{plan.description}</p>
                 <div className="flex flex-wrap gap-1">
                   {plan.features.map((f) => (
                     <span
                       key={f}
-                      className="text-[10px] text-[#6b7280] bg-[#161923] px-2 py-0.5 rounded-md"
+                      className="text-[10px] text-white/30 bg-white/[0.04] px-2 py-0.5 rounded-md"
                     >
                       {f}
                     </span>
@@ -522,12 +519,12 @@ export default function SignupWizard({ locale = "es" }: SignupWizardProps) {
                 <span className="text-white font-black text-lg">
                   {plan.price}
                 </span>
-                <span className="text-[#4a5168] text-xs">{plan.period}</span>
+                <span className="text-white/30 text-xs">{plan.period}</span>
                 <div
-                  className={`w-4 h-4 rounded-full border-2 mt-2 ml-auto flex items-center justify-center transition-all ${
+                  className={`w-3.5 h-3.5 rounded-full border mt-2 ml-auto flex items-center justify-center transition-all ${
                     data.plan === plan.id
-                      ? "border-[#135bec] bg-[#135bec]"
-                      : "border-[#2a2f3e]"
+                      ? "border-white/50 bg-white"
+                      : "border-white/15"
                   }`}
                 >
                   {data.plan === plan.id && (
@@ -578,7 +575,7 @@ export default function SignupWizard({ locale = "es" }: SignupWizardProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1, x: [0, -5, 5, -5, 5, 0] }}
           transition={{ duration: 0.35 }}
-          className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm"
+          className="px-3 py-2.5 rounded-lg bg-red-500/8 border border-red-500/15 text-red-400/80 text-xs"
         >
           {stepError ?? error}
         </motion.div>
@@ -593,7 +590,7 @@ export default function SignupWizard({ locale = "es" }: SignupWizardProps) {
             type="button"
             onClick={() => setStep((s) => s - 1)}
             disabled={status !== "idle"}
-            className="flex items-center gap-1.5 px-4 py-2.5 text-sm text-[#8b92a5] hover:text-white border border-[#2a2f3e] hover:border-[#3a4055] rounded-xl transition-all"
+            className="flex items-center gap-1.5 px-4 py-2.5 text-sm text-white/30 hover:text-white/70 border border-white/[0.06] hover:border-white/[0.12] rounded-lg transition-all"
           >
             <ArrowLeft size={14} />
             Atrás
@@ -605,7 +602,7 @@ export default function SignupWizard({ locale = "es" }: SignupWizardProps) {
             type="submit"
             disabled={!canProceed() || !!stepError}
             whileTap={{ scale: 0.98 }}
-            className="flex items-center gap-2 px-6 py-2.5 bg-[#135bec] hover:bg-[#0e45b5] text-white text-sm font-bold rounded-xl transition-all disabled:opacity-40 shadow-lg shadow-[#135bec]/20"
+            className="flex items-center gap-2 px-6 py-2.5 bg-white text-black text-sm font-medium rounded-lg transition-all hover:bg-white/90 disabled:opacity-30"
           >
             Continuar
             <ArrowRight size={14} />
@@ -615,10 +612,10 @@ export default function SignupWizard({ locale = "es" }: SignupWizardProps) {
             type="submit"
             disabled={status !== "idle"}
             whileTap={{ scale: 0.98 }}
-            className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-bold rounded-xl transition-all duration-300 shadow-lg ${
+            className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium rounded-lg transition-all duration-300 ${
               status === "success"
-                ? "bg-[#10B981] shadow-[#10B981]/20 text-white"
-                : "bg-[#135bec] hover:bg-[#0e45b5] shadow-[#135bec]/20 text-white disabled:opacity-60"
+                ? "bg-emerald-500/15 border border-emerald-500/20 text-emerald-400"
+                : "bg-white text-black hover:bg-white/90 disabled:opacity-40"
             }`}
           >
             {status === "loading" ? (

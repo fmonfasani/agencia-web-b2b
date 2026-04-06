@@ -38,20 +38,20 @@ function FloatingInput({
         onBlur={() => setFocused(false)}
         disabled={disabled}
         autoComplete={autoComplete}
-        className={`w-full rounded-xl border bg-[#0d1017] px-4 pt-5 pb-2 text-sm text-white outline-none transition-all duration-200 font-medium disabled:opacity-40 ${
+        className={`w-full rounded-lg border bg-white/[0.03] px-4 pt-6 pb-2 text-sm text-white outline-none transition-all duration-200 font-medium disabled:opacity-30 ${
           rightSlot ? "pr-11" : ""
         } ${
           focused
-            ? "border-[#135bec] ring-2 ring-[#135bec]/20 shadow-[0_0_20px_rgba(19,91,236,0.12)]"
-            : "border-[#2a2f3e] hover:border-[#3a4055]"
+            ? "border-white/20 shadow-[0_0_0_1px_rgba(255,255,255,0.08)]"
+            : "border-white/[0.08] hover:border-white/[0.12]"
         }`}
       />
       <label
         className={`absolute left-4 pointer-events-none transition-all duration-200 ${
           floating
-            ? "top-2 text-[10px] font-semibold uppercase tracking-widest " +
-              (focused ? "text-[#135bec]" : "text-[#4a5168]")
-            : "top-1/2 -translate-y-1/2 text-sm text-[#4a5168]"
+            ? "top-2 text-[9px] font-semibold uppercase tracking-widest " +
+              (focused ? "text-white/50" : "text-white/30")
+            : "top-1/2 -translate-y-1/2 text-sm text-white/30"
         }`}
       >
         {label}
@@ -98,7 +98,7 @@ export function LoginForm({
       });
 
       if (result?.error) {
-        setError("Credenciales incorrectas. Verificá tu email y contraseña.");
+        setError("Credenciales incorrectas.");
         setStatus("idle");
         return;
       }
@@ -113,13 +113,13 @@ export function LoginForm({
         setStatus("idle");
       }
     } catch {
-      setError("Error de conexión. Revisá tu red.");
+      setError("Error de conexión.");
       setStatus("idle");
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-3">
       <FloatingInput
         label="Email"
         type="email"
@@ -140,65 +140,54 @@ export function LoginForm({
           <button
             type="button"
             onClick={() => setShowPass(!showPass)}
-            className="text-[#4a5168] hover:text-[#8b92a5] transition-colors"
+            className="text-white/20 hover:text-white/50 transition-colors"
             tabIndex={-1}
           >
-            {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
+            {showPass ? <EyeOff size={14} /> : <Eye size={14} />}
           </button>
         }
       />
 
-      {/* Error */}
       {error && (
         <motion.div
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1, x: [0, -6, 6, -6, 6, -3, 3, 0] }}
-          transition={{ duration: 0.4 }}
-          className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center gap-2"
+          animate={{ opacity: 1, x: [0, -5, 5, -5, 5, 0] }}
+          transition={{ duration: 0.35 }}
+          className="px-3 py-2.5 rounded-lg bg-red-500/8 border border-red-500/15 text-red-400/80 text-xs"
         >
-          <svg
-            viewBox="0 0 16 16"
-            fill="currentColor"
-            className="w-3.5 h-3.5 flex-shrink-0"
-          >
-            <path d="M8 1a7 7 0 110 14A7 7 0 018 1zm0 3a.75.75 0 00-.75.75v3.5a.75.75 0 001.5 0v-3.5A.75.75 0 008 4zm0 8a1 1 0 110-2 1 1 0 010 2z" />
-          </svg>
           {error}
         </motion.div>
       )}
 
-      {/* Submit */}
       <motion.button
         type="submit"
         disabled={status !== "idle"}
-        whileTap={{ scale: 0.98 }}
-        className={`w-full rounded-xl py-3.5 font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 shadow-lg ${
+        whileTap={{ scale: 0.99 }}
+        className={`w-full rounded-lg py-3 font-medium text-sm transition-all duration-300 flex items-center justify-center gap-2 ${
           status === "success"
-            ? "bg-[#10B981] shadow-[#10B981]/25 text-white"
-            : "bg-[#135bec] hover:bg-[#0e45b5] shadow-[#135bec]/25 text-white disabled:opacity-60"
+            ? "bg-emerald-500/15 border border-emerald-500/20 text-emerald-400"
+            : "bg-white text-black hover:bg-white/90 disabled:opacity-40"
         }`}
       >
         {status === "loading" ? (
           <>
-            <Loader2 size={15} className="animate-spin" />
+            <Loader2 size={14} className="animate-spin" />
             Autenticando...
           </>
         ) : status === "success" ? (
           <>
-            <Check size={15} />
+            <Check size={14} />
             ¡Bienvenido!
           </>
         ) : (
-          "Ingresar"
+          "Continuar"
         )}
       </motion.button>
 
-      {/* Forgot password */}
-      <p className="text-center text-xs text-[#3a4055]">
+      <p className="text-center pt-1">
         <button
           type="button"
-          className="hover:text-[#135bec] transition-colors"
-          onClick={() => {}}
+          className="text-white/25 hover:text-white/50 transition-colors text-xs"
         >
           ¿Olvidaste tu contraseña?
         </button>

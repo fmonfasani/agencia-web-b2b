@@ -25,20 +25,20 @@ export default async function SignInPage({
 
   const tagline = en
     ? "Your sales pipeline,\nhumans and AI together."
-    : "Tu pipeline de ventas,\nhumanos e IA en un solo lugar.";
+    : "Tu pipeline de ventas.\nHumanos e IA, un solo lugar.";
 
   return (
-    <div className="min-h-screen bg-[#070a10] flex">
+    <div className="min-h-screen bg-black flex">
       {/* ── LEFT — Form ── */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 overflow-y-auto">
-        <div className="w-full max-w-[420px]">
+      <div className="w-full lg:w-[480px] flex items-center justify-center px-8 py-12 overflow-y-auto border-r border-white/[0.04]">
+        <div className="w-full max-w-[360px]">
           {/* Logo */}
-          <div className="flex items-center gap-2.5 mb-10">
-            <div className="w-9 h-9 rounded-xl bg-[#135bec] flex items-center justify-center shadow-lg shadow-[#135bec]/30">
+          <div className="flex items-center gap-3 mb-12">
+            <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center">
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
-                className="w-4.5 h-4.5 text-white"
+                className="w-4 h-4 text-black"
                 stroke="currentColor"
                 strokeWidth={2.5}
               >
@@ -49,47 +49,44 @@ export default async function SignInPage({
                 />
               </svg>
             </div>
-            <span className="text-white font-bold text-base tracking-tight">
+            <span className="text-white font-semibold text-sm tracking-tight">
               Webshooks
             </span>
           </div>
 
-          <h1 className="text-[2rem] font-black text-white leading-tight tracking-tight">
-            {en ? "Welcome back" : "Bienvenido de vuelta"}
+          <h1 className="text-2xl font-semibold text-white leading-tight tracking-tight mb-1">
+            {en ? "Sign in" : "Iniciá sesión"}
           </h1>
-          <p className="text-[#4a5168] mt-2 text-sm">
-            {en ? "Don't have an account? " : "¿No tenés cuenta? "}
+          <p className="text-white/40 text-sm mb-8">
+            {en ? "No account? " : "¿Sin cuenta? "}
             <Link
               href={`/${locale}/auth/register-company`}
-              className="text-[#135bec] font-semibold hover:text-blue-400 transition-colors"
+              className="text-white/70 hover:text-white transition-colors underline underline-offset-2"
             >
-              {en ? "Sign up free" : "Registrá tu empresa"}
+              {en ? "Create one" : "Creá una"}
             </Link>
           </p>
 
-          <div className="mt-8 space-y-4">
-            {/* Google OAuth */}
+          <div className="space-y-3">
             <GoogleSignInButton
-              label={en ? "Sign in with Google" : "Continuar con Google"}
+              label={en ? "Continue with Google" : "Continuar con Google"}
             />
 
-            {/* Divider */}
-            <div className="flex items-center gap-3">
-              <div className="flex-1 h-px bg-[#1e2535]" />
-              <span className="text-[#2a3048] text-xs font-medium">o</span>
-              <div className="flex-1 h-px bg-[#1e2535]" />
+            <div className="flex items-center gap-3 py-1">
+              <div className="flex-1 h-px bg-white/[0.06]" />
+              <span className="text-white/20 text-xs">or</span>
+              <div className="flex-1 h-px bg-white/[0.06]" />
             </div>
 
             <LoginForm locale={locale} darkMode />
           </div>
 
-          {/* Security badges */}
-          <div className="mt-10 flex items-center justify-center gap-4">
+          <div className="mt-10 flex items-center gap-3">
             <div className="flex items-center gap-1.5">
               <svg
                 viewBox="0 0 16 16"
                 fill="none"
-                className="w-3.5 h-3.5 text-[#2a3048]"
+                className="w-3 h-3 text-white/20"
               >
                 <path
                   d="M8 1L2 4v4c0 3.5 2.5 6.7 6 7.5C11.5 14.7 14 11.5 14 8V4L8 1z"
@@ -98,16 +95,16 @@ export default async function SignInPage({
                   strokeLinejoin="round"
                 />
               </svg>
-              <span className="text-[#2a3048] text-[10px] font-medium uppercase tracking-widest">
+              <span className="text-white/20 text-[10px] font-medium uppercase tracking-widest">
                 TLS 1.3
               </span>
             </div>
-            <div className="w-px h-3 bg-[#1e2535]" />
-            <span className="text-[#2a3048] text-[10px] font-medium uppercase tracking-widest">
+            <span className="text-white/10 text-xs">·</span>
+            <span className="text-white/20 text-[10px] font-medium uppercase tracking-widest">
               SOC 2
             </span>
-            <div className="w-px h-3 bg-[#1e2535]" />
-            <span className="text-[#2a3048] text-[10px] font-medium uppercase tracking-widest">
+            <span className="text-white/10 text-xs">·</span>
+            <span className="text-white/20 text-[10px] font-medium uppercase tracking-widest">
               ISO 27001
             </span>
           </div>
