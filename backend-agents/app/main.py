@@ -11,6 +11,8 @@ This service handles:
 import sys
 import os
 import asyncio
+import json
+import psycopg2
 from datetime import datetime
 from fastapi import FastAPI, HTTPException, Request, Depends, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
@@ -38,7 +40,6 @@ from core.config import settings
 import uuid
 import logging
 import time
-import json
 
 # Initialize structured logs
 setup_structured_logging()

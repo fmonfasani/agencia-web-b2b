@@ -1,0 +1,606 @@
+PROMPT PARA MEJORAR DASHBOARD WEBSHOOKS
+======================================
+
+CONTEXTO
+========
+
+Webshooks es una plataforma B2B SaaS que ofrece:
+- Agentes IA especializados (Recepción, Soporte, Ventas, etc.)
+- Observabilidad de agentes en tiempo real
+- Marketplace de agentes
+- Gestión multi-tenant (Admin de Webshooks + Clientes independientes)
+
+OBJETIVO
+========
+
+Diseñar dashboards modernos, funcionales y visualmente atractivos que:
+1. Permitan a Webshooks (Admin) gestionar la plataforma
+2. Permitan a Clientes monitorear sus agentes y KPIs
+3. Habiliten un marketplace intuitivo para descubrir/comprar agentes
+4. Proporcionen insights accionables en tiempo real
+
+═══════════════════════════════════════════════════════════════════════════════
+PARTE 1: DASHBOARD ADMIN (WEBSHOOKS)
+═══════════════════════════════════════════════════════════════════════════════
+
+SECCIONES PRINCIPALES
+======================
+
+1️⃣ OVERVIEW / HOME
+   Visualización:
+   - KPI Cards (4x2 grid):
+     * Clientes activos (número + trending)
+     * Agentes vendidos (número + trending)
+     * Revenue MRR (número + trending)
+     * Queries procesadas hoy (número + trending)
+     * Uptime platform (%)
+     * Agent health (%)
+     * Active sessions (número)
+     * Customer satisfaction (%)
+   
+   - Charts (Recharts):
+     * Gráfico de línea: Revenue últimos 12 meses
+     * Gráfico de áreas: Queries/día últimos 30 días
+     * Gráfico de barras: Top 5 clientes por MRR
+     * Gráfico de pie: Distribución de agentes (Recepción 30%, Soporte 40%, Ventas 20%, Otros 10%)
+   
+   - Tabla: Últimas 10 actividades/eventos críticos
+
+2️⃣ GESTIÓN DE CLIENTES
+   Vista de tabla avanzada:
+   - Columnas: Nombre | Email | Plan | MRR | Agentes | Health | Status | Actions
+   - Filtros: Por plan, por rango MRR, por agentes activos, por status
+   - Búsqueda: por nombre, email, ID
+   - Acciones: Ver detalles, editar plan, reset API key, ver activity log, suspend
+   
+   Modal de detalles del cliente:
+   - Información general (nombre, email, teléfono, empresa, país)
+   - Plan actual (nombre, precio, límites, fecha de renovación)
+   - Agentes en uso (lista con health, queries/mes, costo)
+   - Facturación (invoices, pagos, próxima facturación)
+   - Team members (usuarios del cliente que tienen acceso)
+   - Usage analytics (tabla de consumo por agente)
+
+3️⃣ GESTIÓN DE EQUIPOS (WEBSHOOKS)
+   Gestión interna:
+   - Team members list con roles (Owner, Admin, Manager, Analyst, Viewer)
+   - Permisos granulares por rol
+   - Activity log de quien hizo qué
+   - Invitaciones pendientes
+   - Two-factor authentication status
+   
+   Roles & Permissions:
+   - Vista de matriz: Rol vs Permiso (editar, crear, eliminar)
+   - Auditoría: Quién cambió qué y cuándo
+
+4️⃣ OBSERVABILIDAD DE AGENTES (GLOBAL)
+   Monitoreo de salud:
+   - Grid de "Agent Cards" (Recepción, Soporte, Ventas, etc.):
+     * Nombre del agente
+     * Status indicator (🟢 Online / 🟡 Degraded / 🔴 Offline)
+     * Queries procesadas hoy
+     * Promedio de respuesta (ms)
+     * Error rate (%)
+     * Costo estimado (USD)
+   
+   - Gráfico de rendimiento: Timeline últimas 24h (uptime, latency, errors)
+   - Logs en tiempo real: últimas 50 queries con status
+   - Alertas activas: si algún agente está en problemas
+
+5️⃣ MARKETPLACE (GESTIÓN)
+   Vista de agentes disponibles:
+   - Grid o tabla: Agente | Descripción | Precio/mes | Adoptantes | Rating | Status
+   - Crear nuevo agente: formulario avanzado
+   - Editor de agente: configurar prompt, capabilities, pricing
+   - Estadísticas: gráfico de adopción, gráfico de ratings
+   - Reviews: listar feedback de clientes
+
+6️⃣ MARKETING
+   Campañas & Promociones:
+   - Listar campañas activas (email, SMS, in-app)
+   - Crear nueva campaña (target: por plan, por agente usado, etc.)
+   - Resultados: open rate, click rate, conversion
+   - Email templates library
+   - Coupon management (crear, validar, ver uso)
+
+7️⃣ SEGURIDAD & AUDITORÍA
+   Security dashboard:
+   - Último acceso de cada usuario
+   - Failed login attempts
+   - API key rotations
+   - Database encryption status
+   - Backup status
+   - Compliance checklist (GDPR, SOC2, etc.)
+   
+   Audit log:
+   - Tabla filtrable: Fecha | Usuario | Acción | Recurso | Resultado | IP
+   - Exportar a CSV para compliance
+
+8️⃣ ROLES IAM (IDENTITY & ACCESS MANAGEMENT)
+   User management:
+   - Grid: Nombre | Email | Rol | Último acceso | Status | Actions
+   - Crear usuario: asignar rol, permisos específicos
+   - Roles predefinidos: Owner, Admin, Manager, Analyst, Viewer
+   - Custom roles: crear roles personalizados
+   - Grupos: asignar usuarios a grupos con permisos heredados
+
+═══════════════════════════════════════════════════════════════════════════════
+PARTE 2: DASHBOARD CLIENTE (EMPRESA INDIVIDUAL)
+═══════════════════════════════════════════════════════════════════════════════
+
+SECCIONES PRINCIPALES
+======================
+
+1️⃣ HOME / OVERVIEW
+   KPI Cards (resumen de su negocio):
+   - Agentes activos (número)
+   - Queries procesadas hoy
+   - Costo acumulado este mes ($)
+   - Promedio de respuesta (ms)
+   - Error rate
+   - Satisfacción de clientes (NPS?)
+   
+   Charts:
+   - Gráfico de línea: Queries últimos 30 días
+   - Gráfico de barras: Distribución por agente (Recepción 40%, Soporte 35%, Ventas 25%)
+   - Gráfico de área: Costo acumulado mes-a-fecha
+   - Heat map: Horas pico de uso
+   
+   Últimas interacciones: tabla de últimos queries exitosos
+   Alertas: si algún agente no funciona bien
+
+2️⃣ MIS AGENTES
+   Grid de agentes propios:
+   - Card por agente (visual + info):
+     * Nombre del agente
+     * Ícono/imagen representativa
+     * Status (🟢 Online)
+     * Queries hoy
+     * Promedio respuesta
+     * Error rate
+     * Satisfaction
+     * Botón: Configurar, ver detalles, desactivar
+   
+   Detalles de agente (modal/página):
+   - Información general (nombre, descripción, tipo)
+   - Configuration: ajustar prompt, capabilities
+   - Performance: gráficos de uso, latencia, errores
+   - Logs: últimas queries con resultado
+   - Costos: cuánto ha costado este mes
+   - Feedback: ratings/comentarios de usuarios finales
+
+3️⃣ OBSERVABILIDAD & KPIs
+   Dashboard de métricas:
+   - KPI principales:
+     * Total queries procesadas
+     * Success rate
+     * Avg response time
+     * Total cost
+     * Unique users
+   
+   - Gráficos:
+     * Queries/hora (últimas 24h)
+     * Latencia promedio/día (últimos 7 días)
+     * Error distribution (pie chart)
+     * Costo acumulado vs presupuesto (progress bar)
+   
+   - Filtros: por rango de fechas, por agente
+   - Exportar: descargar datos en CSV/PDF
+
+4️⃣ MARKETPLACE DE AGENTES
+   Descubrimiento de agentes:
+   - Grid de agentes disponibles para comprar:
+     * Card por agente:
+       - Imagen/ícono
+       - Nombre
+       - Descripción corta (1-2 líneas)
+       - Rating (estrellas + número reviews)
+       - Precio/mes
+       - Número de adoptantes
+       - Botón: "Ver detalles" o "Comprar"
+   
+   - Filtros: por tipo (Recepción, Soporte, Ventas), por rango de precio, por rating
+   - Búsqueda: por nombre
+   - Ordenar: por precio, por rating, por popularidad, por novedad
+   
+   Página de detalles del agente:
+   - Header: imagen grande, nombre, rating, precio
+   - Descripción completa
+   - Features: lista de capabilities
+   - Reviews: últimos 5 reviews con rating
+   - Pricing: precio/mes, qué incluye, límites
+   - Demo: posibilidad de testear el agente antes de comprar
+   - Botón: "Comprar" o "Agregar al carrito"
+
+5️⃣ MIS AGENTES COMPRADOS (SEGUIMIENTO)
+   Vista de agentes que compré del marketplace:
+   - Tabla/Grid: Agente | Desde | Próxima renovación | Status | Costo/mes | Actions
+   
+   Para cada agente comprado:
+   - Performance vs. promedio de mercado (gráfico comparativo)
+   - Reviews que escribí
+   - Opción para cambiar de plan (upgrade/downgrade)
+   - Opción para cancelar
+   - Opción para dejar review
+
+6️⃣ FACTURACIÓN & COSTOS
+   Resumen de costos:
+   - Card: Costo actual mes-a-fecha
+   - Card: Proyección para fin de mes
+   - Card: Límite de crédito / disponible
+   
+   Breakdown de costos:
+   - Tabla: Agente | Queries | Costo/query | Total mes
+   - Gráfico de pie: distribución de gastos por agente
+   
+   Invoices:
+   - Tabla: Fecha | Período | Monto | Status | Descargar PDF
+
+7️⃣ CONFIGURACIÓN DE CUENTA
+   - Perfil: nombre, email, teléfono, logo, país
+   - API keys: generar, rotar, revocar
+   - Webhooks: configurar endpoints para eventos
+   - Team members: invitar, remover, cambiar roles
+   - Notifications: qué eventos notificar por email
+   - Preferences: idioma, zona horaria, formato de fecha
+
+═══════════════════════════════════════════════════════════════════════════════
+PARTE 3: DISEÑO VISUAL & ESTÉTICO
+═══════════════════════════════════════════════════════════════════════════════
+
+PALETA DE COLORES
+=================
+
+Primaria:
+- Azul principal: #0066FF (profesional, confianza)
+- Azul oscuro: #003399 (botones, activos)
+- Azul claro: #E6F0FF (backgrounds, hover)
+
+Secundaria:
+- Verde: #10B981 (success, online, positivo)
+- Rojo: #EF4444 (error, offline, crítico)
+- Amarillo: #FBBF24 (warning, degraded)
+- Gris: #6B7280 (texto neutral, borders)
+
+Neutrales:
+- Blanco: #FFFFFF (backgrounds)
+- Gris claro: #F9FAFB (cards, secondary backgrounds)
+- Negro: #111827 (texto principal)
+
+TIPOGRAFÍA
+===========
+
+- Headings: Inter Bold (600-700)
+  * H1: 32px
+  * H2: 24px
+  * H3: 20px
+- Body: Inter Regular (400)
+  * Large: 16px
+  * Medium: 14px
+  * Small: 12px
+- Mono: JetBrains Mono (para código, tokens)
+
+COMPONENTES
+============
+
+Buttons:
+- Primary (azul): "Comprar", "Crear", "Agregar"
+- Secondary (gris): "Cancelar", "Descartar"
+- Danger (rojo): "Eliminar", "Revocar"
+- Ghost (sin fondo): "Ver más", "Expandir"
+
+Cards:
+- Sombra suave: 0 1px 3px rgba(0,0,0,0.1)
+- Border radius: 8px
+- Padding: 16px
+- Hover: fondo gris claro, elevación
+
+Tables:
+- Striped rows (fila par = #F9FAFB)
+- Header con background gris oscuro, texto blanco
+- Hover en fila: fondo azul claro
+- Sticky header
+
+Modals:
+- Backdrop oscuro semi-transparente
+- Modal con rounded corners (12px)
+- Close button en esquina superior derecha
+- Animation: fade-in (200ms)
+
+Status Indicators:
+- Online: 🟢 + verde
+- Offline: 🔴 + rojo
+- Degraded: 🟡 + amarillo
+- Pending: ⚪ + gris
+
+Charts:
+- Usar Recharts o Chart.js
+- Colores: primaria azul, secundaria verde
+- Tooltips con fondo oscuro
+- Legend abajo o a la derecha
+
+LAYOUT
+======
+
+Sidebar:
+- Ancho: 256px (colapsable a 60px)
+- Background: gris oscuro (#1F2937)
+- Items: texto blanco, hover: fondo gris más claro
+- Activo: indicador azul a la izquierda + background azul claro
+- Logo/branding en top
+
+Header:
+- Background: blanco, border inferior gris claro
+- Left: breadcrumbs o título de página
+- Right: search bar, notifications, user profile dropdown
+
+Main Content:
+- Max-width: 1400px
+- Padding: 24px
+- Grid layout para cards/sections
+
+MICROINTERACCIONES
+===================
+
+Loading:
+- Skeleton screens en lugar de spinners
+- Animación suave (pulse o shimmer)
+
+Transitions:
+- Buttons: background change en 150ms
+- Page changes: fade in 200ms
+- Modals: scale + fade in 250ms
+
+Toast Notifications:
+- Position: top-right
+- Colors: green (success), red (error), blue (info)
+- Auto-dismiss en 5 segundos
+- Con ícono + mensaje
+
+Hover States:
+- Cursor change (pointer en botones/links)
+- Subtle elevation o background change
+- Text underline en links
+
+Errors:
+- Input validation: border rojo + mensaje de error abajo
+- Form submit error: toast rojo + error summary arriba
+
+═══════════════════════════════════════════════════════════════════════════════
+PARTE 4: MARKETPLACE - PROPUESTA DE DISEÑO ESTÉTICO
+═══════════════════════════════════════════════════════════════════════════════
+
+LANDING / HOME DEL MARKETPLACE
+==============================
+
+Hero Section:
+- Imagen de fondo: agentes trabajando (o ilustración)
+- Overlay oscuro semi-transparente
+- Título grande: "Marketplace de Agentes IA"
+- Subtítulo: "Potencia tu negocio con asistentes especializados"
+- Search bar grande: "Buscar agentes..."
+- CTA button: "Explorar agentes"
+
+FEATURED AGENTS (Carrusel):
+- 3-4 agentes destacados
+- Card grande con imagen, nombre, descripción, rating, precio
+- Arrow buttons para navegar
+- Auto-scroll cada 5 segundos
+
+AGENT GRID
+===========
+
+Layout:
+- 3-4 columnas (responsivo)
+- Cada card:
+  * Imagen/ícono del agente (cuadrada, 200x200)
+  * Nombre (bold, 16px)
+  * Descripción (gray, 14px, max 2 líneas)
+  * Rating: ⭐⭐⭐⭐⭐ (4.8) + "(124 reviews)"
+  * Precio: "$99/mes" en bold azul
+  * Footer: "Popular" badge si es top, "New" badge si es nuevo
+  * Hover: imagen se vuelve más oscura, aparece botón "Ver detalles"
+
+FILTROS SIDEBAR
+================
+
+Left sidebar (colapsable):
+- Checkboxes: Categoría (Recepción, Soporte, Ventas, etc.)
+- Range slider: Precio (min-max)
+- Checkboxes: Rating (5⭐, 4⭐+, 3⭐+)
+- Checkboxes: Features (Multi-idioma, Analytics, Integrations)
+- "Aplicar filtros" button
+- "Limpiar todos" link
+
+PÁGINA DE DETALLES DEL AGENTE
+==============================
+
+Layout (2 columnas):
+
+IZQUIERDA:
+- Imagen grande (400x400) del agente
+- Thumbnail gallery abajo (otras imágenes)
+- Zoom on hover
+
+DERECHA:
+- Nombre del agente (32px bold)
+- Rating: ⭐⭐⭐⭐⭐ (4.8) con "(324 reviews)"
+- Precio: "$99/mes" en 24px bold azul
+- Botón "Comprar" (primary, grande)
+- Botón "Agregar al carrito" (secondary)
+- Botón "Testear gratis" (ghost)
+
+Tabs debajo:
+1. Descripción
+   - Full description
+   - Feature bullets
+   - Use cases
+   - Integration options
+
+2. Reviews
+   - Review cards: avatar + nombre + rating + comment + fecha
+   - Pagination
+   - Filter por rating
+   - "Escribir review" button
+
+3. Pricing & Plans
+   - Tabla: Plan | Price | Features | CTA
+   - Monthly vs Annual toggle
+
+4. Demo / Test Drive
+   - Interfaz para chatear con el agente (limitado)
+   - Ejemplos de queries
+   - Share demo link
+
+CART / CHECKOUT
+================
+
+Shopping cart:
+- Sidebar o modal mostrando agentes a comprar
+- Cada item: imagen + nombre + precio + cantidad (1) + remover
+- Subtotal + impuestos + total
+- "Checkout" button
+- "Continuar comprando" link
+
+Checkout:
+- Resumen de compra
+- Payment method (tarjeta, PayPal, etc.)
+- Billing address
+- "Comprar" button
+
+Post-compra:
+- Confirmación: ✅ "¡Agente agregado a tu cuenta!"
+- Instrucciones: "Configura tu agente aquí"
+- Link a dashboard del cliente
+
+═══════════════════════════════════════════════════════════════════════════════
+PARTE 5: SEGUIMIENTO ESTÉTICO DE AGENTES COMPRADOS
+═══════════════════════════════════════════════════════════════════════════════
+
+AGENT CARDS (En "Mis Agentes"):
+==============================
+
+Grid layout (2-3 columnas):
+
+Cada card:
+┌─────────────────────────────┐
+│  [Imagen 200x200]          │
+│                             │
+│  Nombre Agente              │
+│  Recepción IA              │
+│  ⭐ 4.8 (324 reviews)       │
+│  🟢 Online                 │
+│  Queries: 1,243 hoy        │
+│  Latency: 245ms            │
+│  Error rate: 0.2%          │
+│                             │
+│  [Configurar] [Ver más]    │
+└─────────────────────────────┘
+
+Hover:
+- Sombra más pronunciada
+- Imagen con overlay oscuro + "Ver detalles" button
+- Background card más claro
+
+PERFORMANCE COMPARISON (Visual)
+================================
+
+Cuando el usuario abre detalles de un agente comprado:
+
+Comparar MI agente vs PROMEDIO de mercado:
+
+┌─ Métrica ─────────┬─ Mi agente ─┬─ Promedio ─┬─ Mejor? ─┐
+│ Queries/mes       │ 12,430      │ 8,200      │ ✅ +51%  │
+│ Avg response (ms) │ 245         │ 312        │ ✅ 27%   │
+│ Error rate        │ 0.2%        │ 0.8%       │ ✅ -75%  │
+│ User satisfaction │ 4.8/5       │ 4.2/5      │ ✅ +14%  │
+└───────────────────┴─────────────┴────────────┴──────────┘
+
+Gráfico de comparación (barras o líneas):
+- Eje Y: Métrica
+- Barras azul (mi agente) vs gris (promedio)
+- Colores: verde si gano, rojo si pierdo
+
+RATING & REVIEW SUBMISSION
+===========================
+
+Botón "Dejar review" abre modal:
+
+┌──────────────────────────────┐
+│ ¿Qué te pareció este agente? │
+│                              │
+│ Rating:                      │
+│ ⭐ ⭐ ⭐ ⭐ ⭐ (click para elegir) │
+│                              │
+│ Comentario:                  │
+│ [textarea placeholder]       │
+│                              │
+│ Tags (opcional):             │
+│ ☑️ Fácil de usar             │
+│ ☑️ Buen soporte              │
+│ ☑️ Buen precio               │
+│ ☑️ Rápido                    │
+│                              │
+│ [Enviar review] [Cancelar]   │
+└──────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════
+PARTE 6: ANIMACIONES & TRANSICIONES SUGERIDAS
+═══════════════════════════════════════════════════════════════════════════════
+
+Framer Motion (si usas React):
+- Page transitions: fadeInUp (300ms)
+- Card entrance: staggerChildren (100ms delay)
+- Rating stars: click with spring animation
+- Numbers in KPI: useSpringValue para contar de 0 hasta el número
+
+Lottie Animations:
+- Loading: agente pensando (think animation)
+- Success: checkmark con confetti
+- Error: X red shake
+- Empty state: agente con signo de pregunta
+
+Hover Effects:
+- Card lift: translateY(-8px) + enhanced shadow
+- Button ripple effect (material design)
+- Image zoom: scale(1.05) on hover
+
+Scroll Animations:
+- Cards fade in al scrollear (Intersection Observer)
+- Charts animate from bottom
+- KPI numbers count up from 0
+
+═══════════════════════════════════════════════════════════════════════════════
+RESUMEN: RECOMENDACIONES PRIORITARIAS
+═══════════════════════════════════════════════════════════════════════════════
+
+PRIORITARIO (FASE 1):
+✅ Dashboard Admin: Home + KPI Cards + Charts
+✅ Dashboard Cliente: Home + Mis Agentes
+✅ Marketplace: Grid de agentes + Página de detalles
+✅ Diseño visual: Paleta de colores + componentes base
+
+IMPORTANTE (FASE 2):
+✅ Observabilidad: Performance charts + Logs
+✅ Seguimiento de agentes: Comparison charts + Reviews
+✅ Facturación: Invoice listing + Costo breakdown
+✅ Animaciones: Transiciones + hover effects
+
+FUTURO (FASE 3):
+✅ Reporting avanzado: Custom reports + export
+✅ AI insights: Recomendaciones basadas en data
+✅ Mobile app: App nativa para iOS/Android
+✅ Real-time notifications: Push, email, SMS
+
+═══════════════════════════════════════════════════════════════════════════════
+
+¿NECESITAS?
+============
+
+1. Figma wireframes/mockups detallados?
+2. Componentes React ya hechos (Button, Card, Table)?
+3. Código de charts con Recharts?
+4. CSS/Tailwind específico para cada sección?
+5. Validación de formularios?
+
+Pregunta y te lo hago 👇

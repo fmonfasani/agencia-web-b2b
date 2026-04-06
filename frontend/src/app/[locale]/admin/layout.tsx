@@ -1,5 +1,5 @@
 import React from "react";
-import { requireAuth } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { Zap, User as UserIcon } from "lucide-react";
 import LogoutButton from "@/components/admin/LogoutButton";
@@ -14,9 +14,9 @@ export default async function AdminLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const auth = await requireAuth();
+  const session = await auth();
 
-  if (!auth) {
+  if (!session?.user) {
     redirect(`/${locale}/auth/sign-in`);
   }
 
@@ -32,42 +32,9 @@ export default async function AdminLayout({
 
   let branding: AdminBranding = {};
   let tenantName = "Webshooks";
+  let userRole = "ADMIN";
 
-  // Fetch tenant info from backend-saas (API Gateway)
-  try {
-    const BACKEND_URL =
-      process.env.NEXT_PUBLIC_SAAS_API_URL || "http://localhost:8000";
-
-    // Get tenant/me endpoint to verify membership and get tenant info
-    const response = await fetch(`${BACKEND_URL}/tenant/me`, {
-      method: "GET",
-      headers: {
-        "X-API-Key": auth.apiKey || "",
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (response.ok) {
-      const data = (await response.json()) as {
-        user?: { id: string; email: string; role: string };
-        tenant?: {
-          id: string;
-          name: string;
-          branding?: AdminBranding;
-        };
-      };
-
-      if (data.tenant) {
-        branding = data.tenant.branding || {};
-        tenantName = data.tenant.name || tenantName;
-      }
-    } else if (response.status === 401 || response.status === 403) {
-      redirect(`/${locale}/auth/sign-in?error=unauthorized`);
-    }
-  } catch (error) {
-    console.error("Admin layout tenant fetch error:", error);
-    // Continue with defaults if fetch fails
-  }
+  const membership = { role: userRole };
 
   const primaryColor = branding.primaryColor || "#4a7fa5";
   const sidebarColor = branding.sidebarColor || "#2c3e55";

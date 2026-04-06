@@ -177,7 +177,7 @@ def login_user(email: str, password: str) -> dict:
             "id": id_,
             "email": email_,
             "nombre": nombre or "Usuario",
-            "rol": rol.lower() if rol else "member",
+            "rol": rol.upper() if rol else "MEMBER",
             "tenant_id": tenant_id,
             "api_key": api_key,
         }
@@ -204,7 +204,7 @@ def get_user_by_api_key(api_key: str) -> Optional[dict]:
     id_, email, nombre, rol, tenant_id, status = row
     if status != "ACTIVE":
         return None
-    return {"id": id_, "email": email, "nombre": nombre or "Usuario", "rol": rol.lower() if rol else "member", "tenant_id": tenant_id}
+    return {"id": id_, "email": email, "nombre": nombre or "Usuario", "rol": rol.upper() if rol else "MEMBER", "tenant_id": tenant_id}
 
 
 def list_users() -> list[dict]:

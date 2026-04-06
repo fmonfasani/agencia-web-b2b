@@ -42,9 +42,15 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     otel_enabled: bool = False
 
+    # --- Multi-tenant ---
+    default_model: str = "ollama"
+    allow_fallback_tenant: bool = False
+    default_tenant_id: str = "default"
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
+        extra = "ignore"  # Ignore extra fields from .env
 
 
 # Global settings instance

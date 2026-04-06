@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
   output: "standalone",
   reactCompiler: true,
   // turbopack: false, // Aquí no puede ser false en la configuración de tipado ts
+  webpackDevMiddleware: {
+    hot: false, // Disable HMR to prevent console clearing
+  },
   logging: {
     fetches: {
       fullUrl: true,

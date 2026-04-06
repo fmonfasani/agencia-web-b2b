@@ -13,8 +13,6 @@ import CookieConsent from "@/components/CookieConsent";
 import SalesChatWidget from "@/components/SalesChatWidget";
 import BrandingProvider from "@/components/BrandingProvider";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { requireAuth as requireCustomAuth } from "@/lib/auth/request-auth";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -28,29 +26,9 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
 
-  // Try to get tenant info for white-labeling
+  // Branding will be provided by BrandingProvider (client-side from localStorage or context)
+  // Don't fetch from DB in server-side metadata - use defaults instead
   let branding: any = null;
-  try {
-    const session = await auth();
-    let tenantId = (session?.user as any)?.tenantId;
-
-    if (!tenantId) {
-      const custom = await requireCustomAuth();
-      if (custom?.session?.tenantId) {
-        tenantId = custom.session.tenantId;
-      }
-    }
-
-    if (tenantId) {
-      const tenant = await (prisma.tenant as any).findUnique({
-        where: { id: tenantId },
-        select: { branding: true },
-      });
-      branding = tenant?.branding;
-    }
-  } catch (e) {
-    // Silent fail in metadata
-  }
 
   const appName = branding?.appName || "Agencia Web";
   const description = branding?.description || "Potenciamos empresas de servicios B2B con desarrollo web de alto rendimiento. Entrega rápida, soporte directo y enfoque total en conversiones.";
@@ -103,29 +81,9 @@ export default async function RootLayout({
 
   const messages = await getMessages();
 
-  // Resolve tenant branding
-  let branding = null;
-  try {
-    const session = await auth();
-    let tenantId = (session?.user as any)?.tenantId;
-
-    if (!tenantId) {
-      const custom = await requireCustomAuth();
-      if (custom?.session?.tenantId) {
-        tenantId = custom.session.tenantId;
-      }
-    }
-
-    if (tenantId) {
-      const tenant = await (prisma.tenant as any).findUnique({
-        where: { id: tenantId },
-        select: { branding: true },
-      });
-      branding = tenant?.branding;
-    }
-  } catch (error) {
-    console.error("Layout branding fetch error:", error);
-  }
+  // Branding is handled client-side by BrandingProvider
+  // This avoids server-side DB calls that would block rendering
+  const branding = null;
 
   return (
     <html lang={locale} suppressHydrationWarning>

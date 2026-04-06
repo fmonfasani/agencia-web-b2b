@@ -1,6 +1,6 @@
 import createMiddleware from "next-intl/middleware";
 import { NextRequest, NextResponse } from "next/server";
-import { routing } from "./i18n/routing";
+import { routing } from "./src/i18n/routing";
 import NextAuth from "next-auth";
 import { authConfig } from "./auth.config";
 import { Ratelimit } from "@upstash/ratelimit";

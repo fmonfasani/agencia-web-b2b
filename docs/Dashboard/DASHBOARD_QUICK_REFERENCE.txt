@@ -1,0 +1,361 @@
+WEBSHOOKS DASHBOARD - GUÍA RÁPIDA VISUAL
+========================================
+
+📊 ESTRUCTURA DE DASHBOARDS
+============================
+
+┌─────────────────────────────────────────────────────────────────┐
+│                    ADMIN DASHBOARD (Webshooks)                  │
+├─────────────────────────────────────────────────────────────────┤
+│ 1️⃣  HOME/OVERVIEW                                               │
+│     • KPI Cards: Clientes, Revenue, Queries, Uptime             │
+│     • Charts: Revenue trend, Queries/día, Top clientes, Mix     │
+│                                                                  │
+│ 2️⃣  GESTIÓN DE CLIENTES                                         │
+│     • Tabla avanzada filtrable (plan, MRR, health)              │
+│     • Modal con detalles completos (plan, agentes, facturación) │
+│                                                                  │
+│ 3️⃣  GESTIÓN DE EQUIPOS                                          │
+│     • Team members con roles (Owner, Admin, Manager, etc)       │
+│     • Permisos granulares                                       │
+│     • Activity log                                              │
+│                                                                  │
+│ 4️⃣  OBSERVABILIDAD DE AGENTES                                   │
+│     • Grid: Status, Queries, Latencia, Errors, Costo           │
+│     • Logs en tiempo real                                       │
+│     • Alertas activas                                           │
+│                                                                  │
+│ 5️⃣  MARKETPLACE (Gestión)                                       │
+│     • Agentes disponibles: precio, adoptantes, rating           │
+│     • Crear/editar agentes                                      │
+│     • Estadísticas de adopción                                  │
+│                                                                  │
+│ 6️⃣  MARKETING                                                   │
+│     • Campañas (email, SMS, in-app)                            │
+│     • Resultados (open rate, click rate, conversion)            │
+│     • Coupons management                                        │
+│                                                                  │
+│ 7️⃣  SEGURIDAD & AUDITORÍA                                       │
+│     • Accesos, failed logins, key rotations                     │
+│     • Audit log completo (fecha, usuario, acción, recurso)      │
+│                                                                  │
+│ 8️⃣  ROLES IAM                                                   │
+│     • User management (crear, editar, remover)                  │
+│     • Roles predefinidos + custom roles                         │
+│     • Grupos de permisos                                        │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│               CLIENTE DASHBOARD (Empresa Individual)             │
+├─────────────────────────────────────────────────────────────────┤
+│ 1️⃣  HOME / OVERVIEW                                              │
+│     • KPI Cards: Agentes activos, Queries, Costo, Respuesta      │
+│     • Charts: Queries trend, Costo vs presupuesto, Distribución │
+│                                                                  │
+│ 2️⃣  MIS AGENTES                                                  │
+│     • Grid de cards: Imagen, Status 🟢, Queries, Latencia       │
+│     • Modal de detalles: Config, Performance, Logs, Costos      │
+│                                                                  │
+│ 3️⃣  OBSERVABILIDAD & KPIs                                        │
+│     • Métricas principales (success rate, response time, costo) │
+│     • Gráficos: Queries/hora, Latencia/día, Errores            │
+│     • Filtros por fecha y agente                                │
+│                                                                  │
+│ 4️⃣  MARKETPLACE DE AGENTES                                       │
+│     • Grid de agentes disponibles para comprar                  │
+│     • Filtros: Tipo, Precio, Rating                            │
+│     • Búsqueda                                                  │
+│     • Card: Imagen, Nombre, Rating, Precio, "Ver detalles"    │
+│                                                                  │
+│ 5️⃣  MIS AGENTES COMPRADOS (Seguimiento)                         │
+│     • Tabla: Agente, Desde, Próxima renovación, Status, Costo  │
+│     • Performance vs promedio de mercado (gráfico comparativo)  │
+│     • Reviews que escribí                                       │
+│                                                                  │
+│ 6️⃣  FACTURACIÓN & COSTOS                                         │
+│     • Costo MES-A-FECHA + proyección                            │
+│     • Breakdown: Costo por agente                               │
+│     • Invoices (descargar PDF)                                  │
+│                                                                  │
+│ 7️⃣  CONFIGURACIÓN DE CUENTA                                      │
+│     • Perfil, API keys, Webhooks, Team members                  │
+│     • Preferencias (idioma, zona horaria)                       │
+└─────────────────────────────────────────────────────────────────┘
+
+
+🎨 PALETA DE COLORES
+====================
+
+PRIMARIA:
+  🔵 Azul principal: #0066FF (botones, activos)
+  🔵 Azul oscuro: #003399 (hover, pressed)
+  🔵 Azul claro: #E6F0FF (backgrounds, subtle)
+
+SECUNDARIA:
+  🟢 Verde: #10B981 (success, online)
+  🔴 Rojo: #EF4444 (error, offline)
+  🟡 Amarillo: #FBBF24 (warning, degraded)
+  ⚫ Gris: #6B7280 (neutral text, borders)
+
+NEUTRALES:
+  ⚪ Blanco: #FFFFFF
+  🩶 Gris claro: #F9FAFB (cards)
+  ⚫ Negro: #111827 (main text)
+
+
+📐 COMPONENTES CLAVE
+====================
+
+KPI CARDS (4 en grid):
+  ┌────────────────────┐
+  │ 📊 Métrica         │  ← Título
+  │ 1,234              │  ← Número grande
+  │ ↑ +12% vs mes ant. │  ← Trending
+  └────────────────────┘
+
+CHARTS (Recharts):
+  • Line chart: Revenue últimos 12 meses
+  • Bar chart: Top 5 clientes
+  • Pie chart: Distribución de agentes
+  • Area chart: Queries/día
+
+AGENT CARDS (Grid):
+  ┌─────────────────┐
+  │  [Imagen 200x]  │
+  │  Recepción IA   │
+  │  🟢 Online      │
+  │  1,243 queries  │
+  │  245ms latency  │
+  │  0.2% errors    │
+  │  [Config] [+]   │
+  └─────────────────┘
+
+TABLES (Advanced):
+  ✓ Striped rows (fila par = gris claro)
+  ✓ Sticky header
+  ✓ Hover highlight (fondo azul claro)
+  ✓ Sortable columns
+  ✓ Filterable
+  ✓ Selectable rows
+
+
+🛍️ MARKETPLACE - FLUJO VISUAL
+=============================
+
+HOME MARKETPLACE:
+  [Hero con search bar grande]
+  
+  FEATURED (Carrusel):
+  ◀ [Card grande] [Card] ▶
+  
+  FILTERS (Left sidebar):
+    ☐ Recepción
+    ☐ Soporte
+    ☐ Ventas
+    🔘 Precio: $0 - $500
+    ⭐⭐⭐⭐⭐ Filter by rating
+  
+  GRID (3-4 columnas):
+    ┌──────────────┐  ┌──────────────┐
+    │ [Image 200]  │  │ [Image 200]  │
+    │ Nombre       │  │ Nombre       │
+    │ Desc. corta  │  │ Desc. corta  │
+    │ ⭐4.8 (124)  │  │ ⭐4.8 (124)  │
+    │ $99/mes      │  │ $99/mes      │
+    │ Popular      │  │ New 🆕       │
+    │ Ver detalles │  │ Ver detalles │
+    └──────────────┘  └──────────────┘
+
+PÁGINA DETALLES:
+  [Left: Grande imagen 400x400]
+  [Right: Nombre, Rating, Precio, Botones]
+  
+  TABS:
+    📝 Descripción  |  ⭐ Reviews  |  💰 Pricing  |  🧪 Demo
+    
+  DESCRIPCIÓN:
+    • Full description
+    • Features (bullets)
+    • Use cases
+    • Integraciones
+  
+  REVIEWS:
+    ⭐⭐⭐⭐⭐ Juan - "Excelente agente"
+    ⭐⭐⭐⭐☆ María - "Muy bueno pero mejorar..."
+    ⭐⭐⭐⭐⭐ Carlos - "Lo mejor del mercado"
+    [Escribir review]
+  
+  PRICING:
+    Monthly | Annual (toggle)
+    
+    Plan | Price | Features | CTA
+    Básico | $99 | ... | Comprar
+    Pro | $199 | ... | Comprar
+    Enterprise | Custom | ... | Contactar
+
+
+👁️ SEGUIMIENTO DE AGENTES (Estético)
+=====================================
+
+MIS AGENTES (Grid):
+  ┌─────────────────────┐  ┌─────────────────────┐
+  │ [Imagen del bot]    │  │ [Imagen del bot]    │
+  │ Recepción IA        │  │ Soporte IA          │
+  │ Recepción           │  │ Soporte             │
+  │ ⭐ 4.8 (324)        │  │ ⭐ 4.7 (256)        │
+  │ 🟢 Online           │  │ 🟢 Online           │
+  │ Queries: 1,243      │  │ Queries: 2,156      │
+  │ Latency: 245ms      │  │ Latency: 198ms      │
+  │ Errors: 0.2%        │  │ Errors: 0.1%        │
+  │ [Configurar] [+]    │  │ [Configurar] [+]    │
+  └─────────────────────┘  └─────────────────────┘
+  
+  HOVER → Sombra más fuerte + overlay oscuro
+
+DETALLES AGENTE:
+  COMPARISON TABLE:
+  ┌─ Métrica ─────────┬─ Mi agente ─┬─ Promedio ─┐
+  │ Queries/mes       │ 12,430      │ 8,200      │ ✅ +51%
+  │ Avg response      │ 245ms       │ 312ms      │ ✅ -27%
+  │ Error rate        │ 0.2%        │ 0.8%       │ ✅ -75%
+  │ User satisfaction │ 4.8/5       │ 4.2/5      │ ✅ +14%
+  └────────────────────────────────────────────────┘
+  
+  COMPARISON CHART:
+    Mi agente  █████████ 90
+    Promedio   ██████░░░░ 60
+    
+  MY REVIEWS:
+    ⭐⭐⭐⭐⭐ "Excelente agente, recomendado" (15 días ago)
+    [Editar] [Eliminar]
+
+
+✨ ANIMACIONES
+==============
+
+Page Load:
+  • Skeleton screens en lugar de spinners
+  • Fade-in en 200ms
+  
+Card Entrance:
+  • Stagger children (100ms delay entre cards)
+  • Slide-up + fade-in
+  
+Hover Effects:
+  • Button: background change (150ms)
+  • Card: translateY(-8px) + enhanced shadow
+  • Image: zoom(1.05) + overlay
+  
+Rating Stars:
+  • Click con spring animation
+  • Tooltip en hover
+  
+KPI Numbers:
+  • Count-up animation (0 → target number)
+  • Duration: 1 segundo
+  
+Toast Notifications:
+  • Position: top-right
+  • Colors: green (success), red (error), blue (info)
+  • Auto-dismiss: 5 segundos
+  • Slide-in from right
+
+
+📱 RESPONSIVE
+=============
+
+Desktop (1400px+):
+  • 3-4 columnas en grids
+  • Sidebar abierto
+  • Todos los elementos visibles
+
+Tablet (768px-1399px):
+  • 2 columnas en grids
+  • Sidebar colapsable
+  • Tables scrollables horizontalmente
+
+Mobile (< 768px):
+  • 1 columna en grids
+  • Sidebar cerrado (hamburger menu)
+  • Cards apiladas
+  • Charts con scroll horizontal
+
+
+🎯 PRIORIDADES DE IMPLEMENTACIÓN
+=================================
+
+FASE 1 (MVP):
+  ✅ Dashboard Admin: Home + KPI Cards
+  ✅ Dashboard Cliente: Home + Mis Agentes
+  ✅ Marketplace: Grid de agentes
+  ✅ Página de detalles agente
+  ✅ Paleta de colores + componentes base
+
+FASE 2:
+  ✅ Observabilidad: Performance charts
+  ✅ Seguimiento: Comparison charts
+  ✅ Facturación: Invoice listing
+  ✅ Animaciones: Transiciones + hover
+  ✅ Responsive design
+
+FASE 3:
+  ✅ Reporting avanzado
+  ✅ AI insights
+  ✅ Real-time notifications
+  ✅ Mobile app
+
+
+🛠️ STACK RECOMENDADO
+====================
+
+UI Components:
+  • shadcn/ui o Headless UI
+  • TailwindCSS para styling
+
+Charts:
+  • Recharts (React charts library)
+  • Chart.js como alternativa
+
+Tables:
+  • TanStack Table (React Table)
+  • DataGrid de Material-UI
+
+Forms:
+  • React Hook Form
+  • Zod o Yup para validación
+
+Animations:
+  • Framer Motion (recomendado)
+  • React Spring como alternativa
+
+Icons:
+  • Lucide React (200+ icons)
+  • Heroicons como alternativa
+
+
+💡 IDEAS EXTRAS
+===============
+
+1. Dark Mode:
+   • Toggle en header
+   • Sistema de themes dinámicos
+
+2. AI Insights:
+   • "Recomendación: Actualizar Agente X"
+   • "Tu costo ha ↑ 23% en últimos 7 días"
+
+3. Real-time Updates:
+   • WebSocket para updates en vivo
+   • Queries/segundo en tiempo real
+
+4. Reporting Exportable:
+   • PDF reports
+   • CSV downloads
+
+5. Integrations:
+   • Slack notifications
+   • Webhook events
+
+6. Customizable Dashboards:
+   • Drag & drop widgets
+   • Guardar layouts personalizados

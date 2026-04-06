@@ -1,5 +1,5 @@
-import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 export async function POST(req: Request) {
     try {
@@ -9,21 +9,17 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Invalid events' }, { status: 400 });
         }
 
-        // Bulk insert events for performance
-        await prisma.rumEvent.createMany({
-            data: events.map((e: any) => ({
-                sessionId: e.sessionId,
-                userId: e.userId,
-                page: e.page,
-                metric: e.metric,
-                value: e.value,
-                userAgent: e.userAgent,
-            })),
+        // Log RUM events for monitoring (skip Prisma in dev without DB)
+        logger.debug('[RUM] Events received', {
+            count: events.length,
+            sample: events[0],
         });
 
         return NextResponse.json({ success: true });
     } catch (error) {
-        console.error('RUM: Failed to store events', error);
+        logger.error('RUM: Failed to process events', {
+            error: error instanceof Error ? error.message : String(error),
+        });
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

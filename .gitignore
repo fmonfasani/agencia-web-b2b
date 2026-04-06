@@ -172,6 +172,7 @@ backend/uploads/
 /*.ps1
 
 # Informes y docs temporales en root (mantiene README.md y CLAUDE.md)
+/docs/
 /*.txt
 /CLAUDE-INSTRUCCIONES.md
 /POST-MIGRACION-CHECKLIST.md

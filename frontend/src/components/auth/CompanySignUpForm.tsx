@@ -128,22 +128,41 @@ export default function CompanySignUpForm({
       }
 
       // AUTO-LOGIN: Trigger NextAuth flow from the client to establish the session cookie
+      console.log("[SIGNUP] Attempting auto-login with credentials:", { email });
       const loginResult = await signIn("credentials", {
         email,
         password,
         redirect: false,
       });
 
+      console.log("[SIGNUP] Login result:", loginResult);
+
       if (loginResult?.error) {
-        // If auto-login fails, redirect to sign-in page instead of throwing error
+        // If auto-login fails, show error and allow user to try again
+        const errorMsg = `Auto-login falló: ${loginResult.error}. Por favor, ve a la página de login.`;
+        console.error("[SIGNUP]", errorMsg);
+        setError(errorMsg);
+        setLoading(false);
+        // Wait 3 seconds before redirecting so user can see the error
+        await new Promise(resolve => setTimeout(resolve, 3000));
         window.location.href = `/${locale}/auth/sign-in?registered=true`;
         return;
       }
 
+      if (!loginResult?.ok) {
+        const errorMsg = `Login inválido: ${loginResult?.status || "desconocido"}`;
+        console.error("[SIGNUP]", errorMsg);
+        setError(errorMsg);
+        setLoading(false);
+        return;
+      }
+
+      console.log("[SIGNUP] Login exitoso, redirigiendo al dashboard");
       window.location.href = `/${locale}/admin/dashboard`;
     } catch (err) {
-      console.error("Signup error:", err);
-      setError(t.errorNetwork);
+      console.error("[SIGNUP] Signup error:", err);
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      setError(`Error: ${errorMessage}`);
       setLoading(false);
     }
   }

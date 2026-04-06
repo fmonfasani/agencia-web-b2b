@@ -1,94 +1,110 @@
-/**
- * components/auth/LoginForm.tsx
- *
- * Formulario de login simple (email + password)
- * Usa el hook useAuth para manejar la autenticación
- */
-
 "use client";
 
 import { useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { Mail, Lock } from "lucide-react";
 
 export function LoginForm({
   locale = "es",
-  darkMode: _darkMode,
+  darkMode = false,
 }: {
   locale?: string;
   darkMode?: boolean;
 }) {
   const router = useRouter();
-  const { login, error: authError, isLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setIsLoading(true);
 
     if (!email || !password) {
       setError("Email y contraseña son requeridos");
+      setIsLoading(false);
       return;
     }
 
-    const success = await login(email, password);
-    if (success) {
-      router.push(`/${locale}/admin`);
-    } else {
-      setError(authError || "Login fallido");
+    try {
+      const result = await signIn("credentials", {
+        email: email.toLowerCase().trim(),
+        password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setError(result.error || "Login fallido");
+        setIsLoading(false);
+        return;
+      }
+
+      if (result?.ok) {
+        router.push(`/${locale}/admin/dashboard`);
+      } else {
+        setError("Login fallido");
+        setIsLoading(false);
+      }
+    } catch (err) {
+      setError("Error de conexión");
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h1 className="text-2xl font-bold text-center mb-6">Webshooks</h1>
+    <div className="min-h-screen flex items-center justify-center bg-[#0d0f14]">
+      <div className="bg-[#161923] p-8 rounded-2xl shadow-lg w-full max-w-md border border-[#2a2f3e]">
+        <h1 className="text-2xl font-bold text-white text-center mb-2">
+          Webshooks
+        </h1>
+        <p className="text-center text-[#8b92a5] text-sm mb-6">
+          Ingresa a tu cuenta
+        </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Email Input */}
           <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label className="block text-xs font-semibold text-[#8b92a5] uppercase tracking-widest mb-2">
               Email
             </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="tu@email.com"
-              disabled={isLoading}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-            />
+            <div className="relative">
+              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#4a5168]" size={15} />
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="tu@email.com"
+                disabled={isLoading}
+                className="w-full rounded-xl border border-[#2a2f3e] bg-[#161923] pl-10 pr-4 py-3 text-sm text-white placeholder-[#4a5168] outline-none focus:ring-2 focus:ring-[#135bec]/50 focus:border-[#135bec]/50 transition-all font-medium disabled:opacity-50"
+              />
+            </div>
           </div>
 
           {/* Password Input */}
           <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label className="block text-xs font-semibold text-[#8b92a5] uppercase tracking-widest mb-2">
               Contraseña
             </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              disabled={isLoading}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-            />
+            <div className="relative">
+              <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#4a5168]" size={15} />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                disabled={isLoading}
+                className="w-full rounded-xl border border-[#2a2f3e] bg-[#161923] pl-10 pr-4 py-3 text-sm text-white placeholder-[#4a5168] outline-none focus:ring-2 focus:ring-[#135bec]/50 focus:border-[#135bec]/50 transition-all font-medium disabled:opacity-50"
+              />
+            </div>
           </div>
 
           {/* Error Message */}
-          {(error || authError) && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-              {error || authError}
+          {error && (
+            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+              {error}
             </div>
           )}
 
@@ -96,26 +112,11 @@ export function LoginForm({
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition"
+            className="w-full rounded-xl bg-[#135bec] hover:bg-[#0e45b5] text-white py-3.5 font-bold text-sm disabled:opacity-50 transition-all shadow-lg shadow-[#135bec]/25"
           >
             {isLoading ? "Autenticando..." : "Ingresar"}
           </button>
         </form>
-
-        {/* Test Credentials */}
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg text-xs text-gray-600">
-          <p className="font-medium mb-2">🧪 Credenciales de prueba:</p>
-          <p>
-            Email:{" "}
-            <code className="bg-white px-2 py-1 rounded">
-              fmonfasani@gmail.com
-            </code>
-          </p>
-          <p>
-            Contraseña:{" "}
-            <code className="bg-white px-2 py-1 rounded">Admin2026!</code>
-          </p>
-        </div>
       </div>
     </div>
   );

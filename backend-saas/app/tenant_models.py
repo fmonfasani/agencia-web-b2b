@@ -23,7 +23,6 @@ class TenantResponse(BaseModel):
     nombre: str
     industria: str
     descripcion: str
-    created_by: str
     created_at: datetime
     updated_at: Optional[datetime] = None
     activo: bool = True
