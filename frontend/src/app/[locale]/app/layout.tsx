@@ -1,7 +1,20 @@
 import React from "react";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { Zap, LogOut, Home, Cpu, ShoppingBag, BarChart3, CreditCard, Settings, FileText, Users, Webhook, Activity } from "lucide-react";
+import {
+  Zap,
+  LogOut,
+  Home,
+  Cpu,
+  ShoppingBag,
+  BarChart3,
+  CreditCard,
+  Settings,
+  FileText,
+  Users,
+  Webhook,
+  Activity,
+} from "lucide-react";
 import Link from "next/link";
 
 export default async function ClientLayout({
@@ -22,14 +35,30 @@ export default async function ClientLayout({
     { href: `/${locale}/app`, label: "Dashboard", icon: Home },
     { href: `/${locale}/app/agents`, label: "Mis Agentes", icon: Cpu },
     { href: `/${locale}/app/chat`, label: "Chat IA", icon: Zap },
-    { href: `/${locale}/app/marketplace`, label: "Marketplace", icon: ShoppingBag },
-    { href: `/${locale}/app/observability`, label: "Observabilidad", icon: BarChart3 },
+    {
+      href: `/${locale}/app/marketplace`,
+      label: "Marketplace",
+      icon: ShoppingBag,
+    },
+    {
+      href: `/${locale}/app/observability`,
+      label: "Observabilidad",
+      icon: BarChart3,
+    },
     { href: `/${locale}/app/billing`, label: "Facturación", icon: CreditCard },
     { href: `/${locale}/app/reports`, label: "Reportes", icon: FileText },
     { href: `/${locale}/app/settings`, label: "Configuración", icon: Settings },
     { href: `/${locale}/app/settings/team`, label: "Equipo", icon: Users },
-    { href: `/${locale}/app/settings/webhooks`, label: "Webhooks", icon: Webhook },
-    { href: `/${locale}/app/settings/activity`, label: "Activity Log", icon: Activity },
+    {
+      href: `/${locale}/app/settings/webhooks`,
+      label: "Webhooks",
+      icon: Webhook,
+    },
+    {
+      href: `/${locale}/app/settings/activity`,
+      label: "Activity Log",
+      icon: Activity,
+    },
   ];
 
   return (
@@ -81,7 +110,7 @@ export default async function ClientLayout({
               </div>
             </div>
             <Link
-              href={`/${locale}/api/auth/signout`}
+              href="/api/auth/signout"
               className="flex items-center gap-2 w-full px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition-colors border border-gray-200"
             >
               <LogOut size={16} />
