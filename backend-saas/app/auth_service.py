@@ -291,9 +291,9 @@ def register_company(
 
         # 3. Crear membresía (usuario es admin de su empresa)
         cur.execute("""
-            INSERT INTO "TenantMember" (id, "userId", "tenantId", role, status, "createdAt", "updatedAt")
+            INSERT INTO "Membership" (id, "userId", "tenantId", role, status, "createdAt", "updatedAt")
             VALUES (%s, %s, %s, %s, %s, NOW(), NOW())
-        """, (f"tm_{secrets.token_hex(12)}", user_id, tenant_id, "ADMIN", "ACTIVE"))
+        """, (f"m_{secrets.token_hex(12)}", user_id, tenant_id, "ADMIN", "ACTIVE"))
 
         conn.commit()
         cur.close()
