@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Send } from "lucide-react";
+import { executeAgent } from "@/app/actions/agent";
 
 interface Message {
   id: string;
@@ -24,9 +25,12 @@ export default function ChatPage() {
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSend = async () => {
     if (!input.trim()) return;
+
+    setError(null);
 
     // Agregar mensaje del usuario
     const userMessage: Message = {
@@ -36,23 +40,42 @@ export default function ChatPage() {
       timestamp: new Date(),
     };
     setMessages((prev) => [...prev, userMessage]);
+    const userQuery = input;
     setInput("");
     setIsLoading(true);
 
-    // Simular respuesta del agente
-    setTimeout(() => {
-      const assistantMessage: Message = {
-        id: `assistant-${Date.now()}`,
-        role: "assistant",
-        content:
-          "Esta es una respuesta simulada. En producción, esto se conectará a tu agente IA real a través del backend.",
-        timestamp: new Date(),
-        iterationCount: 3,
-        duration: 245,
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
+    try {
+      // Llamar al Server Action para ejecutar el agente
+      const response = await executeAgent(userQuery);
+
+      if (response.success && response.data) {
+        const result = response.data;
+        // Extraer el contenido de la respuesta del agente
+        const content = Array.isArray(result.result)
+          ? result.result
+              .filter((msg: any) => msg.role === "assistant")
+              .map((msg: any) => msg.content)
+              .join("\n")
+          : result.result;
+
+        const assistantMessage: Message = {
+          id: `assistant-${Date.now()}`,
+          role: "assistant",
+          content: content || "No se obtuvo respuesta del agente",
+          timestamp: new Date(),
+          iterationCount: result.iterations || 0,
+          duration: result.total_duration_ms || 0,
+        };
+        setMessages((prev) => [...prev, assistantMessage]);
+      } else {
+        setError(response.error || "Error al ejecutar el agente");
+      }
+    } catch (err) {
+      console.error("Chat error:", err);
+      setError(err instanceof Error ? err.message : "Error desconocido");
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -64,6 +87,13 @@ export default function ChatPage() {
           Consulta directamente con tu agente especializado
         </p>
       </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-600 text-sm">{error}</p>
+        </div>
+      )}
 
       {/* Messages Container */}
       <div className="flex-1 bg-white border border-gray-200 rounded-lg p-6 overflow-y-auto">

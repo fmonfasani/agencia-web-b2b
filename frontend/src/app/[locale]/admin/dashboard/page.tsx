@@ -1,15 +1,8 @@
 import { requireTenantMembership } from "@/lib/authz";
-import { saasClientFor } from "@/lib/saas-client";
+import { getAdminDashboardData } from "@/app/actions/admin";
 import { KPICard } from "@/components/dashboard/KPICard";
 import { AgentMetricsChart } from "@/components/dashboard/AgentMetricsChart";
 import { SystemHealth } from "@/components/dashboard/SystemHealth";
-import {
-  Users,
-  DollarSign,
-  Zap,
-  TrendingUp,
-  Activity,
-} from "lucide-react";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -30,23 +23,9 @@ export default async function AdminDashboard({
     throw new Error("TENANT_CONTEXT_REQUIRED");
   }
 
-  // Este endpoint requiere API key como admin
-  // Por ahora, usamos datos mock
-  const mockMetricsData = [
-    { date: "1 abr", queries: 12000, avgDuration: 245, errorRate: 0.2 },
-    { date: "2 abr", queries: 19000, avgDuration: 300, errorRate: 0.3 },
-    { date: "3 abr", queries: 17000, avgDuration: 220, errorRate: 0.1 },
-    { date: "4 abr", queries: 22000, avgDuration: 280, errorRate: 0.4 },
-    { date: "5 abr", queries: 22900, avgDuration: 245, errorRate: 0.2 },
-  ];
-
-  const mockTopClientsData = [
-    { name: "Cliente A", mrr: 24000 },
-    { name: "Cliente B", mrr: 18000 },
-    { name: "Cliente C", mrr: 15000 },
-    { name: "Cliente D", mrr: 12000 },
-    { name: "Cliente E", mrr: 9800 },
-  ];
+  // Fetch real data from backend
+  const dashboardData = await getAdminDashboardData();
+  const { metrics, metricsData, topClientsData, health, error } = dashboardData;
 
   return (
     <div className="space-y-8">
@@ -72,56 +51,52 @@ export default async function AdminDashboard({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <KPICard
           label="Clientes Activos"
-          value="247"
+          value={metrics.totalClients.toLocaleString()}
           trend={{ value: 12, isPositive: true }}
-          icon={Users}
           color="blue"
         />
         <KPICard
           label="Revenue MRR"
-          value="$124,560"
+          value={`$${(metrics.revenue / 1000).toFixed(0)}K`}
           trend={{ value: 8, isPositive: true }}
-          icon={DollarSign}
           color="green"
         />
         <KPICard
           label="Queries Hoy"
-          value="12,456"
+          value={metrics.queriesPerDay.toLocaleString()}
           trend={{ value: 3, isPositive: false }}
-          icon={Zap}
           color="yellow"
         />
         <KPICard
           label="Uptime Platform"
-          value="99.98%"
+          value={`${metrics.uptime}%`}
           trend={{ value: 0.02, isPositive: true }}
-          icon={Activity}
           color="green"
         />
         <KPICard
           label="Agentes en Producción"
-          value="45"
+          value={metrics.activeAgents}
           trend={{ value: 5, isPositive: true }}
-          icon={TrendingUp}
           color="purple"
         />
       </div>
 
       {/* System Health */}
-      <SystemHealth
-        status={{
-          PostgreSQL: true,
-          Qdrant: true,
-          Ollama: true,
-          Redis: true,
-        }}
-      />
+      <SystemHealth status={health} />
 
       {/* Charts */}
-      <AgentMetricsChart
-        metricsData={mockMetricsData}
-        topClientsData={mockTopClientsData}
-      />
+      {error ? (
+        <div className="border border-red-200 rounded-lg p-6 bg-red-50">
+          <p className="text-red-600">
+            Error loading metrics: {error}
+          </p>
+        </div>
+      ) : (
+        <AgentMetricsChart
+          metricsData={metricsData}
+          topClientsData={topClientsData}
+        />
+      )}
 
       {/* Recent Activity */}
       <div className="border border-gray-200 rounded-lg p-6 bg-white">
