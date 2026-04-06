@@ -74,26 +74,25 @@ const EVENT_POOL: Omit<ActivityEvent, "id">[] = [
   },
 ];
 
-let idCounter = 0;
+let idCounter = 1000;
 
 export default function LiveActivityFeed() {
   const [events, setEvents] = useState<ActivityEvent[]>(() =>
     EVENT_POOL.slice(0, 4).map((e, i) => ({ ...e, id: i })),
   );
-  const [poolIndex, setPoolIndex] = useState(4);
 
   useEffect(() => {
+    let nextIndex = 4;
     const interval = setInterval(() => {
-      setEvents((prev) => {
-        idCounter++;
-        const next = EVENT_POOL[poolIndex % EVENT_POOL.length];
-        return [{ ...next, id: idCounter }, ...prev.slice(0, 3)];
-      });
-      setPoolIndex((i) => i + 1);
+      idCounter++;
+      const currentId = idCounter;
+      const next = EVENT_POOL[nextIndex % EVENT_POOL.length];
+      nextIndex++;
+      setEvents((prev) => [{ ...next, id: currentId }, ...prev.slice(0, 3)]);
     }, 3200);
 
     return () => clearInterval(interval);
-  }, [poolIndex]);
+  }, []);
 
   return (
     <div className="w-full space-y-2.5">
