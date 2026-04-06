@@ -37,26 +37,30 @@ API_KEY_HEADER = APIKeyHeader(
 
 def get_current_user(api_key: str = Security(API_KEY_HEADER)) -> dict:
     """Dependency — valida la API key y retorna el usuario."""
+    logger.info(f"[AUTH] get_current_user called with api_key: {api_key}")
     if not api_key:
+        logger.warning("[AUTH] No API key provided in header")
         raise HTTPException(
             status_code=401,
             detail="API Key requerida. Usá POST /auth/login para obtenerla.",
             headers={"WWW-Authenticate": "ApiKey"},
         )
     user = get_user_by_api_key(api_key)
+    logger.info(f"[AUTH] API Key lookup result: {user}")
     if not user:
+        logger.warning(f"[AUTH] API Key not found or user inactive: {api_key[:20]}...")
         raise HTTPException(status_code=401, detail="API Key inválida o usuario inactivo")
     return user
 
 
 def require_admin(user: dict = Depends(get_current_user)) -> dict:
-    if user["rol"] not in ("admin", "superadmin", "super_admin"):
+    if user["rol"] not in ("ADMIN", "SUPER_ADMIN"):
         raise HTTPException(status_code=403, detail="Solo admins pueden realizar esta acción")
     return user
 
 
 def require_analista_or_admin(user: dict = Depends(get_current_user)) -> dict:
-    if user["rol"] not in ("admin", "superadmin", "super_admin", "analista"):
+    if user["rol"] not in ("ADMIN", "SUPER_ADMIN", "ANALISTA"):
         raise HTTPException(status_code=403, detail="Se requiere rol analista o admin")
     return user
 

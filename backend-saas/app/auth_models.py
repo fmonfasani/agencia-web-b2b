@@ -7,16 +7,17 @@ from enum import Enum
 
 
 class Rol(str, Enum):
-    admin    = "admin"
-    analista = "analista"
-    cliente  = "cliente"
+    ADMIN    = "ADMIN"
+    ANALISTA = "ANALISTA"
+    CLIENTE  = "CLIENTE"
+    MEMBER   = "MEMBER"
 
 
 class RegisterRequest(BaseModel):
     email: EmailStr
     password: str
     nombre: str
-    rol: Rol = Rol.cliente
+    rol: Rol = Rol.CLIENTE
     tenant_id: Optional[str] = None  # obligatorio si rol=cliente
 
 
