@@ -1,154 +1,179 @@
 "use server";
 
 import { auth } from "@/lib/auth";
-import { saasClientFor, SaasApiError } from "@/lib/saas-client";
-
-export interface TrainingStatus {
-  tenantId: string;
-  tenantName: string;
-  chunksCount: number;
-  vectorsCount: number;
-  postgresOk: boolean;
-  qdrantOk: boolean;
-  status: "ready" | "empty" | "error";
-}
-
-export interface TenantTrainingStatus extends TrainingStatus {
-  lastUpload?: string;
-}
+import { saasClientFor } from "@/lib/saas-client";
+import type {
+  TrainingDocument,
+  TrainingDocumentDetail,
+  TrainingSummary,
+} from "@/lib/saas-client";
 
 async function getClient() {
   const session = await auth();
   const apiKey =
     (session?.user as any)?.apiKey || (session as any)?.backendApiKey;
   if (!apiKey) throw new Error("No API key in session");
-  return { client: saasClientFor(apiKey), session };
+  return saasClientFor(apiKey);
 }
 
-export async function getTrainingStatus(): Promise<TrainingStatus> {
-  const empty: TrainingStatus = {
-    tenantId: "",
-    tenantName: "Mi Empresa",
-    chunksCount: 0,
-    vectorsCount: 0,
-    postgresOk: false,
-    qdrantOk: false,
-    status: "empty",
-  };
+// ── Cliente ───────────────────────────────────────────────────────────────────
 
+export async function getMyDocuments(): Promise<TrainingDocument[]> {
   try {
-    const { client } = await getClient();
-
-    const tenant = await client.tenant.me().catch(() => null);
-    const tenantId = tenant?.id ?? "";
-    const tenantName = tenant?.nombre ?? "Mi Empresa";
-
-    if (!tenantId) return { ...empty, tenantName };
-
-    const s = await client.onboarding.status(tenantId).catch(() => null);
-    if (!s) return { ...empty, tenantId, tenantName };
-
-    const status: TrainingStatus["status"] =
-      s.qdrant_ok && (s.vectors_count ?? 0) > 0
-        ? "ready"
-        : s.postgres_ok === false || s.qdrant_ok === false
-          ? "error"
-          : "empty";
-
-    return {
-      tenantId,
-      tenantName,
-      chunksCount: s.chunks_count ?? 0,
-      vectorsCount: s.vectors_count ?? 0,
-      postgresOk: s.postgres_ok ?? false,
-      qdrantOk: s.qdrant_ok ?? false,
-      status,
-    };
+    const client = await getClient();
+    const res = await client.training.getMyDocuments();
+    return res.documents;
   } catch (e) {
-    console.warn("[training] getTrainingStatus:", e);
-    return empty;
+    console.warn("[training] getMyDocuments:", e);
+    return [];
   }
 }
 
-export async function uploadDocuments(
+export async function uploadTrainingDocument(
   formData: FormData,
-): Promise<{ success: boolean; error?: string; uploadCount?: number }> {
+): Promise<{
+  success: boolean;
+  error?: string;
+  results?: Array<{
+    filename: string;
+    duplicate: boolean;
+    quality_score?: number;
+  }>;
+}> {
   try {
-    const { client } = await getClient();
-
-    const tenant = await client.tenant.me();
-    const tenantId = tenant?.id;
-    if (!tenantId) return { success: false, error: "Tenant no encontrado" };
-
+    const client = await getClient();
     const files = formData.getAll("files") as File[];
     if (!files.length)
       return { success: false, error: "No se seleccionaron archivos" };
 
-    const allowed = [
-      "application/pdf",
-      "text/plain",
-      "text/csv",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    ];
-    const invalid = files.find((f) => !allowed.includes(f.type));
-    if (invalid)
-      return { success: false, error: `Formato no permitido: ${invalid.name}` };
-
-    await client.onboarding.uploadFiles(tenantId, files);
-    return { success: true, uploadCount: files.length };
+    const results = await Promise.all(
+      files.map(async (file) => {
+        const r = await client.training.uploadDocument(file);
+        return {
+          filename: file.name,
+          duplicate: r.duplicate,
+          quality_score: r.quality_score,
+        };
+      }),
+    );
+    return { success: true, results };
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     return { success: false, error: msg };
   }
 }
 
-// ── Admin: todos los tenants con su estado de entrenamiento ───────────────────
-
-export async function getAllTenantsTrainingStatus(): Promise<
-  TenantTrainingStatus[]
-> {
+export async function getMyTrainingSummary(): Promise<TrainingSummary | null> {
   try {
-    const { client } = await getClient();
-    const tenants = await client.tenant.list();
-
-    const results = await Promise.allSettled(
-      tenants.map(async (t) => {
-        try {
-          const s = await client.onboarding.status(t.id);
-          const status: TrainingStatus["status"] =
-            s.qdrant_ok && (s.vectors_count ?? 0) > 0
-              ? "ready"
-              : s.postgres_ok === false || s.qdrant_ok === false
-                ? "error"
-                : "empty";
-          return {
-            tenantId: t.id,
-            tenantName: t.nombre,
-            chunksCount: s.chunks_count ?? 0,
-            vectorsCount: s.vectors_count ?? 0,
-            postgresOk: s.postgres_ok ?? false,
-            qdrantOk: s.qdrant_ok ?? false,
-            status,
-          } satisfies TenantTrainingStatus;
-        } catch {
-          return {
-            tenantId: t.id,
-            tenantName: t.nombre,
-            chunksCount: 0,
-            vectorsCount: 0,
-            postgresOk: false,
-            qdrantOk: false,
-            status: "empty" as const,
-          } satisfies TenantTrainingStatus;
-        }
-      }),
-    );
-
-    return results
-      .filter((r) => r.status === "fulfilled")
-      .map((r) => (r as PromiseFulfilledResult<TenantTrainingStatus>).value);
+    const client = await getClient();
+    const tenant = await client.tenant.me();
+    if (!tenant?.id) return null;
+    return await client.training.getStatus(tenant.id);
   } catch (e) {
-    console.warn("[training] getAllTenantsTrainingStatus:", e);
+    console.warn("[training] getMyTrainingSummary:", e);
+    return null;
+  }
+}
+
+export async function getAllDocuments() {
+  try {
+    const client = await getClient();
+    const res = await client.training.getAllDocuments();
+    return res.documents;
+  } catch (e) {
+    console.warn("[training] getAllDocuments:", e);
     return [];
+  }
+}
+
+export async function getTrainingMetricsAndQdrant() {
+  try {
+    const client = await getClient();
+    const [metrics, qdrant] = await Promise.all([
+      client.training.getMetrics().catch(() => null),
+      client.training.getQdrantStats().catch(() => null),
+    ]);
+    return { metrics, qdrant };
+  } catch (e) {
+    console.warn("[training] getTrainingMetricsAndQdrant:", e);
+    return { metrics: null, qdrant: null };
+  }
+}
+
+// ── Analista ──────────────────────────────────────────────────────────────────
+
+export async function getPendingDocuments(): Promise<TrainingDocument[]> {
+  try {
+    const client = await getClient();
+    const res = await client.training.getPendingDocuments();
+    return res.documents;
+  } catch (e) {
+    console.warn("[training] getPendingDocuments:", e);
+    return [];
+  }
+}
+
+export async function getDocumentDetail(
+  docId: string,
+): Promise<TrainingDocumentDetail | null> {
+  try {
+    const client = await getClient();
+    return await client.training.getDocument(docId);
+  } catch (e) {
+    console.warn("[training] getDocumentDetail:", e);
+    return null;
+  }
+}
+
+export async function updateDocumentContent(
+  docId: string,
+  contentProcessed: string,
+  metadata?: Record<string, unknown>,
+  chunkConfig?: Record<string, unknown>,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const client = await getClient();
+    await client.training.updateDocument(docId, {
+      content_processed: contentProcessed,
+      metadata,
+      chunk_config: chunkConfig,
+    });
+    return { success: true };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return { success: false, error: msg };
+  }
+}
+
+export async function ingestDocument(
+  docId: string,
+  chunkConfig?: Record<string, unknown>,
+): Promise<{
+  success: boolean;
+  error?: string;
+  chunks?: number;
+  vectors?: number;
+}> {
+  try {
+    const client = await getClient();
+    const res = await client.training.ingestDocument(docId, chunkConfig);
+    return { success: true, chunks: res.chunks, vectors: res.vectors };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return { success: false, error: msg };
+  }
+}
+
+export async function rejectDocument(
+  docId: string,
+  reason: string,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const client = await getClient();
+    await client.training.rejectDocument(docId, reason);
+    return { success: true };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return { success: false, error: msg };
   }
 }

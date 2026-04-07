@@ -32,6 +32,7 @@ from app.models import (
 from app.auth.agent_auth import get_user_by_api_key, validate_tenant_access
 from app.db.trace_service import persist_trace, ensure_traces_table
 from app.onboarding_router import router as onboarding_router  # /onboarding/ingest (procesamiento con LLM)
+from app.training_ingest_router import router as training_ingest_router  # /training/ingest (chunking + embedding + Qdrant)
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -88,6 +89,8 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Include onboarding router (LLM + Qdrant processing)
 app.include_router(onboarding_router)
+# Include training ingest router (chunking + embedding + Qdrant)
+app.include_router(training_ingest_router)
 
 
 @app.on_event("startup")

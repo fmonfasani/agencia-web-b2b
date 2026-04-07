@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { uploadDocuments } from "@/app/actions/training";
+import { uploadTrainingDocument } from "@/app/actions/training";
 import {
   Upload,
   X,
@@ -73,7 +73,7 @@ export default function TrainingUpload() {
     );
     inputFiles.forEach((f) => fd.append("files", f));
 
-    const result = await uploadDocuments(fd);
+    const result = await uploadTrainingDocument(fd);
     if (result.success) {
       setStatus("success");
       setFiles([]);
@@ -171,8 +171,7 @@ export default function TrainingUpload() {
       {status === "success" && (
         <div className="flex items-center gap-2 px-4 py-3 rounded-lg border border-emerald-200 bg-emerald-50 text-sm text-emerald-700">
           <CheckCircle2 size={14} className="shrink-0" />
-          Archivos subidos correctamente. El equipo de Webshooks los procesará
-          pronto.
+          Archivos enviados. El equipo de Webshooks los revisará pronto.
         </div>
       )}
 

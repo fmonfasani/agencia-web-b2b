@@ -1,0 +1,123 @@
+## Plan Arquitectónico — Módulo de Entrenamiento
+
+**Tarea:** Módulo donde el cliente sube documentos, el analista de Webshooks los revisa, preprocesa y mejora, y luego los ingesta al vector store (Qdrant). El cliente solo sube — el control de calidad y la ingesta real la hace el analista.
+
+---
+
+### 1. Análisis del problema
+
+El sistema actual tiene `onboarding.uploadFiles()` y `onboarding.status()` pero carece de:
+- Estado intermedio "en revisión" entre upload e ingesta
+- Panel analista para ver, editar y procesar documentos por tenant
+- Historial de versiones de documentos
+- Pipeline de preprocesamiento (limpieza, chunking manual, metadatos)
+- Notificaciones al cliente cuando su agente está listo
+
+### 2. Arquitectura propuesta
+
+```
+Cliente sube docs
+      ↓
+[PostgreSQL: training_documents]
+  - id, tenant_id, filename, content_raw, content_processed
+  - status: uploaded | reviewing | processed | ingested | rejected
+  - uploaded_at, processed_by, processed_at
+      ↓
+Analista accede al panel admin
+      ↓
+[Panel Analista]
+  - Ve docs pendientes por tenant
+  - Edita content_processed (mejora el texto)
+  - Agrega metadatos (categoría, importancia, tags)
+  - Marca como "listo para ingestar"
+      ↓
+[Trigger de ingesta]
+  - Llama a /onboarding/upload con el contenido procesado
+  - Actualiza status → ingested
+  - Notifica al cliente
+```
+
+### 3. Nueva tabla PostgreSQL
+
+```sql
+CREATE TABLE training_documents (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id UUID NOT NULL REFERENCES tenants(id),
+  filename TEXT NOT NULL,
+  file_type TEXT NOT NULL,
+  content_raw TEXT,
+  content_processed TEXT,
+  status TEXT DEFAULT 'uploaded',  -- uploaded|reviewing|processed|ingested|rejected
+  metadata JSONB DEFAULT '{}',     -- tags, categoria, importancia
+  uploaded_at TIMESTAMPTZ DEFAULT NOW(),
+  processed_by UUID REFERENCES users(id),
+  processed_at TIMESTAMPTZ,
+  ingested_at TIMESTAMPTZ,
+  rejection_reason TEXT
+);
+```
+
+### 4. Nuevos endpoints backend
+
+```
+POST   /training/upload                  → cliente sube archivo
+GET    /training/documents/{tenant_id}   → analista lista docs de un tenant
+GET    /training/pending                 → analista ve todos los pendientes (cross-tenant)
+PATCH  /training/documents/{id}          → analista edita content_processed + metadata
+POST   /training/documents/{id}/ingest   → analista dispara ingesta a Qdrant
+POST   /training/documents/{id}/reject   → analista rechaza con motivo
+GET    /training/status/{tenant_id}      → cliente ve estado de sus docs
+```
+
+### 5. Frontend Cliente — /app/training
+
+- Tabla de documentos propios con columnas: nombre, tipo, estado badge, fecha
+- Upload drag & drop (ya implementado, mejorar para mostrar progreso por archivo)
+- Estados visibles: Subido / En revisión / Procesado / Ingestado / Rechazado
+- Si rechazado: mostrar motivo del rechazo
+- KPIs: total subidos, pendientes de revisión, vectores activos
+
+### 6. Frontend Analista — /admin/training
+
+- Vista principal: tabla de todos los docs pendientes agrupados por tenant
+- Badge contador en sidebar con número de pendientes
+- Vista detalle de un documento:
+  - Tab "Original": content_raw (solo lectura)
+  - Tab "Procesado": textarea editable para content_processed
+  - Panel lateral: metadatos (categoría, tags, nivel de importancia 1-5)
+- Acciones: Guardar borrador / Marcar procesado / Ingestar / Rechazar
+- Filtros: por tenant, por status, por tipo de archivo, por fecha
+
+### 7. Server Actions (Next.js)
+
+```typescript
+// Cliente
+getMyDocuments(): Promise<TrainingDocument[]>
+uploadTrainingDocument(formData: FormData): Promise<{success, error?}>
+
+// Analista (admin)
+getPendingDocuments(): Promise<TrainingDocument[]>
+getDocumentDetail(id: string): Promise<TrainingDocumentDetail>
+updateDocumentContent(id, content, metadata): Promise<{success}>
+ingestDocument(id: string): Promise<{success, vectors?}>
+rejectDocument(id: string, reason: string): Promise<{success}>
+```
+
+### 8. Flujo completo
+
+```
+1. Cliente sube PDF → backend extrae texto → status: uploaded
+2. Analista ve en panel → abre doc → status: reviewing
+3. Analista edita, mejora, agrega tags → guarda → status: processed
+4. Analista presiona "Ingestar" → /onboarding/upload → Qdrant → status: ingested
+5. Cliente ve badge verde → agente actualizado con nuevo conocimiento
+```
+
+### 9. Consideraciones técnicas
+
+- Extracción de texto: PyMuPDF (PDF), python-docx (DOCX), pandas (CSV), built-in (TXT)
+- Seguridad: analista solo puede ver docs de tenants activos
+- Chunking configurable: el analista define chunk_size antes de ingestar
+- Versionado: content_raw es inmutable, content_processed es mutable con historial
+- Rate limiting: máx 10 docs simultáneos por tenant
+- Tamaño máximo: 20MB por archivo, validación en frontend y backend

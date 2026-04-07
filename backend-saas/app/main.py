@@ -24,6 +24,7 @@ from app.auth_service import get_user_by_api_key
 from app.onboarding_router import router as onboarding_router  # Solo /tenant, /upload, /status, /delete
 from app.tenant_router import router as tenant_router
 from app.routers.agent_proxy_router import router as agent_proxy_router
+from app.training_router import router as training_router
 
 # Initialize structured logs
 setup_structured_logging()
@@ -387,6 +388,17 @@ app.include_router(auth_router)
 app.include_router(onboarding_router)
 app.include_router(tenant_router)
 app.include_router(agent_proxy_router)
+app.include_router(training_router)
+
+
+@app.on_event("startup")
+async def startup_event():
+    from app.training_service import ensure_tables
+    try:
+        ensure_tables()
+        logger.info("Training tables ready")
+    except Exception as e:
+        logger.error("Could not ensure training tables: %s", e)
 
 
 # --- Middleware for Trace ID & Performance ---

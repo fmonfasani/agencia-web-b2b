@@ -156,6 +156,100 @@ export interface AgentConfigResponse {
   coberturas?: string[];
 }
 
+// ─── Training types ───────────────────────────────────────────────────────────
+
+export type TrainingDocStatus =
+  | "uploaded"
+  | "preprocessing"
+  | "extracted"
+  | "reviewing"
+  | "approved"
+  | "chunking"
+  | "embedding"
+  | "ingested"
+  | "failed"
+  | "rejected";
+
+export interface TrainingDocument {
+  id: string;
+  tenant_id?: string;
+  filename: string;
+  file_type: string;
+  file_size_bytes: number;
+  status: TrainingDocStatus;
+  quality_score?: number;
+  quality_issues: string[];
+  metadata: Record<string, unknown>;
+  chunk_config: Record<string, unknown>;
+  rejection_reason?: string;
+  uploaded_at?: string;
+  processed_at?: string;
+  ingested_at?: string;
+  chunk_count?: number;
+}
+
+export interface TrainingDocumentDetail extends TrainingDocument {
+  content_raw?: string;
+  content_processed?: string;
+}
+
+export interface TrainingUploadResult {
+  success: boolean;
+  document_id: string;
+  status: TrainingDocStatus;
+  quality_score?: number;
+  quality_issues: string[];
+  duplicate: boolean;
+}
+
+export interface TrainingSummary {
+  tenant_id: string;
+  documents: Record<TrainingDocStatus, number>;
+  total_chunks: number;
+  total_embeddings: number;
+}
+
+export interface IngestResult {
+  success: boolean;
+  doc_id: string;
+  chunks: number;
+  vectors: number;
+}
+
+export interface TrainingMetrics {
+  documents: {
+    by_status: Record<string, number>;
+    total: number;
+    ingested: number;
+    pending: number;
+    rejected: number;
+    failed: number;
+  };
+  quality: { avg_score: number; below_threshold: number; perfect: number };
+  chunks: { total: number; avg_tokens_per_chunk: number };
+  embeddings: { total: number; models_count: number };
+  by_tenant: Array<{
+    tenant_id: string;
+    total_docs: number;
+    ingested: number;
+    pending: number;
+    chunks: number;
+    last_upload?: string;
+  }>;
+  daily_uploads: Array<{ date: string; count: number }>;
+}
+
+export interface QdrantStats {
+  collections: Array<{
+    collection: string;
+    vectors_count: number;
+    indexed_vectors?: number;
+    points_count?: number;
+    status: string;
+  }>;
+  total_collections: number;
+}
+
 export interface HealthService {
   status: "connected" | "error" | "skipped" | "unreachable";
   message?: string;
@@ -192,10 +286,19 @@ class BackendSaasClient {
 
   constructor(apiKey: string, baseUrl?: string) {
     this.apiKey = apiKey;
-    this.baseUrl = (baseUrl ?? process.env.AGENT_SERVICE_URL ?? "http://localhost:8000").replace(/\/$/, "");
+    this.baseUrl = (
+      baseUrl ??
+      process.env.AGENT_SERVICE_URL ??
+      "http://localhost:8000"
+    ).replace(/\/$/, "");
   }
 
-  private async request<T>(method: string, path: string, body?: unknown, timeoutMs: number = this.DEFAULT_TIMEOUT_MS): Promise<T> {
+  private async request<T>(
+    method: string,
+    path: string,
+    body?: unknown,
+    timeoutMs: number = this.DEFAULT_TIMEOUT_MS,
+  ): Promise<T> {
     const url = `${this.baseUrl}${path}`;
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -214,8 +317,16 @@ class BackendSaasClient {
 
       if (!res.ok) {
         let errorBody: unknown;
-        try { errorBody = await res.json(); } catch { errorBody = await res.text(); }
-        throw new SaasApiError(res.status, errorBody, `Backend error ${res.status} on ${method} ${path}`);
+        try {
+          errorBody = await res.json();
+        } catch {
+          errorBody = await res.text();
+        }
+        throw new SaasApiError(
+          res.status,
+          errorBody,
+          `Backend error ${res.status} on ${method} ${path}`,
+        );
       }
 
       return res.json() as Promise<T>;
@@ -233,14 +344,15 @@ class BackendSaasClient {
     login: (data: LoginRequest) =>
       this.request<LoginResponse>("POST", "/auth/login", data),
 
-    me: () =>
-      this.request<UserResponse>("GET", "/auth/me"),
+    me: () => this.request<UserResponse>("GET", "/auth/me"),
 
-    users: () =>
-      this.request<UserResponse[]>("GET", "/auth/users"),
+    users: () => this.request<UserResponse[]>("GET", "/auth/users"),
 
     activate: (userId: string, isActive: boolean) =>
-      this.request<{ success: boolean }>("POST", "/auth/activate", { user_id: userId, is_active: isActive }),
+      this.request<{ success: boolean }>("POST", "/auth/activate", {
+        user_id: userId,
+        is_active: isActive,
+      }),
 
     createAnalista: (data: RegisterRequest) =>
       this.request<UserResponse>("POST", "/auth/create-analista", data),
@@ -250,22 +362,38 @@ class BackendSaasClient {
 
   readonly onboarding = {
     createTenant: (form: Record<string, unknown>) =>
-      this.request<{ tenant_id: string; status: string }>("POST", "/onboarding/tenant", form),
+      this.request<{ tenant_id: string; status: string }>(
+        "POST",
+        "/onboarding/tenant",
+        form,
+      ),
 
     status: (tenantId: string) =>
-      this.request<OnboardingStatusResponse>("GET", `/onboarding/status/${tenantId}`),
+      this.request<OnboardingStatusResponse>(
+        "GET",
+        `/onboarding/status/${tenantId}`,
+      ),
 
     deleteTenant: (tenantId: string) =>
-      this.request<{ success: boolean }>("DELETE", `/onboarding/tenant/${tenantId}`),
+      this.request<{ success: boolean }>(
+        "DELETE",
+        `/onboarding/tenant/${tenantId}`,
+      ),
 
     /** Upload is multipart — handled separately, see uploadFiles() */
-    uploadFiles: async (tenantId: string, files: File[]): Promise<{ upload_ids: string[] }> => {
+    uploadFiles: async (
+      tenantId: string,
+      files: File[],
+    ): Promise<{ upload_ids: string[] }> => {
       const form = new FormData();
       form.append("tenant_id", tenantId);
       for (const file of files) form.append("files", file);
 
       const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), this.UPLOAD_TIMEOUT_MS);
+      const timer = setTimeout(
+        () => controller.abort(),
+        this.UPLOAD_TIMEOUT_MS,
+      );
 
       try {
         const res = await fetch(`${this.baseUrl}/onboarding/upload`, {
@@ -275,7 +403,8 @@ class BackendSaasClient {
           cache: "no-store",
           signal: controller.signal,
         });
-        if (!res.ok) throw new SaasApiError(res.status, await res.text(), "Upload failed");
+        if (!res.ok)
+          throw new SaasApiError(res.status, await res.text(), "Upload failed");
         return res.json();
       } finally {
         clearTimeout(timer);
@@ -286,8 +415,7 @@ class BackendSaasClient {
   // ── Tenants ───────────────────────────────────────────────────────────────
 
   readonly tenant = {
-    list: () =>
-      this.request<TenantResponse[]>("GET", "/tenant/"),
+    list: () => this.request<TenantResponse[]>("GET", "/tenant/"),
 
     get: (tenantId: string) =>
       this.request<TenantResponse>("GET", `/tenant/${tenantId}`),
@@ -295,8 +423,7 @@ class BackendSaasClient {
     update: (tenantId: string, data: TenantUpdateRequest) =>
       this.request<TenantResponse>("PUT", `/tenant/${tenantId}`, data),
 
-    me: () =>
-      this.request<TenantResponse>("GET", "/tenant/me"),
+    me: () => this.request<TenantResponse>("GET", "/tenant/me"),
   };
 
   // ── Agent ─────────────────────────────────────────────────────────────────
@@ -305,20 +432,125 @@ class BackendSaasClient {
     execute: (req: AgentRequest) =>
       this.request<AgentResponse>("POST", "/agent/execute", req),
 
-    config: () =>
-      this.request<AgentConfigResponse>("GET", "/agent/config"),
+    config: () => this.request<AgentConfigResponse>("GET", "/agent/config"),
 
-    traces: () =>
-      this.request<AgentTrace[]>("GET", "/agent/traces"),
+    traces: () => this.request<AgentTrace[]>("GET", "/agent/traces"),
 
-    metrics: () =>
-      this.request<AgentMetricsResponse>("GET", "/metrics/agent"),
+    metrics: () => this.request<AgentMetricsResponse>("GET", "/metrics/agent"),
+  };
+
+  // ── Training ──────────────────────────────────────────────────────────────
+
+  readonly training = {
+    /** Cliente: sube un documento al pipeline de entrenamiento */
+    uploadDocument: async (
+      file: File,
+      tenantId?: string,
+    ): Promise<TrainingUploadResult> => {
+      const form = new FormData();
+      form.append("file", file);
+      if (tenantId) form.append("tenant_id", tenantId);
+
+      const controller = new AbortController();
+      const timer = setTimeout(
+        () => controller.abort(),
+        this.UPLOAD_TIMEOUT_MS,
+      );
+      try {
+        const res = await fetch(`${this.baseUrl}/training/upload`, {
+          method: "POST",
+          headers: { "X-API-Key": this.apiKey },
+          body: form,
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        if (!res.ok)
+          throw new SaasApiError(
+            res.status,
+            await res.text(),
+            "Training upload failed",
+          );
+        return res.json();
+      } finally {
+        clearTimeout(timer);
+      }
+    },
+
+    /** Cliente: lista sus documentos */
+    getMyDocuments: () =>
+      this.request<{ documents: TrainingDocument[]; total: number }>(
+        "GET",
+        "/training/documents",
+      ),
+
+    /** Estado agregado de entrenamiento de un tenant */
+    getStatus: (tenantId: string) =>
+      this.request<TrainingSummary>("GET", `/training/status/${tenantId}`),
+
+    /** Analista: todos los documentos pendientes (cross-tenant) */
+    getPendingDocuments: () =>
+      this.request<{ documents: TrainingDocument[]; total: number }>(
+        "GET",
+        "/training/pending",
+      ),
+
+    /** Detalle de un documento (incluye content_raw y content_processed) */
+    getDocument: (docId: string) =>
+      this.request<TrainingDocumentDetail>(
+        "GET",
+        `/training/documents/${docId}`,
+      ),
+
+    /** Analista: edita contenido procesado, metadata, chunk_config */
+    updateDocument: (
+      docId: string,
+      body: {
+        content_processed?: string;
+        metadata?: Record<string, unknown>;
+        chunk_config?: Record<string, unknown>;
+        status?: string;
+      },
+    ) =>
+      this.request<{ success: boolean; doc_id: string }>(
+        "PATCH",
+        `/training/documents/${docId}`,
+        body,
+      ),
+
+    /** Analista: dispara ingesta a Qdrant */
+    ingestDocument: (docId: string, chunkConfig?: Record<string, unknown>) =>
+      this.request<IngestResult>(
+        "POST",
+        `/training/documents/${docId}/ingest`,
+        { chunk_config: chunkConfig },
+      ),
+
+    /** Analista: rechaza un documento */
+    rejectDocument: (docId: string, reason: string) =>
+      this.request<{ success: boolean; doc_id: string }>(
+        "POST",
+        `/training/documents/${docId}/reject`,
+        { reason },
+      ),
+
+    /** Admin: todos los documentos sin filtro */
+    getAllDocuments: () =>
+      this.request<{ documents: TrainingDocument[]; total: number }>(
+        "GET",
+        "/training/all",
+      ),
+
+    /** Observabilidad: métricas agregadas */
+    getMetrics: () => this.request<TrainingMetrics>("GET", "/training/metrics"),
+
+    /** Observabilidad: stats de Qdrant (via backend-agents) */
+    getQdrantStats: () =>
+      this.request<QdrantStats>("GET", "/training/qdrant-stats"),
   };
 
   // ── Health ────────────────────────────────────────────────────────────────
 
-  health = () =>
-    this.request<HealthResponse>("GET", "/health");
+  health = () => this.request<HealthResponse>("GET", "/health");
 }
 
 // ─── Exports ──────────────────────────────────────────────────────────────────
