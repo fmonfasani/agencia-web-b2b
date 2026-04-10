@@ -10,10 +10,11 @@ from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
-_DSN = os.getenv(
-    "DATABASE_URL",
-    os.getenv("POSTGRES_PRISMA_URL", "postgresql://postgres:Karaoke27570Echeverria@127.0.0.1:5432/agencia_web_b2b")
-)
+_DSN = os.environ.get("DATABASE_URL") or os.environ.get("POSTGRES_PRISMA_URL")
+if not _DSN:
+    raise RuntimeError(
+        "DATABASE_URL (or POSTGRES_PRISMA_URL) environment variable is required."
+    )
 
 MAX_ITERATIONS = 5
 

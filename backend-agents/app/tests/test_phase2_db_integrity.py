@@ -7,7 +7,11 @@ import psycopg2
 import pytest
 
 # Use the environment variable or a default development string
-DSN = os.getenv("POSTGRES_PRISMA_URL") or "postgresql://postgres:Karaoke27570Echeverria@localhost:5432/agencia_web_b2b"
+DSN = os.environ.get("POSTGRES_PRISMA_URL") or os.environ.get("DATABASE_URL")
+if not DSN:
+    raise RuntimeError(
+        "Set POSTGRES_PRISMA_URL or DATABASE_URL env var before running tests."
+    )
 
 BACKEND_URL = "http://localhost:8000"
 MAX_ITERATIONS = 5

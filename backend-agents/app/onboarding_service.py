@@ -32,8 +32,13 @@ OLLAMA_URL   = os.getenv("OLLAMA_URL", "http://localhost:11434")
 QDRANT_URL   = os.getenv("QDRANT_URL", "http://localhost:6333")
 EMBED_MODEL  = os.getenv("EMBED_MODEL", "nomic-embed-text")
 LLM_MODEL    = os.getenv("LLM_MODEL", "qwen2.5:0.5b")
-# Default fallback to the hardcoded local dev DB URL
-DB_DSN       = os.getenv("DATABASE_URL", "postgresql://postgres:Karaoke27570Echeverria@localhost:5432/agencia_web_b2b")
+_raw_db_dsn = os.environ.get("DATABASE_URL")
+if not _raw_db_dsn:
+    raise RuntimeError(
+        "DATABASE_URL environment variable is required. "
+        "Set it in your .env file or deployment config."
+    )
+DB_DSN: str = _raw_db_dsn
 UPLOAD_DIR   = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
 

@@ -22,9 +22,14 @@ _PREHASH_PREFIX = "sha256$"
 
 logger = logging.getLogger(__name__)
 
-# Configuración de DB con prioridad a variable de entorno para Docker/Local
-DEFAULT_DSN = "postgresql://postgres:Karaoke27570Echeverria@127.0.0.1:5432/agencia_web_b2b"
-DB_DSN = os.getenv("DATABASE_URL", DEFAULT_DSN)
+# DATABASE_URL es obligatoria — el servidor no debe arrancar sin ella.
+_raw_dsn = os.environ.get("DATABASE_URL")
+if not _raw_dsn:
+    raise RuntimeError(
+        "DATABASE_URL environment variable is required. "
+        "Set it in your .env file or deployment config."
+    )
+DB_DSN: str = _raw_dsn
 
 # ---------------------------------------------------------------------------
 # Setup tabla users
@@ -90,6 +95,34 @@ def verify_password(plain: str, stored_hash: str) -> bool:
 
 def generate_api_key() -> str:
     return f"wh_{secrets.token_urlsafe(32)}"
+
+
+def rotate_api_key(user_id: str) -> str:
+    """
+    Genera una nueva API key para el usuario e invalida la anterior.
+    Retorna la nueva key.
+    """
+    new_key = generate_api_key()
+    try:
+        conn = psycopg2.connect(DB_DSN)
+        cur = conn.cursor()
+        cur.execute(
+            'UPDATE "User" SET "apiKey" = %s, "updatedAt" = NOW() WHERE id = %s RETURNING id',
+            (new_key, user_id),
+        )
+        row = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+        if not row:
+            raise WebshooksException("Usuario no encontrado", 404)
+        logger.info(f"API key rotada para usuario {user_id}")
+        return new_key
+    except WebshooksException:
+        raise
+    except Exception as e:
+        logger.error(f"Error rotando API key para usuario {user_id}: {e}")
+        raise WebshooksException("Error al rotar la API key", 500)
 
 
 # ---------------------------------------------------------------------------

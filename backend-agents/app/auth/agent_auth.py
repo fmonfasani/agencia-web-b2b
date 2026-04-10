@@ -13,7 +13,14 @@ from typing import Optional
 from fastapi import HTTPException, Header
 
 logger = logging.getLogger(__name__)
-DB_DSN = os.getenv("DATABASE_URL", "postgresql://postgres:Karaoke27570Echeverria@localhost:5432/agencia_web_b2b")
+
+_raw_dsn = os.environ.get("DATABASE_URL")
+if not _raw_dsn:
+    raise RuntimeError(
+        "DATABASE_URL environment variable is required. "
+        "Set it in your .env file or deployment config."
+    )
+DB_DSN: str = _raw_dsn
 
 async def get_user_by_api_key(x_api_key: Optional[str] = Header(None)) -> dict:
     """

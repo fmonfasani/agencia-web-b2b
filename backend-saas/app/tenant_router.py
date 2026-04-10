@@ -124,7 +124,7 @@ async def list_tenants(_: dict = Depends(require_analista_or_admin)):
         return TenantListResponse(total=total, tenants=tenants)
     except Exception as e:
         logger.error(f"Error listing tenants: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Error interno al listar tenants")
 
 
 @router.get(
@@ -162,7 +162,7 @@ async def get_tenant(tenant_id: str, _: dict = Depends(require_analista_or_admin
         raise
     except Exception as e:
         logger.error(f"Error getting tenant {tenant_id}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Error interno al obtener el tenant")
 
 
 @router.put(
@@ -231,4 +231,4 @@ async def update_tenant(
         raise
     except Exception as e:
         logger.error(f"Error updating tenant {tenant_id}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Error interno al actualizar el tenant")

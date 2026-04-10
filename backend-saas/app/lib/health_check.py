@@ -16,8 +16,7 @@ logger = logging.getLogger(__name__)
 # Configuration
 DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
-    logger.warning("DATABASE_URL not set, health check may fail")
-    DATABASE_URL = "postgresql://postgres:password@127.0.0.1:5432/agencia_web_b2b"  # fallback for dev
+    logger.warning("DATABASE_URL not set — database health check will report unhealthy")
 QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
 HEALTH_CHECK_TIMEOUT = 5.0

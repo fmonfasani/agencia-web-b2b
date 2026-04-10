@@ -12,7 +12,7 @@ from app.auth_models import (
 )
 from app.auth_service import (
     create_user, login_user, get_user_by_api_key,
-    list_users, activate_user, setup_users_table
+    list_users, activate_user, setup_users_table, rotate_api_key
 )
 from app.lib.exceptions import (
     WebshooksException,
@@ -362,4 +362,31 @@ async def create_analista(
         raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
         logger.error(f"Error creating analyst: {e}")
+        raise HTTPException(status_code=500, detail="Error interno del servidor")
+
+
+@router.post(
+    "/rotate-key",
+    summary="Rotar API Key",
+    description="""
+Genera una nueva API Key e invalida la anterior inmediatamente.
+
+Usá este endpoint si tu key fue comprometida o como rotación periódica de seguridad.
+
+**Importante:** Después de llamar este endpoint tu key actual deja de funcionar.
+Guardá la nueva key de forma segura antes de cerrar la sesión.
+    """,
+)
+async def rotate_key(user: dict = Depends(get_current_user)):
+    """Rotar API Key del usuario autenticado."""
+    try:
+        new_key = rotate_api_key(user["id"])
+        return {
+            "api_key": new_key,
+            "mensaje": "API Key rotada exitosamente. Tu key anterior ya no es válida.",
+        }
+    except WebshooksException as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
+    except Exception as e:
+        logger.error(f"Error inesperado rotando key: {e}")
         raise HTTPException(status_code=500, detail="Error interno del servidor")

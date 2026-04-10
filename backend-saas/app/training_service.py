@@ -15,7 +15,12 @@ import psycopg2
 
 logger = logging.getLogger(__name__)
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/agencia_web_b2b")
+DATABASE_URL = os.environ.get("DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError(
+        "DATABASE_URL environment variable is required. "
+        "Set it in your .env file or deployment config."
+    )
 UPLOAD_DIR   = Path(os.getenv("UPLOAD_DIR", "/tmp/uploads"))
 
 

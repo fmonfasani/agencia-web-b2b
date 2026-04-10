@@ -21,9 +21,9 @@ from app.models import TraceStepType
 def _load_tenant_config(tenant_id: str) -> dict:
     """Carga configuración del tenant desde PostgreSQL."""
     try:
-        #conn = psycopg2.connect("postgresql://postgres:Karaoke27570Echeverria@localhost:5432/agencia_web_b2b")
-        
-        DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:Karaoke27570Echeverria@localhost:5432/agencia_web_b2b")
+        DATABASE_URL = os.environ.get("DATABASE_URL")
+        if not DATABASE_URL:
+            raise RuntimeError("DATABASE_URL environment variable is required.")
         conn = psycopg2.connect(DATABASE_URL)
         
         cur = conn.cursor()
