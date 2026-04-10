@@ -250,6 +250,63 @@ export interface QdrantStats {
   total_collections: number;
 }
 
+// ─── Reports types ────────────────────────────────────────────────────────────
+
+export interface ReportsDailyStat {
+  date: string;
+  queries: number;
+  errors: number;
+  avg_ms: number;
+  avg_iterations: number;
+}
+
+export interface ReportsUsageResponse {
+  tenant_id: string;
+  start_date: string;
+  end_date: string;
+  summary: {
+    total_queries: number;
+    total_errors: number;
+    success_rate: number;
+    avg_latency_ms: number;
+    min_latency_ms: number;
+    max_latency_ms: number;
+  };
+  daily_stats: ReportsDailyStat[];
+}
+
+export interface ReportsPerformanceResponse {
+  tenant_id: string;
+  period: { start: string; end: string };
+  kpis: {
+    total_queries: number;
+    success_rate_pct: number;
+    latency_p50_ms: number;
+    latency_p95_ms: number;
+    avg_iterations: number;
+    max_iterations: number;
+  };
+}
+
+// ─── Notifications types ──────────────────────────────────────────────────────
+
+export interface Notification {
+  id: string;
+  tenant_id: string;
+  user_id?: string;
+  type: string;
+  title: string;
+  body: string;
+  read: boolean;
+  created_at: string;
+}
+
+export interface NotificationsListResponse {
+  notifications: Notification[];
+  unread_count: number;
+  total: number;
+}
+
 export interface HealthService {
   status: "connected" | "error" | "skipped" | "unreachable";
   message?: string;
@@ -546,6 +603,79 @@ class BackendSaasClient {
     /** Observabilidad: stats de Qdrant (via backend-agents) */
     getQdrantStats: () =>
       this.request<QdrantStats>("GET", "/training/qdrant-stats"),
+  };
+
+  // ── Reports ───────────────────────────────────────────────────────────────
+
+  readonly reports = {
+    usage: (params?: {
+      start_date?: string;
+      end_date?: string;
+      tenant_id?: string;
+    }) => {
+      const q = new URLSearchParams(
+        (params as Record<string, string>) ?? {},
+      ).toString();
+      return this.request<ReportsUsageResponse>(
+        "GET",
+        `/reports/usage${q ? "?" + q : ""}`,
+      );
+    },
+
+    performance: (params?: {
+      start_date?: string;
+      end_date?: string;
+      tenant_id?: string;
+    }) => {
+      const q = new URLSearchParams(
+        (params as Record<string, string>) ?? {},
+      ).toString();
+      return this.request<ReportsPerformanceResponse>(
+        "GET",
+        `/reports/performance${q ? "?" + q : ""}`,
+      );
+    },
+
+    exportCsvUrl: (
+      type: "usage" | "performance" | "traces",
+      params?: { start_date?: string; end_date?: string },
+    ) => {
+      const base = (
+        this.baseUrl ??
+        process.env.AGENT_SERVICE_URL ??
+        "http://localhost:8000"
+      ).replace(/\/$/, "");
+      const q = new URLSearchParams({
+        report_type: type,
+        ...(params ?? {}),
+      }).toString();
+      return `${base}/reports/export/csv?${q}`;
+    },
+  };
+
+  // ── Notifications ─────────────────────────────────────────────────────────
+
+  readonly notifications = {
+    list: (params?: { limit?: number; unread_only?: boolean }) => {
+      const q = new URLSearchParams(
+        Object.fromEntries(
+          Object.entries(params ?? {}).map(([k, v]) => [k, String(v)]),
+        ),
+      ).toString();
+      return this.request<NotificationsListResponse>(
+        "GET",
+        `/notifications${q ? "?" + q : ""}`,
+      );
+    },
+
+    markRead: (id: string) =>
+      this.request<{ success: boolean }>("PATCH", `/notifications/${id}/read`),
+
+    markAllRead: () =>
+      this.request<{ success: boolean }>(
+        "POST",
+        "/notifications/mark-all-read",
+      ),
   };
 
   // ── Health ────────────────────────────────────────────────────────────────

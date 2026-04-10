@@ -17,6 +17,7 @@ import {
   BrainCircuit,
 } from "lucide-react";
 import Link from "next/link";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 export default async function ClientLayout({
   children,
@@ -127,7 +128,11 @@ export default async function ClientLayout({
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 overflow-auto flex flex-col">
+        {/* Topbar */}
+        <div className="sticky top-0 z-10 bg-white/80 backdrop-blur border-b border-gray-200 px-8 py-3 flex items-center justify-end gap-3">
+          <NotificationBell />
+        </div>
         <div className="p-8 max-w-7xl">{children}</div>
       </main>
     </div>

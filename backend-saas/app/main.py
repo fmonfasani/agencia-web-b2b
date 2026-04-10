@@ -25,6 +25,8 @@ from app.onboarding_router import router as onboarding_router  # Solo /tenant, /
 from app.tenant_router import router as tenant_router
 from app.routers.agent_proxy_router import router as agent_proxy_router
 from app.training_router import router as training_router
+from app.reports_router import router as reports_router
+from app.notifications_router import router as notifications_router
 
 # Initialize structured logs
 setup_structured_logging()
@@ -389,6 +391,8 @@ app.include_router(onboarding_router)
 app.include_router(tenant_router)
 app.include_router(agent_proxy_router)
 app.include_router(training_router)
+app.include_router(reports_router)
+app.include_router(notifications_router)
 
 
 @app.on_event("startup")
@@ -397,6 +401,9 @@ async def startup_event():
     try:
         ensure_tables()
         logger.info("Training tables ready")
+        from app.notifications_router import ensure_notifications_table
+        ensure_notifications_table()
+        logger.info("Notifications table ready")
     except Exception as e:
         logger.error("Could not ensure training tables: %s", e)
 

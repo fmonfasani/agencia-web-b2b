@@ -2,6 +2,11 @@
 
 import { auth } from "@/lib/auth";
 import { saasClientFor, SaasApiError } from "@/lib/saas-client";
+import type {
+  ReportsUsageResponse,
+  ReportsPerformanceResponse,
+  AgentTrace,
+} from "@/lib/saas-client";
 
 export interface ActivityLog {
   id: string;
@@ -20,6 +25,46 @@ export interface ReportType {
   icon: string;
 }
 
+async function getClient() {
+  const session = await auth();
+  const apiKey =
+    (session?.user as any)?.apiKey || (session as any)?.backendApiKey;
+  if (!apiKey) throw new Error("No API key in session");
+  return saasClientFor(apiKey);
+}
+
+export async function getUsageReport(params?: {
+  startDate?: string;
+  endDate?: string;
+}): Promise<ReportsUsageResponse | null> {
+  try {
+    const client = await getClient();
+    return await client.reports.usage({
+      start_date: params?.startDate,
+      end_date: params?.endDate,
+    });
+  } catch (e) {
+    console.warn("[reports] getUsageReport:", e);
+    return null;
+  }
+}
+
+export async function getPerformanceReport(params?: {
+  startDate?: string;
+  endDate?: string;
+}): Promise<ReportsPerformanceResponse | null> {
+  try {
+    const client = await getClient();
+    return await client.reports.performance({
+      start_date: params?.startDate,
+      end_date: params?.endDate,
+    });
+  } catch (e) {
+    console.warn("[reports] getPerformanceReport:", e);
+    return null;
+  }
+}
+
 export async function getActivityLog(filters?: {
   user?: string;
   action?: string;
@@ -27,12 +72,7 @@ export async function getActivityLog(filters?: {
   endDate?: string;
 }): Promise<ActivityLog[]> {
   try {
-    const session = await auth();
-    const apiKey =
-      (session?.user as any)?.apiKey || (session as any)?.backendApiKey;
-    if (!apiKey) return [];
-
-    const client = saasClientFor(apiKey);
+    const client = await getClient();
     const traces = await client.agent.traces();
 
     let logs: ActivityLog[] = traces.map((t) => ({
@@ -47,17 +87,14 @@ export async function getActivityLog(filters?: {
           : `${t.iterations ?? 1} iteraciones · ${t.total_duration_ms ?? 0}ms`,
     }));
 
-    if (filters?.action) {
+    if (filters?.action)
       logs = logs.filter((l) =>
         l.action.toLowerCase().includes(filters.action!.toLowerCase()),
       );
-    }
-    if (filters?.startDate) {
+    if (filters?.startDate)
       logs = logs.filter((l) => l.date >= filters.startDate!);
-    }
-    if (filters?.endDate) {
+    if (filters?.endDate)
       logs = logs.filter((l) => l.date <= filters.endDate! + "T23:59:59Z");
-    }
 
     return logs;
   } catch (e) {
@@ -71,14 +108,34 @@ export async function generateReport(
   reportId: string,
   dateRange: { startDate: string; endDate: string },
   format: "csv" | "pdf" | "html",
-): Promise<{ success: boolean; fileName?: string; error?: string }> {
-  const validIds = ["usage", "billing", "performance"];
+): Promise<{
+  success: boolean;
+  fileName?: string;
+  downloadUrl?: string;
+  error?: string;
+}> {
+  const validIds = ["usage", "performance", "traces"];
   if (!validIds.includes(reportId))
     return { success: false, error: "Tipo de reporte no encontrado" };
 
-  // Report generation endpoint not yet implemented in backend
-  // Simulate the file name so the UI can react
-  await new Promise((r) => setTimeout(r, 800));
+  if (format === "csv" && reportId !== "billing") {
+    // CSV export is streamed directly — return URL for client to download
+    const session = await auth();
+    const apiKey =
+      (session?.user as any)?.apiKey || (session as any)?.backendApiKey;
+    if (!apiKey) return { success: false, error: "No autenticado" };
+
+    const client = saasClientFor(apiKey);
+    const downloadUrl = client.reports.exportCsvUrl(
+      reportId as "usage" | "performance" | "traces",
+      { start_date: dateRange.startDate, end_date: dateRange.endDate },
+    );
+    const fileName = `${reportId}_${dateRange.startDate}_${dateRange.endDate}.csv`;
+    return { success: true, fileName, downloadUrl };
+  }
+
+  // PDF / HTML: placeholder while not implemented
+  await new Promise((r) => setTimeout(r, 500));
   const fileName = `${reportId}_${dateRange.startDate}_${dateRange.endDate}.${format}`;
   return { success: true, fileName };
 }

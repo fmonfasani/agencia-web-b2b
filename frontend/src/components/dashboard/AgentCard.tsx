@@ -1,14 +1,14 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Cog, MoreVertical } from "lucide-react";
+import { Bot, Cog, MoreVertical } from "lucide-react";
 import Image from "next/image";
 
 interface AgentCardProps {
   id: string;
   name: string;
   type: string;
-  image: string;
+  image?: string;
   status: "online" | "offline" | "degraded";
   queries: number;
   latency: number;
@@ -51,12 +51,18 @@ export function AgentCard({
     >
       {/* Image Container */}
       <div className="relative h-48 bg-gray-100 overflow-hidden group">
-        <Image
-          src={image}
-          alt={name}
-          fill
-          className="object-cover group-hover:opacity-75 transition-opacity"
-        />
+        {image ? (
+          <Image
+            src={image}
+            alt={name}
+            fill
+            className="object-cover group-hover:opacity-75 transition-opacity"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+            <Bot size={48} className="text-blue-400" />
+          </div>
+        )}
         {/* Overlay on Hover */}
         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center">
           <button className="opacity-0 group-hover:opacity-100 px-4 py-2 bg-blue-600 text-white rounded font-medium transition-opacity hover:bg-blue-700">
@@ -75,7 +81,11 @@ export function AgentCard({
           className={`inline-block px-3 py-1 rounded-full text-sm font-medium mb-4 ${statusColors[status]}`}
         >
           {statusDots[status]}{" "}
-          {status === "online" ? "Online" : status === "offline" ? "Offline" : "Degraded"}
+          {status === "online"
+            ? "Online"
+            : status === "offline"
+              ? "Offline"
+              : "Degraded"}
         </div>
 
         {/* Metrics */}
