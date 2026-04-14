@@ -67,6 +67,10 @@ class OpenRouterProvider(LLMProvider):
         self.usage_file = Path(os.getenv('OPENROUTER_USAGE_FILE', 'openrouter_usage.json'))
         self.timezone = os.getenv('OPENROUTER_TIMEZONE', 'UTC')  # TODO: implementar timezone-aware resets
 
+        # Token tracking (populated after each complete() call)
+        self.last_tokens_in: int = 0
+        self.last_tokens_out: int = 0
+
         # Cargar persistencia (contadores de ayer)
         self._load_usage()
 
@@ -256,8 +260,14 @@ class OpenRouterProvider(LLMProvider):
 
                 # Extraer contenido
                 content = data["choices"][0]["message"]["content"]
+
+                # Capture token usage
+                usage = data.get("usage", {})
+                self.last_tokens_in = usage.get("prompt_tokens", 0)
+                self.last_tokens_out = usage.get("completion_tokens", 0)
+
                 logger.info(
-                    f"OpenRouter OK: model={target_model}, key={selected_key.name}",
+                    f"OpenRouter OK: model={target_model}, key={selected_key.name}, tokens={self.last_tokens_in}+{self.last_tokens_out}",
                     extra={
                         "model": target_model,
                         "key_name": selected_key.name,

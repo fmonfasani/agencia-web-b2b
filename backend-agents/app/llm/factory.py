@@ -11,9 +11,13 @@ from .openrouter_provider import OpenRouterProvider
 #from .groq_provider import GroqProvider
 
 
-def get_llm_provider():
+def get_llm_provider(provider: str = None, model: str = None):
     """
     Retorna una instancia del proveedor LLM configurado.
+
+    Args:
+        provider: Override de provider ('ollama' | 'openrouter'). Si None usa settings.
+        model: Override de modelo. Si None usa el default del provider.
 
     Returns:
         LLMProvider: Instancia del provider configurado
@@ -21,16 +25,21 @@ def get_llm_provider():
     Raises:
         ValueError: Si el provider configurado no está soportado
     """
-    provider_name = settings.llm_provider.lower()
+    provider_name = (provider or settings.llm_provider).lower()
 
     if provider_name == "groq":
-        # GroqProvider no está implementado aún
         raise NotImplementedError("GroqProvider no está implementado aún")
-        # return GroqProvider()
     elif provider_name == "ollama":
-        return OllamaProvider()
+        # OllamaProvider acepta model en el constructor
+        effective_model = model or settings.ollama_model
+        return OllamaProvider(model=effective_model)
     elif provider_name == "openrouter":
-        return OpenRouterProvider()
+        # OpenRouterProvider.complete() acepta model como parámetro opcional.
+        # Sobreescribimos default_model para que todos los llamados usen el modelo elegido.
+        instance = OpenRouterProvider()
+        if model:
+            instance.default_model = model
+        return instance
     else:
         raise ValueError(
             f"LLM provider no soportado: {provider_name}. "

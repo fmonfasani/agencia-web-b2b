@@ -222,9 +222,81 @@ def login_user(email: str, password: str) -> dict:
 
 
 def get_user_by_api_key(api_key: str) -> Optional[dict]:
-    """Verifica la API key y retorna el usuario. Retorna None si es inválida."""
+    """
+    Verifica la API key y retorna el usuario.
+
+    Lookup order:
+    1. Enterprise `api_keys` table (keyed by SHA-256 hash) — checks expiry + status, returns scopes.
+    2. Legacy `User.apiKey` column — backward-compat fallback.
+
+    Returns None if key is invalid, expired, or user is inactive.
+    """
+    key_hash = hashlib.sha256(api_key.encode()).hexdigest()
     conn = psycopg2.connect(DB_DSN)
     cur = conn.cursor()
+
+    # ── 1. Enterprise api_keys table ──────────────────────────────────────────
+    try:
+        cur.execute("""
+            SELECT
+                ak.id          AS key_id,
+                ak.user_id,
+                ak.tenant_id   AS key_tenant_id,
+                ak.scopes,
+                ak.status,
+                ak.expires_at,
+                u.email,
+                u.name,
+                u.role,
+                u."defaultTenantId",
+                u.status       AS user_status
+            FROM api_keys ak
+            JOIN "User" u ON u.id = ak.user_id
+            WHERE ak.key_hash = %s
+        """, (key_hash,))
+        ak_row = cur.fetchone()
+    except Exception:
+        ak_row = None  # table may not exist yet during migration
+
+    if ak_row:
+        (key_id, user_id, key_tenant_id, scopes, key_status,
+         expires_at, email, nombre, rol, default_tenant_id, user_status) = ak_row
+
+        # Validate status and expiry
+        if key_status != "active" or user_status != "ACTIVE":
+            conn.close()
+            return None
+        if expires_at is not None:
+            from datetime import datetime, timezone
+            now = datetime.now(timezone.utc)
+            exp = expires_at if expires_at.tzinfo else expires_at.replace(tzinfo=timezone.utc)
+            if now > exp:
+                conn.close()
+                return None
+
+        # Touch last_used_at (best-effort, don't fail auth if this errors)
+        try:
+            import socket
+            cur.execute("""
+                UPDATE api_keys SET last_used_at = NOW() WHERE id = %s
+            """, (key_id,))
+            conn.commit()
+        except Exception:
+            pass
+
+        conn.close()
+        effective_tenant = key_tenant_id or default_tenant_id
+        return {
+            "id": user_id,
+            "email": email,
+            "nombre": nombre or "Usuario",
+            "rol": (rol or "MEMBER").upper(),
+            "tenant_id": effective_tenant,
+            "api_key_id": key_id,
+            "api_key_scopes": scopes or ["*"],
+        }
+
+    # ── 2. Legacy User.apiKey fallback ────────────────────────────────────────
     cur.execute("""
         SELECT id, email, name, role, "defaultTenantId", status
         FROM "User" WHERE "apiKey" = %s
@@ -237,7 +309,121 @@ def get_user_by_api_key(api_key: str) -> Optional[dict]:
     id_, email, nombre, rol, tenant_id, status = row
     if status != "ACTIVE":
         return None
-    return {"id": id_, "email": email, "nombre": nombre or "Usuario", "rol": rol.upper() if rol else "MEMBER", "tenant_id": tenant_id}
+    return {
+        "id": id_,
+        "email": email,
+        "nombre": nombre or "Usuario",
+        "rol": (rol or "MEMBER").upper(),
+        "tenant_id": tenant_id,
+        "api_key_scopes": ["*"],
+    }
+
+
+# ---------------------------------------------------------------------------
+# Enterprise API Key management
+# ---------------------------------------------------------------------------
+
+def create_enterprise_api_key(
+    user_id: str,
+    tenant_id: str,
+    name: str,
+    scopes: Optional[list] = None,
+    expires_at: Optional[str] = None,
+    rate_limit_rpm: int = 60,
+) -> dict:
+    """
+    Create a new enterprise API key and store its SHA-256 hash.
+    Returns the raw key (only time it's visible) + metadata.
+    """
+    raw_key = generate_api_key()
+    key_hash = hashlib.sha256(raw_key.encode()).hexdigest()
+    key_prefix = raw_key[:12]  # "wh_" + 9 chars
+    key_id = f"ak_{secrets.token_hex(12)}"
+
+    try:
+        conn = psycopg2.connect(DB_DSN)
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO api_keys (
+                id, user_id, tenant_id, key_hash, key_prefix,
+                name, scopes, rate_limit_rpm, expires_at, status
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s::jsonb, %s, %s, 'active')
+            RETURNING id, key_prefix, name, scopes, created_at
+        """, (
+            key_id, user_id, tenant_id, key_hash, key_prefix,
+            name,
+            __import__("json").dumps(scopes or ["*"]),
+            rate_limit_rpm,
+            expires_at,
+        ))
+        row = cur.fetchone()
+        conn.commit()
+        conn.close()
+
+        return {
+            "id": row[0],
+            "key": raw_key,       # ← only time the raw key is returned
+            "key_prefix": row[1],
+            "name": row[2],
+            "scopes": row[3],
+            "created_at": str(row[4]),
+            "expires_at": expires_at,
+        }
+    except Exception as e:
+        logger.error(f"Error creating enterprise API key for user={user_id}: {e}")
+        raise WebshooksException("Error al crear la API key", 500)
+
+
+def revoke_enterprise_api_key(key_id: str, tenant_id: str) -> bool:
+    """Revoke an API key by setting status='revoked'. Validates ownership."""
+    try:
+        conn = psycopg2.connect(DB_DSN)
+        cur = conn.cursor()
+        cur.execute("""
+            UPDATE api_keys SET status = 'revoked', updated_at = NOW()
+            WHERE id = %s AND tenant_id = %s
+            RETURNING id
+        """, (key_id, tenant_id))
+        row = cur.fetchone()
+        conn.commit()
+        conn.close()
+        return row is not None
+    except Exception as e:
+        logger.error(f"Error revoking API key {key_id}: {e}")
+        return False
+
+
+def list_enterprise_api_keys(tenant_id: str) -> list[dict]:
+    """List active API keys for a tenant (without the raw key)."""
+    try:
+        conn = psycopg2.connect(DB_DSN)
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT id, key_prefix, name, scopes, rate_limit_rpm,
+                   expires_at, last_used_at, status, created_at
+            FROM api_keys
+            WHERE tenant_id = %s AND status != 'revoked'
+            ORDER BY created_at DESC
+        """, (tenant_id,))
+        rows = cur.fetchall()
+        conn.close()
+        return [
+            {
+                "id": r[0],
+                "key_prefix": r[1],
+                "name": r[2],
+                "scopes": r[3],
+                "rate_limit_rpm": r[4],
+                "expires_at": str(r[5]) if r[5] else None,
+                "last_used_at": str(r[6]) if r[6] else None,
+                "status": r[7],
+                "created_at": str(r[8]),
+            }
+            for r in rows
+        ]
+    except Exception as e:
+        logger.error(f"Error listing API keys for tenant={tenant_id}: {e}")
+        return []
 
 
 def list_users() -> list[dict]:

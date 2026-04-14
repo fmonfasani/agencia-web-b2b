@@ -58,12 +58,20 @@ def build_prompt(
     """Build the messages list for the planner LLM call."""
 
     if tenant_config:
-        system = PLANNER_SYSTEM_PROMPT_TENANT.format(
-            tenant_nombre=tenant_config.get("nombre", "el negocio"),
-            descripcion=tenant_config.get("descripcion", ""),
-            tono=tenant_config.get("tono", "profesional y cercano"),
-            fallback=tenant_config.get("fallback", "Comunicate con nosotros para más información."),
-        )
+        if tenant_config.get("base_prompt"):
+            # Template-based agent: use base_prompt + optional custom_prompt
+            system = tenant_config["base_prompt"]
+            if tenant_config.get("custom_prompt"):
+                system += "\n\n" + tenant_config["custom_prompt"]
+            fallback = tenant_config.get("fallback", "Comunicate con nosotros para más información.")
+            system += f"\n\nUSA ÚNICAMENTE la información del contexto para responder. Si no tenés información suficiente, respondé con: \"{fallback}\"\nResponde SIEMPRE en JSON: {{\"thought\": \"...\", \"action\": \"none\", \"is_finished\": true, \"answer\": \"...\"}}"
+        else:
+            system = PLANNER_SYSTEM_PROMPT_TENANT.format(
+                tenant_nombre=tenant_config.get("nombre", "el negocio"),
+                descripcion=tenant_config.get("descripcion", ""),
+                tono=tenant_config.get("tono", "profesional y cercano"),
+                fallback=tenant_config.get("fallback", "Comunicate con nosotros para más información."),
+            )
     else:
         system = PLANNER_SYSTEM_PROMPT_GENERIC.format(
             tool_descriptions=tool_descriptions

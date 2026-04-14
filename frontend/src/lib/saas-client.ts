@@ -75,10 +75,32 @@ export interface OnboardingStatusResponse {
 export interface AgentRequest {
   query: string;
   tenant_id?: string;
+  conversation_id?: string;
   trace_id?: string;
   max_iterations?: number;
   temperature?: number;
   enable_detailed_trace?: boolean;
+  // Agent Lab overrides
+  llm_provider?: string;
+  model?: string;
+  // Agent instance
+  agent_instance_id?: string;
+}
+
+export interface AgentProviderInfo {
+  available: boolean;
+  base_url?: string;
+  default_model?: string;
+  models: string[];
+}
+
+export interface AgentProvidersResponse {
+  current_provider: string;
+  current_model: string;
+  providers: {
+    ollama: AgentProviderInfo;
+    openrouter: AgentProviderInfo;
+  };
 }
 
 export interface AgentMessage {
@@ -98,6 +120,9 @@ export interface AgentMetadata {
   embedding_ms: number;
   rag_ms: number;
   llm_ms: number;
+  tokens_in?: number;
+  tokens_out?: number;
+  tokens_used?: number;
 }
 
 export interface AgentResponse {
@@ -124,6 +149,56 @@ export interface AgentTrace {
   created_at: string;
 }
 
+export interface AgentTemplate {
+  id: string;
+  type: string; // 'recepcionista' | 'ventas' | 'soporte' | 'informativo'
+  name: string;
+  description?: string;
+  base_prompt: string;
+  tools: string[];
+  config_base: { max_iterations?: number; temperature?: number };
+  version: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AgentInstance {
+  id: string;
+  tenant_id: string;
+  template_id: string;
+  name: string;
+  custom_prompt?: string;
+  knowledge_base_id?: string;
+  overrides: Record<string, unknown>;
+  status: "active" | "paused" | "archived";
+  config: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+  // Joined from template
+  template_type?: string;
+  template_name?: string;
+  template_description?: string;
+  tools?: string[];
+  config_base?: Record<string, unknown>;
+}
+
+export interface AgentInstanceCreate {
+  template_id: string;
+  name: string;
+  custom_prompt?: string;
+  knowledge_base_id?: string;
+  overrides?: Record<string, unknown>;
+}
+
+export interface AgentInstanceUpdate {
+  name?: string;
+  custom_prompt?: string;
+  knowledge_base_id?: string;
+  overrides?: Record<string, unknown>;
+  status?: "active" | "paused" | "archived";
+}
+
 export interface AgentMetricsResponse {
   tenant_id: string;
   avg_iterations: number;
@@ -132,6 +207,13 @@ export interface AgentMetricsResponse {
   error_count: number;
   success_rate: number;
   last_execution?: string;
+  /** Admin only: per-tenant breakdown */
+  tenant_breakdown?: Array<{
+    tenant_id: string;
+    total_executions: number;
+    avg_duration_ms: number;
+    error_count: number;
+  }>;
 }
 
 export interface AgentSede {
@@ -338,7 +420,7 @@ class SaasApiError extends Error {
 class BackendSaasClient {
   private baseUrl: string;
   private apiKey: string;
-  private readonly DEFAULT_TIMEOUT_MS = 30_000; // 30 seconds
+  private readonly DEFAULT_TIMEOUT_MS = 120_000; // 120 seconds (models like gemma4/qwen3.5 need more time)
   private readonly UPLOAD_TIMEOUT_MS = 120_000; // 120 seconds for file uploads
 
   constructor(apiKey: string, baseUrl?: string) {
@@ -493,7 +575,69 @@ class BackendSaasClient {
 
     traces: () => this.request<AgentTrace[]>("GET", "/agent/traces"),
 
-    metrics: () => this.request<AgentMetricsResponse>("GET", "/metrics/agent"),
+    /** Admin: fetch traces across all tenants (or filtered by tenantId) */
+    tracesAdmin: (opts?: { limit?: number; tenantId?: string }) => {
+      const params = new URLSearchParams();
+      if (opts?.limit) params.set("limit", String(opts.limit));
+      if (opts?.tenantId) params.set("tenant_id", opts.tenantId);
+      const qs = params.toString();
+      return this.request<AgentTrace[]>(
+        "GET",
+        `/agent/traces${qs ? `?${qs}` : ""}`,
+      );
+    },
+
+    metrics: (tenantId?: string) => {
+      const qs = tenantId ? `?tenant_id=${encodeURIComponent(tenantId)}` : "";
+      return this.request<AgentMetricsResponse>(
+        "GET",
+        `/agent/metrics/agent${qs}`,
+      );
+    },
+
+    providers: () =>
+      this.request<AgentProvidersResponse>("GET", "/agent/providers"),
+  };
+
+  readonly templates = {
+    list: (includeInactive = false) =>
+      this.request<AgentTemplate[]>(
+        "GET",
+        `/agent-templates${includeInactive ? "?include_inactive=true" : ""}`,
+      ),
+
+    get: (id: string) =>
+      this.request<AgentTemplate>("GET", `/agent-templates/${id}`),
+  };
+
+  readonly instances = {
+    list: (opts?: { tenantId?: string; status?: string }) => {
+      const params = new URLSearchParams();
+      if (opts?.tenantId) params.set("tenant_id", opts.tenantId);
+      if (opts?.status) params.set("status", opts.status);
+      const qs = params.toString();
+      return this.request<AgentInstance[]>(
+        "GET",
+        `/agent-instances${qs ? `?${qs}` : ""}`,
+      );
+    },
+
+    get: (id: string) =>
+      this.request<AgentInstance>("GET", `/agent-instances/${id}`),
+
+    create: (body: AgentInstanceCreate, tenantId?: string) => {
+      const qs = tenantId ? `?tenant_id=${encodeURIComponent(tenantId)}` : "";
+      return this.request<AgentInstance>("POST", `/agent-instances${qs}`, body);
+    },
+
+    update: (id: string, body: AgentInstanceUpdate) =>
+      this.request<AgentInstance>("PATCH", `/agent-instances/${id}`, body),
+
+    archive: (id: string) =>
+      this.request<{ success: boolean; id: string; status: string }>(
+        "DELETE",
+        `/agent-instances/${id}`,
+      ),
   };
 
   // ── Training ──────────────────────────────────────────────────────────────

@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 class ProxyClient:
     """Forward requests to backend-agents service."""
 
-    def __init__(self, base_url: str, timeout: float = 60.0):
+    def __init__(self, base_url: str, timeout: float = 180.0):
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
         self._client: Optional[httpx.AsyncClient] = None

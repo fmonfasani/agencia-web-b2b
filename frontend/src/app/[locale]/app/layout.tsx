@@ -15,6 +15,7 @@ import {
   Webhook,
   Activity,
   BrainCircuit,
+  FlaskConical,
 } from "lucide-react";
 import Link from "next/link";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
@@ -32,6 +33,11 @@ export default async function ClientLayout({
   if (!session?.user) {
     redirect(`/${locale}/auth/sign-in`);
   }
+
+  const userRole = (session.user as any)?.role ?? "";
+  const isAdminOrAnalista = ["ADMIN", "SUPER_ADMIN", "ANALISTA"].includes(
+    userRole,
+  );
 
   const navItems = [
     { href: `/${locale}/app`, label: "Dashboard", icon: Home },
@@ -52,6 +58,10 @@ export default async function ClientLayout({
       label: "Observabilidad",
       icon: BarChart3,
     },
+    // Agent Lab — solo ADMIN, SUPER_ADMIN, ANALISTA
+    ...(isAdminOrAnalista
+      ? [{ href: `/${locale}/app/lab`, label: "Agent Lab", icon: FlaskConical }]
+      : []),
     { href: `/${locale}/app/billing`, label: "Facturación", icon: CreditCard },
     { href: `/${locale}/app/reports`, label: "Reportes", icon: FileText },
     { href: `/${locale}/app/settings`, label: "Configuración", icon: Settings },
@@ -133,7 +143,7 @@ export default async function ClientLayout({
         <div className="sticky top-0 z-10 bg-white/80 backdrop-blur border-b border-gray-200 px-8 py-3 flex items-center justify-end gap-3">
           <NotificationBell />
         </div>
-        <div className="p-8 max-w-7xl">{children}</div>
+        <div className="p-8 w-full max-w-7xl">{children}</div>
       </main>
     </div>
   );

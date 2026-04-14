@@ -25,6 +25,11 @@ class AgentRequest(BaseModel):
     enable_detailed_trace: bool = Field(default=False, description="Habilitar trazas detalladas paso a paso")
     max_iterations: Optional[int] = Field(default=5, ge=1, le=10, description="Máximo de iteraciones del agente")
     temperature: Optional[float] = Field(default=0.7, ge=0.0, le=2.0, description="Temperatura del LLM")
+    # Agent Lab overrides — permiten comparar modelos/providers por request
+    llm_provider: Optional[str] = Field(None, description="Override de provider: 'ollama' | 'openrouter'")
+    model: Optional[str] = Field(None, description="Override de modelo: 'gemma3:latest', 'qwen2.5:3b', 'openai/gpt-4o-mini'...")
+    # Agent instance — usa config de template + instancia
+    agent_instance_id: Optional[str] = Field(None, description="ID de instancia de agente (agent_instances.id)")
 
 class RagResult(BaseModel):
     """Resultado de búsqueda RAG"""
@@ -61,6 +66,7 @@ class AgentResponse(BaseModel):
     trace_id: str = Field(description="ID único del request para tracing")
     tenant_id: str = Field(description="Tenant que hizo el request")
     query: str = Field(description="Query original del usuario")
+    session_id: Optional[str] = Field(None, description="ID de sesión para mantener historial de conversación")
     iterations: int = Field(default=0, description="Número de iteraciones del agente")
     result: List[Dict[str, str]] = Field(description="Resultado del agente (lista de mensajes)")
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Metadata de ejecución (modelo, tiempo, etc.)")

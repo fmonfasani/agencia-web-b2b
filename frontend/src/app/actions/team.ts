@@ -43,7 +43,7 @@ export async function getTeamMembers(): Promise<TeamMember[]> {
       email: u.email,
       name: u.nombre ?? u.email.split("@")[0],
       role: mapRol(u.rol),
-      status: u.is_active ? "active" : "revoked",
+      status: u.activo ? "active" : "revoked",
       joinedAt: u.created_at,
     }));
   } catch (e) {

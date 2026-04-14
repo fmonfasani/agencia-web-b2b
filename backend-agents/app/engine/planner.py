@@ -73,6 +73,10 @@ class GraphState(TypedDict):
     had_embedding_fallback: bool
     had_llm_error: bool
     llm_error_msg: str
+    tokens_in: int
+    tokens_out: int
+    knowledge_base_id: Optional[str]      # Qdrant collection — defaults to tenant_id
+    agent_config_override: Optional[dict] # Template+instance config, overrides _load_tenant_config
 
 
 # ---------------------------------------------------------------------------
@@ -107,9 +111,11 @@ async def rag_node(state: GraphState, rag_retriever) -> Dict[str, Any]:
     ctx = state.get("tracing_context")
     try:
         query = state["task"]
+        # Use knowledge_base_id if set (agent instance), else fall back to tenant_id
+        rag_collection = state.get("knowledge_base_id") or state["tenant_id"]
         results, embedding_ms, qdrant_ms, had_fallback = await rag_retriever.search(
             query=query,
-            tenant_id=state["tenant_id"],
+            tenant_id=rag_collection,
             top_k=5,
             ctx=ctx,
         )
@@ -175,7 +181,8 @@ async def planner_node(state: GraphState, llm_provider, tool_registry) -> Dict[s
         }
 
     # --- Build prompt and call LLM ---
-    tenant_cfg = _load_tenant_config(state["tenant_id"])
+    # agent_config_override takes priority (template+instance), else load from DB
+    tenant_cfg = state.get("agent_config_override") or _load_tenant_config(state["tenant_id"])
     messages = build_prompt(
         task=state["task"],
         context=state["context"],
@@ -232,7 +239,7 @@ async def planner_node(state: GraphState, llm_provider, tool_registry) -> Dict[s
 
         # Para tenants con config (agentes de consulta), no forzar search
         # Solo forzar search si es agente de lead generation (sin tenant_config)
-        tenant_cfg_check = _load_tenant_config(state["tenant_id"])
+        tenant_cfg_check = state.get("agent_config_override") or _load_tenant_config(state["tenant_id"])
         if not tenant_cfg_check and not _task_has_url(state["task"]) and state["iterations"] == 0 and not llm_error_update:
             decision.action = "search"
             decision.is_finished = False
@@ -251,6 +258,10 @@ async def planner_node(state: GraphState, llm_provider, tool_registry) -> Dict[s
         content = decision.answer if decision.answer else decision.thought
         new_msg = {"role": "assistant", "content": content}
 
+        # Accumulate token usage from provider
+        tokens_in_delta = getattr(llm_provider, "last_tokens_in", 0)
+        tokens_out_delta = getattr(llm_provider, "last_tokens_out", 0)
+
         return {
             "messages": state["messages"] + [new_msg],
             "next_step": decision.action if not finished else "none",
@@ -258,6 +269,8 @@ async def planner_node(state: GraphState, llm_provider, tool_registry) -> Dict[s
             "iterations": state["iterations"] + 1,
             "llm_calls": state["llm_calls"] + 1,
             "llm_ms": state["llm_ms"] + call_ms,
+            "tokens_in": state["tokens_in"] + tokens_in_delta,
+            "tokens_out": state["tokens_out"] + tokens_out_delta,
             **llm_error_update,
         }
     except Exception as e:
@@ -373,14 +386,20 @@ async def run_agent(
     llm_provider,
     tool_registry,
     tracing_context=None,
+    conversation_history: Optional[List[Dict[str, str]]] = None,
+    knowledge_base_id: Optional[str] = None,
+    agent_config_override: Optional[Dict[str, Any]] = None,
 ) -> Tuple[List[Dict[str, str]], Dict[str, Any]]:
     """Run the agent and return (messages, metadata)."""
     graph = build_agent_graph(rag_retriever, llm_provider, tool_registry)
 
+    # Prepend prior conversation turns so the LLM has full context
+    prior_messages: List[Dict[str, str]] = list(conversation_history or [])
+
     initial_state: GraphState = {
         "task": task,
         "tenant_id": tenant_id,
-        "messages": [],
+        "messages": prior_messages,
         "iterations": 0,
         "context": "",
         "next_step": "none",
@@ -400,6 +419,10 @@ async def run_agent(
         "had_embedding_fallback": False,
         "had_llm_error": False,
         "llm_error_msg": "",
+        "tokens_in": 0,
+        "tokens_out": 0,
+        "knowledge_base_id": knowledge_base_id or tenant_id,
+        "agent_config_override": agent_config_override,
     }
 
     agent_error: Optional[str] = None
@@ -421,7 +444,9 @@ async def run_agent(
         "rag_results": result.get("rag_results", []),
         "finish_reason": "llm_error" if agent_error else _finish_reason_from_state(result),
         "model": llm_provider.model,
-        "tokens_used": 0,
+        "tokens_in": result.get("tokens_in", 0),
+        "tokens_out": result.get("tokens_out", 0),
+        "tokens_used": result.get("tokens_in", 0) + result.get("tokens_out", 0),
         "embedding_ms": result.get("embedding_ms", 0),
         "rag_ms": result.get("rag_ms", 0),
         "llm_ms": result.get("llm_ms", 0),

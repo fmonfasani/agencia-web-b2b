@@ -8,8 +8,7 @@ import os
 import time
 import uuid
 import logging
-from datetime import datetime
-from fastapi import FastAPI, HTTPException, Request, Depends
+from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
@@ -20,13 +19,19 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app.lib.logging_utils import setup_structured_logging, trace_id_var
 from app.lib.health_check import get_full_health_status
 from app.auth_router import router as auth_router, get_current_user
-from app.auth_service import get_user_by_api_key
-from app.onboarding_router import router as onboarding_router  # Solo /tenant, /upload, /status, /delete
+from app.onboarding_router import router as onboarding_router
 from app.tenant_router import router as tenant_router
 from app.routers.agent_proxy_router import router as agent_proxy_router
+from app.routers.agent_templates_router import router as agent_templates_router
+from app.routers.agent_instances_router import router as agent_instances_router
+from app.routers.analytics_router import router as analytics_router
 from app.training_router import router as training_router
 from app.reports_router import router as reports_router
 from app.notifications_router import router as notifications_router
+from app.middleware.api_gateway import APIGatewayMiddleware
+from app.core.usage_tracker import usage_tracker
+from app.core.analytics_aggregator import run_aggregation_loop
+from app.core.background_jobs import run_reconciliation_loop, run_cleanup_loop
 
 # Initialize structured logs
 setup_structured_logging()
@@ -372,7 +377,8 @@ Los agentes son internos — el cliente solo interactúa con este backend.
     ],
 )
 
-# Configure CORS
+# ── Middleware stack (order matters: last added = first to run) ───────────────
+# CORS must be outermost so preflight requests are handled before auth
 allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3001,http://127.0.0.1:3001").split(",")
 app.add_middleware(
     CORSMiddleware,
@@ -382,14 +388,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# API Gateway: identity resolution for ALL protected routes
+app.add_middleware(APIGatewayMiddleware)
+
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# Routers
+# ── Routers ───────────────────────────────────────────────────────────────────
 app.include_router(auth_router)
 app.include_router(onboarding_router)
 app.include_router(tenant_router)
 app.include_router(agent_proxy_router)
+app.include_router(agent_templates_router)
+app.include_router(agent_instances_router)
+app.include_router(analytics_router)
 app.include_router(training_router)
 app.include_router(reports_router)
 app.include_router(notifications_router)
@@ -397,7 +409,9 @@ app.include_router(notifications_router)
 
 @app.on_event("startup")
 async def startup_event():
+    import asyncio
     from app.training_service import ensure_tables
+
     try:
         ensure_tables()
         logger.info("Training tables ready")
@@ -406,6 +420,23 @@ async def startup_event():
         logger.info("Notifications table ready")
     except Exception as e:
         logger.error("Could not ensure training tables: %s", e)
+
+    # ── Background tasks ──────────────────────────────────────────────────────
+    # Usage event worker: batch-processes Redis queue with retry + DLQ
+    asyncio.create_task(usage_tracker.start_worker())
+    logger.info("Usage event worker started")
+
+    # Analytics aggregation: populates analytics_daily every hour
+    asyncio.create_task(run_aggregation_loop())
+    logger.info("Analytics aggregation scheduler started")
+
+    # Quota reconciliation: compares Redis vs DB, corrects drift every 5 min
+    asyncio.create_task(run_reconciliation_loop())
+    logger.info("Quota reconciliation loop started")
+
+    # Stale reservation cleanup: rolls back expired pending reservations every 60s
+    asyncio.create_task(run_cleanup_loop())
+    logger.info("Stale reservation cleanup loop started")
 
 
 # --- Middleware for Trace ID & Performance ---

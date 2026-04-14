@@ -1,32 +1,33 @@
 """
 Agent Proxy Router — Proxies requests to backend-agents.
-All endpoints require X-API-Key auth and validate tenant access.
+
+Execution lifecycle is fully managed by ExecutionRuntime:
+    auth (middleware) → authorize → quota_reserve → execute → usage_event → quota_commit
+
+Each handler only needs to call execution_context() — no manual auth/quota code.
 """
 import logging
 import os
 import httpx
 from fastapi import APIRouter, Request, Depends, HTTPException, Query
-from typing import Optional
 
 from app.auth_router import get_current_user
 from app.lib.proxy_client import ProxyClient
-from app.models.agent_request_model import AgentRequest, AgentResponse, AgentConfigResponse
+from app.models.agent_request_model import AgentRequest, AgentConfigResponse
+from app.core.execution_runtime import execution_context
+from app.core.circuit_breaker import requires_execution_runtime, safe_agent
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/agent", tags=["Agent Proxy"])
 
-# Backend-agents URL from env
 BACKEND_AGENTS_URL = os.getenv("BACKEND_AGENTS_URL", "http://localhost:8001")
-
-# Path constants
 AGENT_EXECUTE_PATH = "/agent/execute"
-AGENT_CONFIG_PATH = "/agent/config"
-AGENT_TRACES_PATH = "/agent/traces"
+AGENT_CONFIG_PATH  = "/agent/config"
+AGENT_TRACES_PATH  = "/agent/traces"
 AGENT_METRICS_PATH = "/metrics/agent"
 
 
 async def get_proxy_client() -> ProxyClient:
-    """Dependency: returns configured proxy client."""
     return ProxyClient(base_url=BACKEND_AGENTS_URL)
 
 
@@ -97,61 +98,82 @@ Ejecuta el agente inteligente con contexto RAG para responder consultas del tena
     """,
     response_model=None,
 )
+@requires_execution_runtime
 async def proxy_execute(
     req: AgentRequest,
     request: Request,
-    current_user: dict = Depends(get_current_user),
     proxy: ProxyClient = Depends(get_proxy_client),
 ):
     """
     Proxy for backend-agents /agent/execute.
 
-    Validates:
-    - User is active (via get_current_user)
-    - User has access to requested tenant_id (admin can access any, cliente only own)
+    Lifecycle fully managed by ExecutionRuntime:
+        identity (middleware) → authorize → quota_reserve → execute → quota_commit → usage_event
+
+    @requires_execution_runtime: asserts identity exists before entering the handler.
+    safe_agent(): wraps the backend call with a hard timeout (TIMEOUT_AGENT_S env, default 60s).
     """
-    tenant_id = req.tenant_id or current_user.get("tenant_id")
+    identity = getattr(request.state, "identity", None)
+    tenant_id = req.tenant_id or (identity.tenant_id if identity else None)
     if not tenant_id:
         raise HTTPException(status_code=400, detail="tenant_id is required")
 
-    # Validate tenant access
-    user_rol = current_user.get("rol", "")
-    if user_rol not in ("admin", "superadmin", "super_admin") and current_user.get("tenant_id") != tenant_id:
-        raise HTTPException(
-            status_code=403,
-            detail=f"No permission to access tenant '{tenant_id}'"
+    async with execution_context(request, tenant_id=tenant_id) as rt:
+        try:
+            result = await safe_agent(
+                lambda: proxy.forward(
+                    "POST",
+                    AGENT_EXECUTE_PATH,
+                    json=req.model_dump(exclude_none=True),
+                    headers={
+                        "X-API-Key":  request.headers.get("X-API-Key", ""),
+                        "X-Trace-Id": request.state.trace_id,
+                    },
+                )
+            )
+        except HTTPException:
+            raise  # safe_agent raises 504 on timeout; let it propagate
+        except httpx.HTTPError as e:
+            logger.error(f"[proxy_execute] backend-agents error: {e}",
+                         extra={"tenant_id": tenant_id})
+            raise HTTPException(status_code=502, detail=f"Agent service unavailable: {e}")
+
+        meta = result.get("metadata", {}) if isinstance(result, dict) else {}
+        tokens_in  = int(meta.get("tokens_in")  or meta.get("prompt_tokens")     or 0)
+        tokens_out = int(meta.get("tokens_out") or meta.get("completion_tokens") or 0)
+        if tokens_in == 0 and tokens_out == 0:
+            tokens_out = int(meta.get("tokens_used") or 500)
+
+        rt.record_usage(
+            tokens_in=tokens_in,
+            tokens_out=tokens_out,
+            model=meta.get("model", "ollama/gemma3:latest"),
+            agent_type=req.agent_instance_id or "default",
+            trace_id=result.get("trace_id") if isinstance(result, dict) else None,
+            session_id=getattr(req, "session_id", None),
+            finish_reason=meta.get("finish_reason", "stop"),
         )
 
-    # Forward to backend-agents
+    return result
+
+
+@router.get(
+    "/providers",
+    summary="Providers y modelos disponibles (Agent Lab)",
+)
+async def proxy_providers(
+    request: Request,
+    _: dict = Depends(get_current_user),
+    proxy: ProxyClient = Depends(get_proxy_client),
+):
+    """Proxy for backend-agents /agent/providers — lista modelos Ollama/OpenRouter."""
     try:
-        # Propagate trace_id and API key to backend-agents for validation
-        trace_id = request.headers.get("X-Trace-Id")
-        api_key = request.headers.get("X-API-Key")
-        headers = {}
-        if trace_id:
-            headers["X-Trace-Id"] = trace_id
-        if api_key:
-            headers["X-API-Key"] = api_key
-
-        result = await proxy.forward(
-            "POST",
-            AGENT_EXECUTE_PATH,
-            json=req.model_dump(exclude_none=True),
-            headers=headers
+        return await proxy.forward(
+            "GET",
+            "/agent/providers",
+            headers={"X-API-Key": request.headers.get("X-API-Key")}
         )
-        return result
     except httpx.HTTPError as e:
-        trace_id = request.headers.get("X-Trace-Id", "unknown")
-        tenant_id = current_user.get("tenant_id", "unknown")
-        logger.error(
-            "Proxy error to backend-agents",
-            extra={
-                "trace_id": trace_id,
-                "tenant_id": tenant_id,
-                "error": str(e),
-                "service": "agent_proxy_router"
-            }
-        )
         raise HTTPException(status_code=502, detail=f"Agent service unavailable: {str(e)}")
 
 
@@ -220,7 +242,7 @@ async def proxy_config(
 
 @router.get(
     "/traces",
-    summary="Obtener trazas de ejecución",
+    summary="Obtener trazas de ejecución (admin: todas; cliente: propias)",
     description="""
 Retorna las últimas ejecuciones del agente para el tenant.
 Útil para auditoría, debugging y observabilidad.
@@ -252,27 +274,35 @@ Retorna las últimas ejecuciones del agente para el tenant.
 **Parámetro:**
 - `limit`: número de trazas (1-100, default 50)
     """,
-    response_model=dict,
+    response_model=None,
 )
 async def proxy_traces(
     request: Request,
     limit: int = Query(50, ge=1, le=100, description="Number of traces to return"),
+    filter_tenant_id: str = Query(None, alias="tenant_id", description="Admin: filtrar por tenant específico"),
     current_user: dict = Depends(get_current_user),
     proxy: ProxyClient = Depends(get_proxy_client),
 ):
-    """Proxy for backend-agents /agent/traces."""
-    tenant_id = current_user.get("tenant_id")
-    if not tenant_id:
-        raise HTTPException(
-            status_code=403,
-            detail=f"User role '{current_user.get('rol')}' does not have tenant access"
-        )
+    """
+    Proxy for backend-agents /agent/traces.
+    - ADMIN/ANALISTA: ve todas las trazas (o filtra por tenant_id)
+    - CLIENTE: solo sus propias trazas (tenant_id ignorado)
+    """
+    user_rol = (current_user.get("rol") or "").upper()
+    is_admin = user_rol in ("ADMIN", "SUPER_ADMIN", "ANALISTA")
+
+    if not is_admin and not current_user.get("tenant_id"):
+        raise HTTPException(status_code=403, detail="Sin acceso a trazas")
+
+    params: dict = {"limit": limit}
+    if filter_tenant_id:
+        params["tenant_id"] = filter_tenant_id
 
     try:
         result = await proxy.forward(
             "GET",
             AGENT_TRACES_PATH,
-            params={"limit": limit},
+            params=params,
             headers={"X-API-Key": request.headers.get("X-API-Key")}
         )
         return result
@@ -316,21 +346,26 @@ Incluye promedio de iteraciones, tiempo de respuesta y conteo de errores.
 )
 async def proxy_metrics(
     request: Request,
+    filter_tenant_id: str = Query(None, alias="tenant_id", description="Admin: filtrar por tenant específico"),
     current_user: dict = Depends(get_current_user),
     proxy: ProxyClient = Depends(get_proxy_client),
 ):
-    """Proxy for backend-agents /metrics/agent."""
-    tenant_id = current_user.get("tenant_id")
-    if not tenant_id:
-        raise HTTPException(
-            status_code=403,
-            detail=f"User role '{current_user.get('rol')}' does not have tenant access"
-        )
+    """Proxy for backend-agents /metrics/agent. Admin/Analista ve todos los tenants."""
+    user_rol = (current_user.get("rol") or "").upper()
+    is_admin = user_rol in ("ADMIN", "SUPER_ADMIN", "ANALISTA")
+
+    if not is_admin and not current_user.get("tenant_id"):
+        raise HTTPException(status_code=403, detail="Sin acceso a métricas")
+
+    params: dict = {}
+    if filter_tenant_id:
+        params["tenant_id"] = filter_tenant_id
 
     try:
         result = await proxy.forward(
             "GET",
             AGENT_METRICS_PATH,
+            params=params if params else None,
             headers={"X-API-Key": request.headers.get("X-API-Key")}
         )
         return result

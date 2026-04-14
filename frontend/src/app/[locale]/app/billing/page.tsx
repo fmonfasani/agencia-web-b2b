@@ -1,120 +1,51 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { CreditCard, Download, AlertCircle, CheckCircle } from "lucide-react";
-import { PageTransition, StaggerItem } from "@/components/animations/PageTransition";
-import { useToast } from "@/components/ui/toast";
+import { useState, useEffect, useTransition } from "react";
+import { motion } from "framer-motion";
+import { Cpu, DollarSign, Zap, BarChart2 } from "lucide-react";
+import {
+  PageTransition,
+  StaggerItem,
+} from "@/components/animations/PageTransition";
+import { getBillingData, type BillingData } from "@/app/actions/billing";
 
-interface Subscription {
-  id: string;
-  agentName: string;
-  plan: string;
-  amount: number;
-  currency: string;
-  status: "active" | "canceled" | "past_due";
-  nextBillingDate: string;
-  createdAt: string;
+function fmt(n: number, decimals = 0) {
+  return n.toLocaleString("es-ES", { maximumFractionDigits: decimals });
 }
 
-interface Invoice {
-  id: string;
-  invoiceNumber: string;
-  date: string;
-  agentName: string;
-  amount: number;
-  currency: string;
-  status: "paid" | "pending" | "failed";
+function fmtCost(n: number) {
+  if (n === 0) return "$0.00";
+  if (n < 0.01) return `< $0.01`;
+  return `$${n.toFixed(4)}`;
 }
 
-const mockSubscriptions: Subscription[] = [
-  {
-    id: "sub_recepcion",
-    agentName: "Recepción IA Pro",
-    plan: "Mensual",
-    amount: 99,
-    currency: "USD",
-    status: "active",
-    nextBillingDate: "2026-05-06",
-    createdAt: "2026-03-06",
-  },
-  {
-    id: "sub_ventas",
-    agentName: "Ventas IA Enterprise",
-    plan: "Anual",
-    amount: 1290,
-    currency: "USD",
-    status: "active",
-    nextBillingDate: "2027-04-06",
-    createdAt: "2026-04-06",
-  },
-];
-
-const mockInvoices: Invoice[] = [
-  {
-    id: "inv_001",
-    invoiceNumber: "INV-2026-001",
-    date: "2026-04-06",
-    agentName: "Recepción IA Pro",
-    amount: 99,
-    currency: "USD",
-    status: "paid",
-  },
-  {
-    id: "inv_002",
-    invoiceNumber: "INV-2026-002",
-    date: "2026-04-06",
-    agentName: "Ventas IA Enterprise",
-    amount: 1290,
-    currency: "USD",
-    status: "paid",
-  },
-  {
-    id: "inv_003",
-    invoiceNumber: "INV-2026-003",
-    date: "2026-03-06",
-    agentName: "Recepción IA Pro",
-    amount: 99,
-    currency: "USD",
-    status: "paid",
-  },
-];
+function fmtTokens(n: number) {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return String(n);
+}
 
 export default function BillingPage() {
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>(mockSubscriptions);
-  const [invoices, setInvoices] = useState<Invoice[]>(mockInvoices);
-  const [loading, setLoading] = useState(false);
-  const { addToast } = useToast();
+  const [data, setData] = useState<BillingData | null>(null);
+  const [selectedTenant, setSelectedTenant] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [, startTransition] = useTransition();
 
-  const totalMRR = subscriptions
-    .filter((s) => s.status === "active")
-    .reduce((sum, s) => sum + (s.plan === "Mensual" ? s.amount : 0), 0);
-
-  const totalARR = subscriptions
-    .filter((s) => s.status === "active")
-    .reduce((sum, s) => sum + (s.plan === "Anual" ? s.amount : 0), 0);
-
-  const handleCancelSubscription = async (subscriptionId: string) => {
+  const loadData = (tenantId?: string) => {
     setLoading(true);
-    try {
-      // Mock API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setSubscriptions((prev) =>
-        prev.map((s) =>
-          s.id === subscriptionId ? { ...s, status: "canceled" as const } : s
-        )
-      );
-      addToast("Suscripción cancelada exitosamente", "success");
-    } catch (error) {
-      addToast("Error al cancelar la suscripción", "error");
-    } finally {
-      setLoading(false);
-    }
+    getBillingData(tenantId || undefined)
+      .then(setData)
+      .catch(() => {})
+      .finally(() => setLoading(false));
   };
 
-  const handleDownloadInvoice = (invoice: Invoice) => {
-    addToast(`Descargando factura ${invoice.invoiceNumber}...`, "info");
-    // Mock download
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const handleTenantChange = (tid: string) => {
+    setSelectedTenant(tid);
+    startTransition(() => loadData(tid || undefined));
   };
 
   return (
@@ -122,221 +53,336 @@ export default function BillingPage() {
       <div className="space-y-8">
         {/* Header */}
         <StaggerItem>
-          <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">
-              Facturación
-            </h1>
-            <p className="text-gray-600">
-              Gestiona tus suscripciones y facturas
-            </p>
-          </div>
-        </StaggerItem>
-
-        {/* MRR & ARR Cards */}
-        <motion.div
-          className="grid grid-cols-1 md:grid-cols-2 gap-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-        >
-          <div className="border border-gray-200 rounded-lg p-6 bg-white">
-            <h3 className="text-sm font-semibold text-gray-600 mb-2">
-              MRR (Recurrente Mensual)
-            </h3>
-            <p className="text-3xl font-bold text-gray-900">
-              ${totalMRR.toFixed(2)}
-            </p>
-            <p className="text-xs text-gray-500 mt-2">
-              {subscriptions.filter((s) => s.status === "active" && s.plan === "Mensual").length} suscripción
-              {subscriptions.filter((s) => s.status === "active" && s.plan === "Mensual").length !== 1 ? "es" : ""} activa
-              {subscriptions.filter((s) => s.status === "active" && s.plan === "Mensual").length !== 1 ? "s" : ""}
-            </p>
-          </div>
-
-          <div className="border border-gray-200 rounded-lg p-6 bg-white">
-            <h3 className="text-sm font-semibold text-gray-600 mb-2">
-              ARR (Recurrente Anual)
-            </h3>
-            <p className="text-3xl font-bold text-gray-900">
-              ${totalARR.toFixed(2)}
-            </p>
-            <p className="text-xs text-gray-500 mt-2">
-              {subscriptions.filter((s) => s.status === "active" && s.plan === "Anual").length} suscripción
-              {subscriptions.filter((s) => s.status === "active" && s.plan === "Anual").length !== 1 ? "es" : ""} activa
-              {subscriptions.filter((s) => s.status === "active" && s.plan === "Anual").length !== 1 ? "s" : ""}
-            </p>
-          </div>
-        </motion.div>
-
-        {/* Subscriptions Section */}
-        <StaggerItem>
-          <motion.div
-            className="border border-gray-200 rounded-lg p-6 bg-white"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            <div className="flex items-center gap-2 mb-4">
-              <CreditCard size={20} className="text-blue-600" />
-              <h2 className="text-lg font-bold text-gray-900">Suscripciones Activas</h2>
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-4xl font-bold text-gray-900 mb-2">
+                Facturación
+              </h1>
+              <p className="text-gray-600">
+                Consumo de tokens y costos por modelo LLM
+              </p>
             </div>
-
-            <div className="space-y-4">
-              {subscriptions.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">
-                  No hay suscripciones activas
-                </p>
-              ) : (
-                subscriptions.map((sub, idx) => (
-                  <motion.div
-                    key={sub.id}
-                    className="border border-gray-100 rounded-lg p-4 flex items-between justify-between"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3, delay: idx * 0.05 }}
-                  >
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900">{sub.agentName}</h3>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2 text-sm text-gray-600">
-                        <div>
-                          <p className="text-xs text-gray-500">Plan</p>
-                          <p>{sub.plan}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500">Precio</p>
-                          <p>
-                            ${sub.amount}/{sub.plan === "Mensual" ? "mes" : "año"}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500">Siguiente facturación</p>
-                          <p>{new Date(sub.nextBillingDate).toLocaleDateString("es-ES")}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500">Estado</p>
-                          <div className="flex items-center gap-1">
-                            {sub.status === "active" ? (
-                              <>
-                                <CheckCircle size={14} className="text-green-600" />
-                                <span className="text-green-600">Activo</span>
-                              </>
-                            ) : sub.status === "past_due" ? (
-                              <>
-                                <AlertCircle size={14} className="text-yellow-600" />
-                                <span className="text-yellow-600">Vencido</span>
-                              </>
-                            ) : (
-                              <span className="text-red-600">Cancelado</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    {sub.status === "active" && (
-                      <div className="flex gap-2 ml-4">
-                        <button
-                          onClick={() => handleCancelSubscription(sub.id)}
-                          disabled={loading}
-                          className="px-3 py-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50"
-                        >
-                          Cancelar
-                        </button>
-                      </div>
-                    )}
-                  </motion.div>
-                ))
-              )}
-            </div>
-          </motion.div>
-        </StaggerItem>
-
-        {/* Invoices Section */}
-        <StaggerItem>
-          <motion.div
-            className="border border-gray-200 rounded-lg p-6 bg-white"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.3 }}
-          >
-            <h2 className="text-lg font-bold text-gray-900 mb-4">Facturas Recientes</h2>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-4 font-semibold text-gray-900">
-                      Factura
-                    </th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-900">
-                      Agente
-                    </th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-900">
-                      Fecha
-                    </th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-900">
-                      Monto
-                    </th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-900">
-                      Estado
-                    </th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-900">
-                      Acción
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {invoices.map((invoice, idx) => (
-                    <motion.tr
-                      key={invoice.id}
-                      className="border-b border-gray-100 hover:bg-gray-50"
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.3, delay: idx * 0.05 }}
-                    >
-                      <td className="py-3 px-4 font-medium text-gray-900">
-                        {invoice.invoiceNumber}
-                      </td>
-                      <td className="py-3 px-4 text-gray-600">
-                        {invoice.agentName}
-                      </td>
-                      <td className="py-3 px-4 text-gray-600">
-                        {new Date(invoice.date).toLocaleDateString("es-ES")}
-                      </td>
-                      <td className="py-3 px-4 font-medium text-gray-900">
-                        ${invoice.amount.toFixed(2)}
-                      </td>
-                      <td className="py-3 px-4">
-                        <span
-                          className={`px-2 py-1 rounded text-xs font-medium ${
-                            invoice.status === "paid"
-                              ? "bg-green-100 text-green-700"
-                              : invoice.status === "pending"
-                                ? "bg-yellow-100 text-yellow-700"
-                                : "bg-red-100 text-red-700"
-                          }`}
-                        >
-                          {invoice.status === "paid"
-                            ? "Pagada"
-                            : invoice.status === "pending"
-                              ? "Pendiente"
-                              : "Fallida"}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <button
-                          onClick={() => handleDownloadInvoice(invoice)}
-                          className="text-blue-600 hover:text-blue-700 flex items-center gap-1"
-                        >
-                          <Download size={14} />
-                          Descargar
-                        </button>
-                      </td>
-                    </motion.tr>
+            {data?.isAdmin && data.tenantIds.length > 0 && (
+              <div className="flex items-center gap-2">
+                <label className="text-sm text-gray-500 font-medium">
+                  Tenant:
+                </label>
+                <select
+                  value={selectedTenant}
+                  onChange={(e) => handleTenantChange(e.target.value)}
+                  className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Todos los tenants</option>
+                  {data.tenantIds.map((tid) => (
+                    <option key={tid} value={tid}>
+                      {tid}
+                    </option>
                   ))}
-                </tbody>
-              </table>
+                </select>
+              </div>
+            )}
+          </div>
+        </StaggerItem>
+
+        {/* KPI Cards */}
+        <StaggerItem>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              {
+                label: "Ejecuciones totales",
+                value: loading ? "—" : fmt(data?.totalExecutions ?? 0),
+                icon: BarChart2,
+                color: "text-blue-600",
+              },
+              {
+                label: "Tokens entrada",
+                value: loading ? "—" : fmtTokens(data?.totalTokensIn ?? 0),
+                icon: Zap,
+                color: "text-indigo-600",
+              },
+              {
+                label: "Tokens salida",
+                value: loading ? "—" : fmtTokens(data?.totalTokensOut ?? 0),
+                icon: Cpu,
+                color: "text-purple-600",
+              },
+              {
+                label: "Costo estimado",
+                value: loading ? "—" : fmtCost(data?.totalCostUsd ?? 0),
+                icon: DollarSign,
+                color: "text-green-600",
+              },
+            ].map((kpi) => (
+              <div
+                key={kpi.label}
+                className="bg-white border border-gray-200 rounded-lg p-5"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <kpi.icon size={16} className={kpi.color} />
+                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+                    {kpi.label}
+                  </p>
+                </div>
+                <p className="text-2xl font-bold text-gray-900">{kpi.value}</p>
+              </div>
+            ))}
+          </div>
+        </StaggerItem>
+
+        {/* By Model table */}
+        <StaggerItem>
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">
+              Consumo por modelo
+            </h2>
+            {loading ? (
+              <div className="space-y-3">
+                {[...Array(3)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-10 bg-gray-100 rounded animate-pulse"
+                  />
+                ))}
+              </div>
+            ) : !data || data.byModel.length === 0 ? (
+              <p className="text-gray-500 text-center py-8">
+                Sin datos de tokens aún — ejecuta algunos agentes primero
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-3 px-4 font-semibold text-gray-900">
+                        Modelo
+                      </th>
+                      <th className="text-right py-3 px-4 font-semibold text-gray-900">
+                        Ejecuciones
+                      </th>
+                      <th className="text-right py-3 px-4 font-semibold text-gray-900">
+                        Tokens entrada
+                      </th>
+                      <th className="text-right py-3 px-4 font-semibold text-gray-900">
+                        Tokens salida
+                      </th>
+                      <th className="text-right py-3 px-4 font-semibold text-gray-900">
+                        Costo
+                      </th>
+                      <th className="text-right py-3 px-4 font-semibold text-gray-900">
+                        % del total
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.byModel.map((m, idx) => {
+                      const pct =
+                        data.totalCostUsd > 0
+                          ? ((m.costUsd / data.totalCostUsd) * 100).toFixed(1)
+                          : "0.0";
+                      return (
+                        <motion.tr
+                          key={m.model}
+                          className="border-b border-gray-100 hover:bg-gray-50"
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.2, delay: idx * 0.04 }}
+                        >
+                          <td className="py-3 px-4">
+                            <div className="font-medium text-gray-900">
+                              {m.label}
+                            </div>
+                            <div className="font-mono text-xs text-gray-400">
+                              {m.model}
+                            </div>
+                            {m.isLocal && (
+                              <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-medium">
+                                local · gratis
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 text-right text-gray-700">
+                            {fmt(m.executions)}
+                          </td>
+                          <td className="py-3 px-4 text-right font-mono text-gray-600">
+                            {fmtTokens(m.tokensIn)}
+                          </td>
+                          <td className="py-3 px-4 text-right font-mono text-gray-600">
+                            {fmtTokens(m.tokensOut)}
+                          </td>
+                          <td className="py-3 px-4 text-right font-mono font-semibold text-gray-900">
+                            {fmtCost(m.costUsd)}
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <div className="w-16 bg-gray-100 rounded-full h-1.5">
+                                <div
+                                  className="bg-blue-500 h-1.5 rounded-full"
+                                  style={{
+                                    width: `${Math.min(100, parseFloat(pct))}%`,
+                                  }}
+                                />
+                              </div>
+                              <span className="text-xs text-gray-500 w-10 text-right">
+                                {pct}%
+                              </span>
+                            </div>
+                          </td>
+                        </motion.tr>
+                      );
+                    })}
+                  </tbody>
+                  <tfoot>
+                    <tr className="border-t-2 border-gray-200 bg-gray-50">
+                      <td className="py-3 px-4 font-bold text-gray-900">
+                        Total
+                      </td>
+                      <td className="py-3 px-4 text-right font-bold text-gray-900">
+                        {fmt(data.totalExecutions)}
+                      </td>
+                      <td className="py-3 px-4 text-right font-mono font-bold text-gray-900">
+                        {fmtTokens(data.totalTokensIn)}
+                      </td>
+                      <td className="py-3 px-4 text-right font-mono font-bold text-gray-900">
+                        {fmtTokens(data.totalTokensOut)}
+                      </td>
+                      <td className="py-3 px-4 text-right font-mono font-bold text-gray-900">
+                        {fmtCost(data.totalCostUsd)}
+                      </td>
+                      <td className="py-3 px-4 text-right font-bold text-gray-500">
+                        100%
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            )}
+          </div>
+        </StaggerItem>
+
+        {/* Admin: By Tenant */}
+        {data?.isAdmin && data.byTenant.length > 0 && (
+          <StaggerItem>
+            <div className="bg-white border border-gray-200 rounded-lg p-6">
+              <h2 className="text-lg font-bold text-gray-900 mb-4">
+                Consumo por tenant
+              </h2>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-3 px-4 font-semibold text-gray-900">
+                        Tenant
+                      </th>
+                      <th className="text-right py-3 px-4 font-semibold text-gray-900">
+                        Ejecuciones
+                      </th>
+                      <th className="text-right py-3 px-4 font-semibold text-gray-900">
+                        Tokens entrada
+                      </th>
+                      <th className="text-right py-3 px-4 font-semibold text-gray-900">
+                        Tokens salida
+                      </th>
+                      <th className="text-right py-3 px-4 font-semibold text-gray-900">
+                        Costo
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.byTenant.map((t, idx) => (
+                      <motion.tr
+                        key={t.tenantId}
+                        className="border-b border-gray-100 hover:bg-gray-50"
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.2, delay: idx * 0.04 }}
+                      >
+                        <td className="py-3 px-4 font-mono text-xs text-blue-600">
+                          {t.tenantId}
+                        </td>
+                        <td className="py-3 px-4 text-right text-gray-700">
+                          {fmt(t.executions)}
+                        </td>
+                        <td className="py-3 px-4 text-right font-mono text-gray-600">
+                          {fmtTokens(t.tokensIn)}
+                        </td>
+                        <td className="py-3 px-4 text-right font-mono text-gray-600">
+                          {fmtTokens(t.tokensOut)}
+                        </td>
+                        <td className="py-3 px-4 text-right font-mono font-semibold text-gray-900">
+                          {fmtCost(t.costUsd)}
+                        </td>
+                      </motion.tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </motion.div>
+          </StaggerItem>
+        )}
+
+        {/* Monthly breakdown */}
+        {data && data.byMonth.length > 0 && (
+          <StaggerItem>
+            <div className="bg-white border border-gray-200 rounded-lg p-6">
+              <h2 className="text-lg font-bold text-gray-900 mb-4">
+                Evolución mensual
+              </h2>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-3 px-4 font-semibold text-gray-900">
+                        Mes
+                      </th>
+                      <th className="text-right py-3 px-4 font-semibold text-gray-900">
+                        Ejecuciones
+                      </th>
+                      <th className="text-right py-3 px-4 font-semibold text-gray-900">
+                        Tokens totales
+                      </th>
+                      <th className="text-right py-3 px-4 font-semibold text-gray-900">
+                        Costo
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.byMonth.map((m, idx) => (
+                      <motion.tr
+                        key={m.month}
+                        className="border-b border-gray-100 hover:bg-gray-50"
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.2, delay: idx * 0.04 }}
+                      >
+                        <td className="py-3 px-4 font-medium text-gray-900">
+                          {m.month}
+                        </td>
+                        <td className="py-3 px-4 text-right text-gray-700">
+                          {fmt(m.executions)}
+                        </td>
+                        <td className="py-3 px-4 text-right font-mono text-gray-600">
+                          {fmtTokens(m.tokensIn + m.tokensOut)}
+                        </td>
+                        <td className="py-3 px-4 text-right font-mono font-semibold text-gray-900">
+                          {fmtCost(m.costUsd)}
+                        </td>
+                      </motion.tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </StaggerItem>
+        )}
+
+        {/* Note about local models */}
+        <StaggerItem>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-700">
+            <strong>Nota:</strong> Los modelos locales (Ollama) tienen costo
+            $0.00. Los precios de OpenRouter son estimados basados en tarifas
+            públicas por 1M tokens y pueden variar. Para facturación exacta
+            verifica en tu dashboard de OpenRouter.
+          </div>
         </StaggerItem>
       </div>
     </PageTransition>

@@ -61,6 +61,22 @@ class AgentRequest(BaseModel):
         description="Temperatura del LLM (default: 0.7)"
     )
 
+    # Agent Lab — override de provider y modelo por request
+    llm_provider: Optional[str] = Field(
+        None,
+        description="Override del provider LLM: 'ollama' | 'openrouter'"
+    )
+
+    model: Optional[str] = Field(
+        None,
+        description="Override del modelo: 'gemma4:latest', 'openai/gpt-4o-mini', etc."
+    )
+
+    conversation_id: Optional[str] = Field(
+        None,
+        description="ID de sesión para conversaciones multi-turn"
+    )
+
     model_config = ConfigDict(
         json_schema_extra={
             "examples": [

@@ -81,46 +81,40 @@ async def persist_trace(
     iterations: int,
     result: list,
     metadata: Dict[str, Any],
-    rag_context: Optional[list] = None,
-    user_id: Optional[str] = None,
+    rag_context: Optional[list] = None,  # noqa: ARG001 — reserved for future migration
+    user_id: Optional[str] = None,       # noqa: ARG001 — reserved for future migration
 ):
     """
     Persistir trace de ejecución en PostgreSQL.
-    
-    Args:
-        trace_id: ID único del trace
-        tenant_id: ID del tenant
-        query: Pregunta original
-        iterations: Número de iteraciones
-        result: Respuesta final
-        metadata: Metadata (timing, finish_reason, etc)
-        rag_context: Chunks recuperados por RAG
-        user_id: ID del usuario (opcional)
     """
     conn = get_connection()
     cur = conn.cursor()
-    
+
+    finish_reason = metadata.get("finish_reason", "success")
+    total_ms = metadata.get("total_ms") or metadata.get("total_duration_ms")
+    had_error = finish_reason in ("error", "timeout", "embedding_error")
+    tokens_in = metadata.get("tokens_in", 0) or 0
+    tokens_out = metadata.get("tokens_out", 0) or 0
+
     try:
         cur.execute("""
             INSERT INTO agent_request_traces (
-                trace_id, tenant_id, user_id, query, iterations,
-                result, rag_context, metadata,
-                embedding_ms, rag_ms, llm_ms, total_ms, finish_reason
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                trace_id, tenant_id, query, iterations,
+                result, metadata, total_ms, finish_reason, had_error,
+                tokens_in, tokens_out
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """, (
             trace_id,
             tenant_id,
-            user_id,
             query,
             iterations,
             Json(result),
-            Json(rag_context or []),
             Json(metadata),
-            metadata.get("embedding_ms"),
-            metadata.get("rag_ms"),
-            metadata.get("llm_ms"),
-            metadata.get("total_duration_ms"),
-            metadata.get("finish_reason")
+            total_ms,
+            finish_reason,
+            had_error,
+            tokens_in,
+            tokens_out,
         ))
         
         conn.commit()
