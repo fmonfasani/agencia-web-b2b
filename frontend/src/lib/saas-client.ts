@@ -425,9 +425,13 @@ class BackendSaasClient {
 
   constructor(apiKey: string, baseUrl?: string) {
     this.apiKey = apiKey;
+    // Server-side: AGENT_SERVICE_URL (never exposed to browser)
+    // Client-side: NEXT_PUBLIC_AGENT_SERVICE_URL (must be set in deployment)
+    // Fallback: localhost (dev only)
     this.baseUrl = (
       baseUrl ??
       process.env.AGENT_SERVICE_URL ??
+      process.env.NEXT_PUBLIC_AGENT_SERVICE_URL ??
       "http://localhost:8000"
     ).replace(/\/$/, "");
   }

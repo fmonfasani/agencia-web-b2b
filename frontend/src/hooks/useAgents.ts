@@ -58,9 +58,27 @@ export function useAgents(): UseAgentsState {
       client.instances.list({ status: "active" }),
       client.templates.list(),
     ]);
-    if (instRes.status === "fulfilled") setInstances(instRes.value ?? []);
-    else setError("Error al cargar agentes");
-    if (tplRes.status === "fulfilled") setTemplates(tplRes.value ?? []);
+
+    // Surface ALL errors — both fetches are critical for /app/agents to work
+    const errors: string[] = [];
+    if (instRes.status === "fulfilled") {
+      setInstances(instRes.value ?? []);
+    } else {
+      setInstances([]);
+      errors.push(
+        `instancias: ${instRes.reason instanceof Error ? instRes.reason.message : "error desconocido"}`,
+      );
+    }
+    if (tplRes.status === "fulfilled") {
+      setTemplates(tplRes.value ?? []);
+    } else {
+      setTemplates([]);
+      errors.push(
+        `templates: ${tplRes.reason instanceof Error ? tplRes.reason.message : "error desconocido"}`,
+      );
+    }
+    if (errors.length > 0)
+      setError(`Error al cargar agentes (${errors.join("; ")})`);
     setLoading(false);
   }, [apiKey]);
 
