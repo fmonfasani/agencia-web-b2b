@@ -257,6 +257,10 @@ def get_user_by_api_key(api_key: str) -> Optional[dict]:
         ak_row = cur.fetchone()
     except Exception:
         ak_row = None  # table may not exist yet during migration
+        try:
+            conn.rollback()  # reset connection — required after any psycopg2 error
+        except Exception:
+            pass
 
     if ak_row:
         (key_id, user_id, key_tenant_id, scopes, key_status,

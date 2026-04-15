@@ -28,6 +28,7 @@ from app.routers.analytics_router import router as analytics_router
 from app.training_router import router as training_router
 from app.reports_router import router as reports_router
 from app.notifications_router import router as notifications_router
+from app.admin_router import router as admin_router
 from app.middleware.api_gateway import APIGatewayMiddleware
 from app.core.usage_tracker import usage_tracker
 from app.core.analytics_aggregator import run_aggregation_loop
@@ -405,6 +406,7 @@ app.include_router(analytics_router)
 app.include_router(training_router)
 app.include_router(reports_router)
 app.include_router(notifications_router)
+app.include_router(admin_router)
 
 
 @app.on_event("startup")

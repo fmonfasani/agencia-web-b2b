@@ -147,12 +147,21 @@ export default async function AdminLayout({
             />
           </SidebarCategory>
 
-          {/* 2. COMERCIAL */}
+          {/* 1b. TENANTS */}
           <SidebarCategory
-            label="Comercial"
-            iconName="Briefcase"
+            label="Tenants"
+            iconName="Building2"
             defaultOpen={true}
           >
+            <SidebarNavItem
+              href={`/${locale}/admin/dashboard`}
+              iconName="LayoutGrid"
+              label="Control Center"
+            />
+          </SidebarCategory>
+
+          {/* 2. COMERCIAL */}
+          <SidebarCategory label="Comercial" iconName="Briefcase">
             <SidebarNavItem
               href={`/${locale}/admin/dashboard`}
               iconName="Zap"

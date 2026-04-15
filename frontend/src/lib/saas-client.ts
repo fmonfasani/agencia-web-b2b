@@ -394,6 +394,91 @@ export interface HealthService {
   message?: string;
 }
 
+// ─── Admin Control Plane types ───────────────────────────────────────────────
+
+export interface AdminTenantSummary {
+  id: string;
+  nombre: string;
+  industria: string;
+  website?: string;
+  user_count: number;
+  usage_7d: {
+    total_queries: number;
+    errors: number;
+    avg_latency_ms: number;
+    success_rate: number | null;
+  };
+  last_activity: string | null;
+  health: "healthy" | "warning" | "error" | "inactive";
+  created_at: string | null;
+}
+
+export interface AdminTenantUser {
+  id: string;
+  email: string;
+  name: string | null;
+  role: string;
+  status: string;
+  created_at: string | null;
+}
+
+export interface AdminTenantTrace {
+  trace_id: string;
+  query: string;
+  finish_reason: string;
+  total_ms: number | null;
+  had_error: boolean;
+  iterations: number | null;
+  tokens_in: number | null;
+  tokens_out: number | null;
+  model: string | null;
+  tools: string[];
+  created_at: string | null;
+}
+
+export interface AdminTenantOverview {
+  tenant: {
+    id: string;
+    nombre: string;
+    industria: string;
+    website?: string;
+    created_at: string | null;
+    updated_at: string | null;
+  };
+  users: AdminTenantUser[];
+  usage: {
+    queries_today: number;
+    queries_7d: number;
+    errors_7d: number;
+    success_rate_7d: number | null;
+    avg_latency_ms_7d: number;
+    min_latency_ms_7d: number;
+    max_latency_ms_7d: number;
+    queries_30d: number;
+    errors_30d: number;
+    avg_latency_ms_30d: number;
+  };
+  health: "healthy" | "warning" | "error" | "inactive";
+  recent_traces: AdminTenantTrace[];
+}
+
+export interface AdminLogsResponse {
+  tenant_id: string;
+  total: number;
+  limit: number;
+  offset: number;
+  rows: AdminTenantTrace[];
+}
+
+export interface AdminGlobalStats {
+  total_tenants: number;
+  total_active_users: number;
+  queries_7d: number;
+  queries_today: number;
+  errors_7d: number;
+  platform_health: "healthy" | "warning" | "error" | "inactive";
+}
+
 export interface HealthResponse {
   status: "ok" | "degraded";
   timestamp: string;
@@ -824,6 +909,48 @@ class BackendSaasClient {
         "POST",
         "/notifications/mark-all-read",
       ),
+  };
+
+  // ── Admin Control Plane ───────────────────────────────────────────────────
+
+  readonly admin = {
+    /** Global platform stats (tenant count, queries, errors). */
+    stats: () => this.request<AdminGlobalStats>("GET", "/admin/stats"),
+
+    /** List all tenants with health + 7d usage summary. */
+    tenants: () => this.request<AdminTenantSummary[]>("GET", "/admin/tenants"),
+
+    /** Full overview for a single tenant. */
+    tenantOverview: (tenantId: string) =>
+      this.request<AdminTenantOverview>(
+        "GET",
+        `/admin/tenants/${tenantId}/overview`,
+      ),
+
+    /** Paginated logs for a tenant. */
+    tenantLogs: (
+      tenantId: string,
+      opts?: {
+        limit?: number;
+        offset?: number;
+        had_error?: boolean;
+        finish_reason?: string;
+        q?: string;
+      },
+    ) => {
+      const params = new URLSearchParams();
+      if (opts?.limit != null) params.set("limit", String(opts.limit));
+      if (opts?.offset != null) params.set("offset", String(opts.offset));
+      if (opts?.had_error != null)
+        params.set("had_error", String(opts.had_error));
+      if (opts?.finish_reason) params.set("finish_reason", opts.finish_reason);
+      if (opts?.q) params.set("q", opts.q);
+      const qs = params.toString();
+      return this.request<AdminLogsResponse>(
+        "GET",
+        `/admin/tenants/${tenantId}/logs${qs ? `?${qs}` : ""}`,
+      );
+    },
   };
 
   // ── Health ────────────────────────────────────────────────────────────────
