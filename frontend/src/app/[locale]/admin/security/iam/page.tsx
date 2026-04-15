@@ -1,7 +1,6 @@
-import { prisma } from "@/lib/prisma";
-import { Role } from "@prisma/client";
-import { requireAuth } from "@/lib/auth/request-auth";
+import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { saasClientFor } from "@/lib/saas-client";
 import {
   UserPlus,
   MoreVertical,
@@ -9,94 +8,9 @@ import {
   ShieldCheck,
   Clock,
   CheckCircle2,
-  Mail,
 } from "lucide-react";
-import { revalidatePath } from "next/cache";
-import crypto from "crypto";
-import CopyInviteButton from "@/components/admin/CopyInviteButton";
-import DeleteInviteButton from "@/components/admin/DeleteInviteButton";
-import SendInviteEmailButton from "@/components/admin/SendInviteEmailButton";
-import { sendInvitationEmail } from "@/lib/mail";
 
-// Server Action para generar invitación
-async function createInvitation(formData: FormData) {
-  "use server";
-  const email = formData.get("email") as string;
-  const role = formData.get("role") as string;
-  const auth = await requireAuth();
-  if (!auth || !auth.session.tenantId) return;
-
-  // Generar un token seguro
-  const token = crypto.randomBytes(32).toString("hex");
-  const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + 7); // Expira en 7 días
-
-  // Guardar invitación en la DB
-  const invite = await prisma.invitation.create({
-    data: {
-      email,
-      role: role as Role,
-      tokenHash: token,
-      tenantId: auth.session.tenantId,
-      invitedById: auth.user.id,
-      expiresAt,
-      status: "PENDING",
-    },
-    include: { tenant: true },
-  });
-
-  // Intentar enviar mail si tenemos configuración SMTP
-  if (process.env.SMTP_USER && process.env.SMTP_PASS) {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3001";
-    const inviteUrl = `${baseUrl}/auth/accept-invite?token=${token}`;
-
-    await sendInvitationEmail({
-      to: email,
-      tenantName: invite.tenant.name,
-      inviteUrl,
-      role,
-    });
-  }
-
-  revalidatePath("/[locale]/admin/security/iam", "page");
-}
-
-// Server Action para eliminar invitación
-async function deleteInvitation(id: string) {
-  "use server";
-  const auth = await requireAuth();
-  if (!auth) return;
-
-  await prisma.invitation.delete({
-    where: { id },
-  });
-
-  revalidatePath("/[locale]/admin/security/iam", "page");
-}
-
-// Server Action para re-enviar mail manualmente
-async function sendManualEmail(id: string) {
-  "use server";
-  const auth = await requireAuth();
-  if (!auth) return { success: false, error: "No autorizado" };
-
-  const invite = await prisma.invitation.findUnique({
-    where: { id },
-    include: { tenant: true },
-  });
-
-  if (!invite) return { success: false, error: "Invitación no encontrada" };
-
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3001";
-  const inviteUrl = `${baseUrl}/auth/accept-invite?token=${invite.tokenHash}`;
-
-  return await sendInvitationEmail({
-    to: invite.email,
-    tenantName: invite.tenant.name,
-    inviteUrl,
-    role: invite.role,
-  });
-}
+export const dynamic = "force-dynamic";
 
 export default async function IAMPage({
   params,
@@ -104,38 +18,27 @@ export default async function IAMPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const auth = await requireAuth();
-  if (!auth) redirect(`/${locale}/auth/sign-in`);
+  const session = await auth();
+  if (!session?.user) redirect(`/${locale}/auth/sign-in`);
 
-  // 1. Obtener miembros actuales
-  const members = await prisma.membership.findMany({
-    where: { tenantId: auth.session.tenantId || "" },
-    include: { user: true },
-  });
+  const apiKey = (session.user as any)?.apiKey as string | undefined;
 
-  // 2. Obtener invitaciones pendientes
-  const invitations = await prisma.invitation.findMany({
-    where: {
-      tenantId: auth.session.tenantId || "",
-      status: "PENDING",
-    },
-    orderBy: { createdAt: "desc" },
-  });
-
-  interface Invitation {
+  let members: Array<{
     id: string;
     email: string;
-    role: string;
-    expiresAt: Date;
-    tokenHash: string;
-  }
+    nombre?: string;
+    rol: string;
+    is_active: boolean;
+    created_at: string;
+  }> = [];
 
-  interface Membership {
-    id: string;
-    role: string;
-    user: {
-      email: string;
-    };
+  if (apiKey) {
+    try {
+      const client = saasClientFor(apiKey);
+      members = await client.auth.users();
+    } catch {
+      // Graceful degradation
+    }
   }
 
   const roles = ["SALES", "MARKETING", "DEVELOPER", "MANAGER", "VIEWER"];
@@ -168,7 +71,7 @@ export default async function IAMPage({
               <UserPlus size={20} className="text-primary" />
               Invitar Colaborador
             </h2>
-            <form action={createInvitation} className="space-y-4">
+            <div className="space-y-4">
               <div>
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">
                   Email Corporativo
@@ -177,8 +80,8 @@ export default async function IAMPage({
                   name="email"
                   type="email"
                   placeholder="ejemplo@agencia.com"
-                  required
-                  className="w-full bg-slate-50 border border-slate-200 px-4 py-3 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium"
+                  disabled
+                  className="w-full bg-slate-50 border border-slate-200 px-4 py-3 rounded-2xl text-sm focus:outline-none font-medium opacity-50 cursor-not-allowed"
                 />
               </div>
 
@@ -188,7 +91,8 @@ export default async function IAMPage({
                 </label>
                 <select
                   name="role"
-                  className="w-full bg-slate-50 border border-slate-200 px-4 py-3 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-bold text-slate-700"
+                  disabled
+                  className="w-full bg-slate-50 border border-slate-200 px-4 py-3 rounded-2xl text-sm font-bold text-slate-700 opacity-50 cursor-not-allowed"
                 >
                   {roles.map((r) => (
                     <option key={r} value={r}>
@@ -198,88 +102,31 @@ export default async function IAMPage({
                 </select>
               </div>
 
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex items-center gap-3">
+              <div className="bg-amber-50 p-4 rounded-2xl border border-amber-100 flex items-center gap-3">
                 <Clock size={20} className="text-amber-500" />
                 <div className="text-[10px] leading-tight">
                   <p className="font-bold text-slate-700 uppercase">
-                    Validez Temporal
+                    Próximamente
                   </p>
                   <p className="text-slate-500 mt-0.5">
-                    La invitación expira en 7 días por seguridad.
+                    El módulo de invitaciones estará disponible pronto.
                   </p>
                 </div>
               </div>
 
               <button
-                type="submit"
-                className="w-full bg-[#0a0a0b] text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg shadow-black/10 flex items-center justify-center gap-2"
+                disabled
+                className="w-full bg-[#0a0a0b] text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest opacity-40 cursor-not-allowed flex items-center justify-center gap-2"
               >
                 Generar Invitación
                 <Zap size={14} fill="white" />
               </button>
-            </form>
+            </div>
           </div>
         </div>
 
-        {/* LISTAS */}
+        {/* MIEMBROS ACTUALES */}
         <div className="lg:col-span-2 space-y-8">
-          {/* INVITACIONES PENDIENTES */}
-          {invitations.length > 0 && (
-            <div className="bg-white rounded-[2.5rem] border border-amber-200 shadow-sm overflow-hidden bg-gradient-to-b from-amber-50/30 to-white">
-              <div className="p-8 border-b border-amber-100 flex items-center justify-between">
-                <h3 className="font-black text-amber-900 flex items-center gap-2 uppercase tracking-tight text-sm">
-                  <Clock size={16} />
-                  Invitaciones Pendientes
-                </h3>
-              </div>
-              <div className="divide-y divide-amber-100">
-                {(invitations as unknown as Invitation[]).map(
-                  (invite: Invitation) => (
-                    <div
-                      key={invite.id}
-                      className="p-6 flex items-center justify-between hover:bg-amber-50/50 transition-colors"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="size-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center">
-                          <Mail size={18} />
-                        </div>
-                        <div>
-                          <p className="font-bold text-slate-900 text-sm">
-                            {invite.email}
-                          </p>
-                          <div className="flex gap-2 items-center mt-1">
-                            <span className="text-[9px] font-black bg-slate-900 text-white px-1.5 py-0.5 rounded uppercase tracking-tighter">
-                              {invite.role}
-                            </span>
-                            <span className="text-[10px] text-slate-400">
-                              Expira:{" "}
-                              {new Date(invite.expiresAt).toLocaleDateString()}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <SendInviteEmailButton
-                          id={invite.id}
-                          onSend={sendManualEmail}
-                        />
-                        <CopyInviteButton
-                          token={invite.tokenHash}
-                          locale={locale}
-                        />
-                        <DeleteInviteButton
-                          id={invite.id}
-                          onDelete={deleteInvitation}
-                        />
-                      </div>
-                    </div>
-                  ),
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* MIEMBROS ACTUALES */}
           <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden">
             <div className="p-8 border-b border-slate-100 flex items-center justify-between">
               <h3 className="font-black text-slate-900 flex items-center gap-2 uppercase tracking-tight">
@@ -305,8 +152,17 @@ export default async function IAMPage({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {(members as unknown as Membership[]).map(
-                    (member: Membership) => (
+                  {members.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={3}
+                        className="px-8 py-16 text-center text-slate-400 italic text-sm"
+                      >
+                        No hay miembros registrados todavía.
+                      </td>
+                    </tr>
+                  ) : (
+                    members.map((member) => (
                       <tr
                         key={member.id}
                         className="hover:bg-slate-50/50 transition-colors group"
@@ -314,21 +170,22 @@ export default async function IAMPage({
                         <td className="px-8 py-5">
                           <div className="flex items-center gap-3">
                             <div className="size-10 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-black text-sm shadow-lg shadow-black/5">
-                              {member.user.email?.charAt(0).toUpperCase()}
+                              {member.email?.charAt(0).toUpperCase()}
                             </div>
                             <div>
                               <span className="font-bold text-slate-900 text-sm block">
-                                {member.user.email}
+                                {member.email}
                               </span>
                               <span className="text-[9px] text-emerald-500 font-black uppercase flex items-center gap-1">
-                                <CheckCircle2 size={8} /> Activo
+                                <CheckCircle2 size={8} />{" "}
+                                {member.is_active ? "Activo" : "Inactivo"}
                               </span>
                             </div>
                           </div>
                         </td>
                         <td className="px-8 py-5">
                           <span className="font-black text-[10px] text-slate-700 uppercase bg-slate-100 px-2 py-1 rounded-lg border border-slate-200">
-                            {member.role}
+                            {member.rol}
                           </span>
                         </td>
                         <td className="px-8 py-5 text-right">
@@ -337,7 +194,7 @@ export default async function IAMPage({
                           </button>
                         </td>
                       </tr>
-                    ),
+                    ))
                   )}
                 </tbody>
               </table>

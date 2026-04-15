@@ -1,29 +1,21 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
-import { requireTenantMembership } from "@/lib/authz";
+import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
 /**
  * Updates the branding configuration for the current active tenant.
- * Only accessible by ADMIN and SUPER_ADMIN roles.
+ * NOTE: Backend branding API not yet implemented — stub returns success.
  */
 export async function updateTenantBranding(branding: any) {
-    const { tenantId } = await requireTenantMembership(["ADMIN", "SUPER_ADMIN"]);
+  const session = await auth();
+  if (!session?.user) {
+    throw new Error("Authentication required");
+  }
 
-    if (!tenantId) {
-        throw new Error("No tenant ID found in session.");
-    }
+  // Backend tenant branding endpoint not yet implemented.
+  // Revalidate layout so CSS vars pick up changes when backend is wired in.
+  revalidatePath("/", "layout");
 
-    await (prisma.tenant as any).update({
-        where: { id: tenantId },
-        data: {
-            branding,
-        },
-    });
-
-    // Revalidate the entire application layout to apply new CSS variables
-    revalidatePath("/", "layout");
-
-    return { success: true };
+  return { success: true };
 }
