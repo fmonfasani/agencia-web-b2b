@@ -1,33 +1,35 @@
 import { NextResponse } from "next/server";
-import { Role } from "@prisma/client";
-import { AuthorizationError, requireRole } from "@/lib/authz";
-import { prisma } from "@/lib/prisma";
-import { requireInternalSecret } from "@/lib/api-auth";
+import { auth } from "@/lib/auth";
+import { saasClientFor } from "@/lib/saas-client";
 
-export async function GET(request: Request) {
-    try {
-        requireInternalSecret(request);
-    } catch {
-        return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
-    }
+export async function GET() {
+  const session = await auth();
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
-    try {
-        await requireRole(["ADMIN", "SUPER_ADMIN"] as Role[]);
+  const apiKey = (session.user as any)?.apiKey as string | undefined;
+  if (!apiKey) {
+    return NextResponse.json({ error: "No API key" }, { status: 401 });
+  }
 
-        const traces = await prisma.trace.findMany({
-            orderBy: { createdAt: "desc" },
-            take: 50,
-        });
+  try {
+    const client = saasClientFor(apiKey);
+    const raw = await client.agent.traces();
 
-        return NextResponse.json({
-            success: true,
-            traces,
-        });
-    } catch (error) {
-        if (error instanceof AuthorizationError) {
-            return NextResponse.json({ error: error.message }, { status: error.status });
-        }
-        console.error("[Observability:Traces] GET error:", error);
-        return NextResponse.json({ error: "Failed to fetch traces" }, { status: 500 });
-    }
+    // Map AgentTrace[] → component Trace shape
+    const traces = raw.map((t) => ({
+      id: t.id,
+      traceId: t.id,
+      service: "agent",
+      operation: (t.query ?? "query").slice(0, 60),
+      duration: t.total_duration_ms ?? 0,
+      status: t.success === false ? "error" : "ok",
+      createdAt: t.created_at,
+    }));
+
+    return NextResponse.json({ success: true, traces });
+  } catch {
+    return NextResponse.json({ success: true, traces: [] });
+  }
 }

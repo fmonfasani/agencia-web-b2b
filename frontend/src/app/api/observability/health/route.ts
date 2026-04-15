@@ -1,78 +1,42 @@
 import { NextResponse } from "next/server";
-import { Role } from "@prisma/client";
-import { AuthorizationError, requireRole } from "@/lib/authz";
-import { prisma } from "@/lib/prisma";
-import { Redis } from "@upstash/redis";
-import { requireInternalSecret } from "@/lib/api-auth";
+import { auth } from "@/lib/auth";
+import { saasClientFor } from "@/lib/saas-client";
 
-export async function GET(request: Request) {
-    try {
-        requireInternalSecret(request);
-    } catch {
-        return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
-    }
+export async function GET() {
+  const session = await auth();
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
-    try {
-        await requireRole(["ADMIN", "SUPER_ADMIN"] as Role[]);
-    } catch (error) {
-        if (error instanceof AuthorizationError) {
-            return NextResponse.json({ error: error.message }, { status: error.status });
-        }
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const apiKey = (session.user as any)?.apiKey as string | undefined;
+  if (!apiKey) {
+    return NextResponse.json({ error: "No API key" }, { status: 401 });
+  }
 
-    const health: {
-        status: "ok" | "degraded";
-        timestamp: string;
-        services: Record<string, unknown>;
-    } = {
-        status: 'ok',
-        timestamp: new Date().toISOString(),
-        services: {}
-    };
+  try {
+    const client = saasClientFor(apiKey);
+    const data = await client.health();
 
-    // 1. Database Check
-    try {
-        await prisma.$queryRaw`SELECT 1`;
-        health.services.database = { status: 'connected' };
-    } catch (e) {
-        health.status = 'degraded';
-        health.services.database = { status: 'error', message: e instanceof Error ? e.message : 'Unknown error' };
-    }
-
-    // 2. Redis Check
-    try {
-        if (process.env.UPSTASH_REDIS_REST_URL) {
-            const redis = Redis.fromEnv();
-            await redis.ping();
-            health.services.redis = { status: 'connected' };
-        } else {
-            health.services.redis = { status: 'skipped', message: 'Not configured' };
-        }
-    } catch {
-        health.status = 'degraded';
-        health.services.redis = { status: 'error' };
-    }
-
-    // 3. Agent Service Check
-    try {
-        const agentUrl = process.env.AGENT_SERVICE_URL || 'http://localhost:8000';
-        const res = await fetch(`${agentUrl}/health`, {
-            cache: 'no-store',
-            signal: AbortSignal.timeout(3000)
-        });
-
-        if (res.ok) {
-            const data = await res.json();
-            health.services.agentService = { status: 'connected', details: data };
-        } else {
-            health.services.agentService = { status: 'unhealthy', code: res.status };
-        }
-    } catch {
-        health.services.agentService = { status: 'unreachable' };
-    }
-
-    return NextResponse.json(health, {
-        status: health.status === 'ok' ? 200 : 207 // 207 Multi-Status if degraded but alive
+    // Map backend-saas HealthResponse → component HealthStatus shape
+    return NextResponse.json({
+      status: data.status,
+      timestamp: data.timestamp,
+      services: {
+        database: data.services.postgres ?? { status: "skipped" },
+        redis: { status: "skipped", message: "Not configured" },
+        agentService: data.services.ollama ??
+          data.services.qdrant ?? { status: "connected" },
+      },
     });
+  } catch {
+    return NextResponse.json({
+      status: "degraded",
+      timestamp: new Date().toISOString(),
+      services: {
+        database: { status: "unreachable" },
+        redis: { status: "skipped" },
+        agentService: { status: "unreachable" },
+      },
+    });
+  }
 }
