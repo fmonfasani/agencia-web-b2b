@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import AuthSessionProvider from "@/components/providers/AuthSessionProvider";
 
 export default async function ClientLayout({
   children,
@@ -143,7 +144,9 @@ export default async function ClientLayout({
         <div className="sticky top-0 z-10 bg-white/80 backdrop-blur border-b border-gray-200 px-8 py-3 flex items-center justify-end gap-3">
           <NotificationBell />
         </div>
-        <div className="p-8 w-full max-w-7xl">{children}</div>
+        <div className="p-8 w-full max-w-7xl">
+          <AuthSessionProvider>{children}</AuthSessionProvider>
+        </div>
       </main>
     </div>
   );
