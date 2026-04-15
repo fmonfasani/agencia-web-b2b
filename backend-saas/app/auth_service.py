@@ -468,7 +468,7 @@ def register_company(
 ) -> dict:
     """
     Registra una nueva empresa y su usuario administrador.
-    Crea: Usuario, Tenant, Membresía, Pipeline por defecto.
+    Usa las tablas existentes: User (auth) + tenants (legacy).
     """
     try:
         conn = psycopg2.connect(DB_DSN)
@@ -483,36 +483,23 @@ def register_company(
         api_key = generate_api_key()
         password_hash = hash_password(password)
 
-        # Generar slug para la empresa
-        slug = companyName.lower().replace(" ", "-").replace("_", "-")[:50]
-
-        # Verificar slug duplicado
-        cur.execute('SELECT id FROM "Tenant" WHERE slug = %s', (slug,))
-        if cur.fetchone():
-            slug = f"{slug}-{secrets.token_hex(4)}"
-
         # Generar IDs
         user_id = f"u_{secrets.token_hex(12)}"
         tenant_id = f"t_{secrets.token_hex(12)}"
+        full_name = f"{firstName} {lastName}".strip()
 
-        # 1. Crear usuario
+        # 1. Crear tenant (empresa) en tabla 'tenants' (schema legacy)
         cur.execute("""
-            INSERT INTO "User" (id, email, "passwordHash", "firstName", "lastName",
+            INSERT INTO tenants (id, nombre, industria, config, created_at, updated_at)
+            VALUES (%s, %s, %s, %s::jsonb, NOW(), NOW())
+        """, (tenant_id, companyName, "General", __import__("json").dumps({"website": website})))
+
+        # 2. Crear usuario en tabla "User"
+        cur.execute("""
+            INSERT INTO "User" (id, email, "passwordHash", name,
                                 role, status, "apiKey", "defaultTenantId", "createdAt", "updatedAt")
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
-        """, (user_id, email, password_hash, firstName, lastName, "ADMIN", "ACTIVE", api_key, tenant_id))
-
-        # 2. Crear tenant (empresa)
-        cur.execute("""
-            INSERT INTO "Tenant" (id, name, slug, website, status, "createdAt", "updatedAt")
-            VALUES (%s, %s, %s, %s, %s, NOW(), NOW())
-        """, (tenant_id, companyName, slug, website or None, "ACTIVE"))
-
-        # 3. Crear membresía (usuario es admin de su empresa)
-        cur.execute("""
-            INSERT INTO "Membership" (id, "userId", "tenantId", role, status, "createdAt", "updatedAt")
-            VALUES (%s, %s, %s, %s, %s, NOW(), NOW())
-        """, (f"m_{secrets.token_hex(12)}", user_id, tenant_id, "ADMIN", "ACTIVE"))
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+        """, (user_id, email, password_hash, full_name, "ADMIN", "ACTIVE", api_key, tenant_id))
 
         conn.commit()
         cur.close()
