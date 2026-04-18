@@ -95,10 +95,10 @@ export default async function ClientDashboard({
         {/* Header */}
         <StaggerItem>
           <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">
+            <h1 className="text-4xl font-bold text-[#111111] mb-2">
               Bienvenido, {dashboardInfo.tenantName || "Usuario"}
             </h1>
-            <p className="text-gray-600">
+            <p className="text-[#6B7280]">
               Monitorea tu plataforma de agentes IA en tiempo real
             </p>
           </div>
@@ -112,53 +112,53 @@ export default async function ClientDashboard({
               value={metrics.total_executions || 0}
               trend={{ value: 12, isPositive: true }}
               icon="zap"
-              color="blue"
+              accentColor="blue"
             />
             <KPICard
               label="Latencia Promedio"
               value={`${metrics.avg_duration_ms || 0}ms`}
               trend={{ value: 5, isPositive: false }}
               icon="activity"
-              color="yellow"
+              accentColor="orange"
             />
             <KPICard
               label="Tasa de Éxito"
               value={`${((metrics.success_rate || 0) * 100).toFixed(1)}%`}
               trend={{ value: 3, isPositive: true }}
               icon="trending-up"
-              color="green"
+              accentColor="green"
             />
             <KPICard
               label="Agentes Activos"
               value="3"
               trend={{ value: 0, isPositive: true }}
               icon="users"
-              color="purple"
+              accentColor="gray"
             />
           </div>
         </StaggerContainer>
 
         {/* Estado del Onboarding */}
         {onboarding && (
-          <div className="border border-blue-200 bg-blue-50 rounded-lg p-6">
-            <h2 className="text-lg font-bold text-blue-900 mb-3">
+          <div className="border border-[#E5E7EB] bg-[#F9FAFB] rounded-lg p-6">
+            <h2 className="text-lg font-bold text-[#111111] mb-3">
               Estado del Onboarding
             </h2>
             <div className="space-y-3">
               <div>
-                <p className="text-sm text-blue-700 mb-1">
+                <p className="text-sm text-[#6B7280] mb-1">
                   Documentos Ingestionados
                 </p>
-                <div className="w-full bg-blue-200 rounded-full h-2">
+                <div className="w-full bg-[#E5E7EB] rounded-full h-2">
                   <div
-                    className="bg-blue-600 h-2 rounded-full"
+                    className="bg-[#3B82F6] h-2 rounded-full"
                     style={{
                       width: `${onboarding.postgresql ? 100 : 0}%`,
                     }}
                   ></div>
                 </div>
               </div>
-              <p className="text-sm text-blue-600">
+              <p className="text-sm text-[#6B7280]">
                 {onboarding.postgresql
                   ? "✅ Base de datos lista"
                   : "⏳ Cargando documentos..."}
@@ -179,13 +179,13 @@ export default async function ClientDashboard({
             <StaggerItem>
               <Link
                 href={`/${locale}/app/chat`}
-                className="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer"
+                className="border border-[#E5E7EB] bg-white rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer"
               >
                 <div className="text-3xl mb-2">💬</div>
-                <h3 className="text-lg font-bold text-gray-900 mb-1">
+                <h3 className="text-lg font-bold text-[#111111] mb-1">
                   Chat IA
                 </h3>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-[#6B7280]">
                   Consulta directamente con tu agente
                 </p>
               </Link>
@@ -194,13 +194,13 @@ export default async function ClientDashboard({
             <StaggerItem>
               <Link
                 href={`/${locale}/app/agents`}
-                className="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer"
+                className="border border-[#E5E7EB] bg-white rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer"
               >
                 <div className="text-3xl mb-2">🤖</div>
-                <h3 className="text-lg font-bold text-gray-900 mb-1">
+                <h3 className="text-lg font-bold text-[#111111] mb-1">
                   Mis Agentes
                 </h3>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-[#6B7280]">
                   Gestiona y configura tus agentes
                 </p>
               </Link>
@@ -209,13 +209,15 @@ export default async function ClientDashboard({
             <StaggerItem>
               <Link
                 href={`/${locale}/app/marketplace`}
-                className="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer"
+                className="border border-[#E5E7EB] bg-white rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer"
               >
                 <div className="text-3xl mb-2">🛍️</div>
-                <h3 className="text-lg font-bold text-gray-900 mb-1">
+                <h3 className="text-lg font-bold text-[#111111] mb-1">
                   Marketplace
                 </h3>
-                <p className="text-sm text-gray-600">Descubre nuevos agentes</p>
+                <p className="text-sm text-[#6B7280]">
+                  Descubre nuevos agentes
+                </p>
               </Link>
             </StaggerItem>
           </div>
