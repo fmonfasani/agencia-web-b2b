@@ -1,5 +1,5 @@
 /* ─── DM Sans (Webshooks Design System) ─── */
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&display=swap");
 
 @import "tailwindcss";
 
@@ -10,49 +10,76 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --font-sans: 'DM Sans', 'Nunito', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "DM Sans", "Nunito", ui-sans-serif, system-ui, sans-serif;
 
-  /* === WEBSHOOKS DESIGN TOKENS === */
+  /* === WEBSHOOKS DESIGN SYSTEM v2 === */
 
-  /* App backgrounds */
-  --color-bg-app: #f7f7f7;
-  --color-bg-card: #ffffff;
-  --color-bg-row-alt: #fafafa;
-  --color-bg-row-hover: #edf2f7;
-  --color-bg-table-head: #efefef;
-  --color-bg-input: #fafafa;
+  /* Paleta base — Negro + Naranja */
+  --color-ws-orange: #f97316;
+  --color-ws-orange-light: #fff7ed;
+  --color-ws-orange-muted: #fdba74;
+  --color-ws-black: #111111;
+  --color-ws-black-hover: #1f2937;
+  --color-ws-white: #ffffff;
+  --color-ws-white-off: #f9fafb;
 
-  /* Accent family (blue-slate) */
-  --color-accent-1: #4a7fa5;
-  --color-accent-2: #5a8fb5;
-  --color-accent-3: #3d6e8a;
-  --color-accent-dark: #2c5f7a;
+  /* Texto */
+  --color-text-primary: #111111;
+  --color-text-secondary: #6b7280;
+  --color-text-muted: #9ca3af;
+  --color-text-faint: #d1d5db;
+  --color-text-link: #111111;
+  --color-text-empty: #e5e7eb;
 
-  /* Sidebar */
-  --color-sidebar-top: #2c3e55;
-  --color-sidebar-mid: #34495e;
-
-  /* Text hierarchy */
-  --color-text-primary: #1a2623;
-  --color-text-secondary: #374151;
-  --color-text-muted: #6b7280;
-  --color-text-faint: #9ca3af;
-  --color-text-link: #4a7fa5;
-  --color-text-empty: #d1d5db;
-
-  /* Borders */
-  --color-border-light: #f0f2f1;
+  /* Bordes */
+  --color-border: #e5e7eb;
+  --color-border-light: #f3f4f6;
   --color-border-input: #e5e7eb;
 
-  /* Legacy — public site colors */
-  --color-primary: #135bec;
-  --color-primary-dark: #0e45b5;
-  --color-background-light: #ffffff;
-  --color-background-dark: #0a0a0b;
-  --color-surface: #f9fafb;
-  --color-surface-hover: #f3f4f6;
-  --color-text-main: #0f172a;
-  --color-border-subtle: #f1f5f9;
+  /* Tema Admin (sidebar oscuro, bg gris) */
+  --color-admin-bg: #f3f4f6;
+  --color-admin-surface: #efefef;
+  --color-admin-sidebar: #111111;
+  --color-admin-sidebar-hover: #1f2937;
+  --color-admin-sidebar-text: #f9fafb;
+  --color-admin-sidebar-muted: #9ca3af;
+
+  /* Tema Cliente (sidebar oscuro, bg más claro) */
+  --color-client-bg: #fafafa;
+  --color-client-surface: #ffffff;
+  --color-client-sidebar: #111111;
+  --color-client-sidebar-hover: #1f2937;
+  --color-client-sidebar-text: #f9fafb;
+  --color-client-sidebar-muted: #9ca3af;
+
+  /* Status colors (semánticos) */
+  --color-status-new: #3b82f6;
+  --color-status-new-light: #eff6ff;
+  --color-status-contacted: #f59e0b;
+  --color-status-contacted-light: #fffbeb;
+  --color-status-qualified: #10b981;
+  --color-status-qualified-light: #f0fdf4;
+  --color-status-paused: #f97316;
+  --color-status-paused-light: #fff7ed;
+  --color-status-won: #111111;
+  --color-status-lost: #9ca3af;
+
+  /* Score bar colors */
+  --color-score-cold: #f97316; /* 0-33: naranja */
+  --color-score-warm: #3b82f6; /* 34-66: azul */
+  --color-score-hot: #10b981; /* 67-100: verde */
+
+  /* Legacy backgrounds (usado aún en algunos componentes) */
+  --color-bg-app: #fafafa;
+  --color-bg-card: #ffffff;
+  --color-bg-row-alt: #f9fafb;
+  --color-bg-row-hover: #f3f4f6;
+  --color-bg-table-head: #f9fafb;
+  --color-bg-input: #fafafa;
+
+  /* Sidebar legacy (para compatibilidad) */
+  --color-sidebar-top: #111111;
+  --color-sidebar-mid: #1f2937;
 
   /* Radii */
   --radius-card: 14px;
@@ -67,17 +94,35 @@
 
   /* Shadows */
   --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.06);
-  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.10);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.1);
   --shadow-table: 0 2px 16px rgba(0, 0, 0, 0.06);
-  --shadow-btn: 0 4px 14px rgba(52, 96, 126, 0.30);
-  --shadow-premium: 0 10px 30px -10px rgba(0, 0, 0, 0.04), 0 4px 10px -5px rgba(0, 0, 0, 0.02);
-  --shadow-premium-hover: 0 20px 40px -15px rgba(19, 91, 236, 0.08), 0 10px 20px -10px rgba(0, 0, 0, 0.04);
+  --shadow-btn: 0 4px 14px rgba(17, 17, 17, 0.15);
+  --shadow-premium:
+    0 10px 30px -10px rgba(0, 0, 0, 0.04), 0 4px 10px -5px rgba(0, 0, 0, 0.02);
+  --shadow-premium-hover:
+    0 20px 40px -15px rgba(0, 0, 0, 0.08), 0 10px 20px -10px rgba(0, 0, 0, 0.04);
+
+  /* Legacy accent (for compatibility) */
+  --color-accent-1: #111111;
+  --color-accent-2: #f97316;
+  --color-accent-3: #6b7280;
+  --color-accent-dark: #000000;
+
+  /* Legacy site colors */
+  --color-primary: #111111;
+  --color-primary-dark: #000000;
+  --color-background-light: #ffffff;
+  --color-background-dark: #111111;
+  --color-surface: #fafafa;
+  --color-surface-hover: #f3f4f6;
+  --color-text-main: #111111;
+  --color-border-subtle: #f3f4f6;
 }
 
 @layer base {
   body {
     @apply bg-background text-foreground;
-    font-family: 'DM Sans', 'Nunito', ui-sans-serif, system-ui, sans-serif;
+    font-family: "DM Sans", "Nunito", ui-sans-serif, system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     selection-background-color: rgba(74, 127, 165, 0.15);
     selection-color: #2c5f7a;
@@ -85,7 +130,9 @@
 
   *:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 2px #4a7fa5, 0 0 0 4px rgba(74, 127, 165, 0.15);
+    box-shadow:
+      0 0 0 2px #111111,
+      0 0 0 4px rgba(17, 17, 17, 0.1);
   }
   * {
     @apply border-border outline-ring/50;
@@ -96,7 +143,6 @@
 }
 
 @layer utilities {
-
   /* Webshooks admin body */
   .admin-bg {
     background-color: #f7f7f7;
@@ -127,11 +173,11 @@
 
   /* KPI card accent borders */
   .kpi-blue {
-    border-left: 4px solid #4a7fa5;
+    border-left: 4px solid #3b82f6;
   }
 
   .kpi-teal {
-    border-left: 4px solid #2ecc8f;
+    border-left: 4px solid #10b981;
   }
 
   .kpi-amber {
@@ -139,12 +185,16 @@
   }
 
   .kpi-slate {
-    border-left: 4px solid #6b7280;
+    border-left: 4px solid #9ca3af;
+  }
+
+  .kpi-orange {
+    border-left: 4px solid #f97316;
   }
 
   /* Score bar colors */
   .score-green {
-    background-color: #2ecc8f;
+    background-color: #10b981;
   }
 
   .score-blue {
@@ -155,16 +205,46 @@
     background-color: #f59e0b;
   }
 
+  .score-orange {
+    background-color: #f97316;
+  }
+
+  /* Theme utilities */
+  .theme-admin {
+    background-color: var(--color-admin-bg);
+  }
+
+  .theme-client {
+    background-color: var(--color-client-bg);
+  }
+
+  .sidebar-dark {
+    background-color: var(--color-admin-sidebar);
+    color: var(--color-admin-sidebar-text);
+  }
+
   /* Public site utilities */
   .technical-grid {
-    background-image: radial-gradient(circle at 1px 1px, #e2e8f0 1px, transparent 0);
+    background-image: radial-gradient(
+      circle at 1px 1px,
+      #e2e8f0 1px,
+      transparent 0
+    );
     background-size: 24px 24px;
   }
 
   .glow-mesh {
     background:
-      radial-gradient(circle at 50% -20%, rgba(19, 91, 236, 0.05) 0%, transparent 70%),
-      radial-gradient(circle at 0% 100%, rgba(19, 91, 236, 0.03) 0%, transparent 50%);
+      radial-gradient(
+        circle at 50% -20%,
+        rgba(17, 17, 17, 0.05) 0%,
+        transparent 70%
+      ),
+      radial-gradient(
+        circle at 0% 100%,
+        rgba(249, 115, 22, 0.03) 0%,
+        transparent 50%
+      );
   }
 
   .glass-card {

@@ -15,6 +15,7 @@ import {
   Activity,
   BrainCircuit,
   FlaskConical,
+  Zap,
 } from "lucide-react";
 import { WebshooksLogo } from "@/components/WebshooksLogo";
 import Link from "next/link";
@@ -80,12 +81,12 @@ export default async function ClientLayout({
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen theme-client flex">
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-200 shadow-sm">
+      <aside className="w-64 sidebar-dark border-r border-[#000000]/10 shadow-sm text-white">
         {/* Logo */}
-        <div className="p-6 border-b border-gray-200">
-          <WebshooksLogo variant="lockup" theme="light" fontSize={16} />
+        <div className="p-6 border-b border-white/10">
+          <WebshooksLogo variant="lockup" theme="dark" fontSize={16} />
         </div>
 
         {/* Navigation */}
@@ -96,7 +97,7 @@ export default async function ClientLayout({
               <Link
                 key={item.href}
                 href={item.href}
-                className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium text-sm"
+                className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-[#9CA3AF] hover:bg-[#1F2937] hover:text-white transition-colors font-medium text-sm"
               >
                 <Icon size={18} />
                 {item.label}
@@ -106,22 +107,22 @@ export default async function ClientLayout({
         </nav>
 
         {/* Footer */}
-        <div className="absolute bottom-0 left-0 right-0 border-t border-gray-200 bg-white">
+        <div className="absolute bottom-0 left-0 right-0 border-t border-white/10 bg-[#111111]">
           <div className="p-4 w-64">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 bg-gray-300 rounded-full" />
+              <div className="w-8 h-8 bg-[#1F2937] rounded-full" />
               <div>
-                <p className="text-sm font-medium text-gray-900">
+                <p className="text-sm font-medium text-white">
                   {session.user?.email || "Usuario"}
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-[#9CA3AF]">
                   {(session.user as any)?.role || "Cliente"}
                 </p>
               </div>
             </div>
             <Link
               href="/api/auth/signout"
-              className="flex items-center gap-2 w-full px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition-colors border border-gray-200"
+              className="flex items-center gap-2 w-full px-3 py-2 text-sm font-medium text-[#9CA3AF] hover:bg-[#1F2937] hover:text-white rounded-lg transition-colors border border-white/10"
             >
               <LogOut size={16} />
               Cerrar sesión
@@ -131,12 +132,12 @@ export default async function ClientLayout({
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto flex flex-col">
+      <main className="flex-1 overflow-auto flex flex-col bg-[#FAFAFA]">
         {/* Topbar */}
-        <div className="sticky top-0 z-10 bg-white/80 backdrop-blur border-b border-gray-200 px-8 py-3 flex items-center justify-end gap-3">
+        <div className="sticky top-0 z-10 bg-white border-b border-[#E5E7EB] px-8 py-4 flex items-center justify-end gap-3 shadow-sm">
           <NotificationBell />
         </div>
-        <div className="p-8 w-full max-w-7xl">
+        <div className="p-8 w-full">
           <AuthSessionProvider>{children}</AuthSessionProvider>
         </div>
       </main>

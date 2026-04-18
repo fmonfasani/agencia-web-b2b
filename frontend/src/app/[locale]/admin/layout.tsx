@@ -44,22 +44,20 @@ export default async function AdminLayout({
 
   return (
     <div
-      className="min-h-screen bg-[#f7f7f7] flex overflow-hidden"
+      className="min-h-screen theme-admin flex overflow-hidden"
       style={{
         fontFamily: branding.fontFamily
           ? `'${branding.fontFamily}', sans-serif`
           : "'DM Sans', 'Nunito', sans-serif",
       }}
     >
-      {/* Sidebar — Webshooks Design System */}
+      {/* Sidebar — Webshooks Design System v2 */}
       <aside
-        className="w-[220px] text-white hidden md:flex flex-col relative z-50 shrink-0"
+        className="w-[240px] text-white hidden md:flex flex-col relative z-50 shrink-0 sidebar-dark"
         style={{
-          background: branding.brandingEnabled
-            ? sidebarColor
-            : "linear-gradient(180deg, #2c3e55 0%, #34495e 60%, #2c3e55 100%)",
-          boxShadow: "2px 0 20px rgba(0,0,0,0.12)",
-          borderRight: "1px solid rgba(255,255,255,0.06)",
+          background: branding.brandingEnabled ? sidebarColor : "#111111",
+          boxShadow: "2px 0 12px rgba(0,0,0,0.08)",
+          borderRight: "1px solid rgba(255,255,255,0.05)",
         }}
       >
         {/* Brand Header */}
@@ -123,10 +121,10 @@ export default async function AdminLayout({
         <div
           className="flex-1 overflow-y-auto admin-scroll"
           style={{
-            padding: "12px 10px",
+            padding: "16px 12px",
             display: "flex",
             flexDirection: "column",
-            gap: 2,
+            gap: 4,
           }}
         >
           {/* 1. EXECUTIVE */}
@@ -391,7 +389,7 @@ export default async function AdminLayout({
       {/* Main content */}
       <main
         className="flex-1 overflow-auto relative admin-scroll"
-        style={{ background: "#f7f7f7" }}
+        style={{ background: "var(--color-admin-bg)" }}
       >
         <div className="relative z-10">{children}</div>
       </main>
