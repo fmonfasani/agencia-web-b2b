@@ -26,18 +26,11 @@ interface KPICardProps {
   animated?: boolean;
 }
 
-const accentColorClasses = {
-  blue: "border-l-[#3B82F6]",
-  orange: "border-l-[#F97316]",
-  green: "border-l-[#10B981]",
-  gray: "border-l-[#9CA3AF]",
-};
-
-const iconColorClasses = {
-  blue: "text-[#3B82F6]",
-  orange: "text-[#F97316]",
-  green: "text-[#10B981]",
-  gray: "text-[#9CA3AF]",
+const accentColorMap = {
+  blue: "#3B82F6",
+  orange: "#F97316",
+  green: "#10B981",
+  gray: "#9CA3AF",
 };
 
 const iconMap: Record<string, LucideIcon> = {
@@ -72,9 +65,12 @@ export function KPICard({
   const TrendIcon = trend?.isPositive ? ArrowUpIcon : ArrowDownIcon;
   const Icon = icon ? iconMap[icon] : undefined;
 
+  const accentHex = accentColorMap[accentColor];
+
   return (
     <motion.div
-      className={`bg-white border border-[#E5E7EB] border-l-4 ${accentColorClasses[accentColor]} rounded-lg p-6 transition-all hover:shadow-lg`}
+      className="bg-white border border-[#E5E7EB] border-l-4 rounded-lg p-6 transition-all hover:shadow-lg"
+      style={{ borderLeftColor: accentHex }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
@@ -84,9 +80,7 @@ export function KPICard({
         <h3 className="text-xs font-semibold uppercase tracking-wider text-[#6B7280]">
           {label}
         </h3>
-        {Icon && (
-          <Icon size={20} className={`${iconColorClasses[accentColor]}`} />
-        )}
+        {Icon && <Icon size={20} style={{ color: accentHex }} />}
       </div>
 
       <div className="mb-3">
