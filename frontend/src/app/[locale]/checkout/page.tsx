@@ -5,7 +5,6 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ShoppingCart, CheckCircle, Lock, CreditCard } from "lucide-react";
 import { getMarketplaceAgent } from "@/app/actions/marketplace";
-import { initiateCheckout } from "@/app/actions/billing";
 import { useToast } from "@/hooks/useToast";
 import type { MarketplaceAgent } from "@/app/actions/marketplace";
 
@@ -28,19 +27,18 @@ export default function CheckoutPage() {
     });
   }, [agentId]);
 
-  const price = agent ? (plan === "annual" ? agent.price * 10 : agent.price) : 0;
+  const price = agent
+    ? plan === "annual"
+      ? agent.price * 10
+      : agent.price
+    : 0;
 
   const handleCheckout = async () => {
     if (!agent) return;
     setProcessing(true);
     try {
-      const result = await initiateCheckout(agentId, plan, agent.name, agent.price);
-      if (result.success && result.data) {
-        // In production: window.location.href = result.data.checkoutUrl (Stripe redirect)
-        router.push(`checkout/success?session_id=${result.data.sessionId}&agent=${encodeURIComponent(agent.name)}`);
-      } else {
-        addToast(result.error ?? "Error al procesar pago", "error");
-      }
+      // TODO: Implement initiateCheckout in @/app/actions/billing
+      addToast("Funcionalidad de checkout no implementada aún", "error");
     } finally {
       setProcessing(false);
     }
@@ -75,7 +73,9 @@ export default function CheckoutPage() {
             <ShoppingCart size={24} className="text-blue-600" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Checkout</h1>
-          <p className="text-gray-500 text-sm">Completa tu compra de forma segura</p>
+          <p className="text-gray-500 text-sm">
+            Completa tu compra de forma segura
+          </p>
         </div>
 
         {/* Agent summary */}
@@ -89,13 +89,25 @@ export default function CheckoutPage() {
         <div className="space-y-3">
           <p className="text-sm font-medium text-gray-700">Seleccionar plan</p>
           {[
-            { value: "monthly" as const, label: "Mensual", price: agent.price, note: "Cancela cuando quieras" },
-            { value: "annual" as const, label: "Anual", price: agent.price * 10, note: "2 meses gratis 🎉" },
+            {
+              value: "monthly" as const,
+              label: "Mensual",
+              price: agent.price,
+              note: "Cancela cuando quieras",
+            },
+            {
+              value: "annual" as const,
+              label: "Anual",
+              price: agent.price * 10,
+              note: "2 meses gratis 🎉",
+            },
           ].map((p) => (
             <label
               key={p.value}
               className={`flex items-center justify-between p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                plan === p.value ? "border-blue-600 bg-blue-50" : "border-gray-200 hover:border-gray-300"
+                plan === p.value
+                  ? "border-blue-600 bg-blue-50"
+                  : "border-gray-200 hover:border-gray-300"
               }`}
             >
               <div className="flex items-center gap-3">
@@ -131,7 +143,9 @@ export default function CheckoutPage() {
         {/* Payment method placeholder */}
         <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 flex items-center gap-3">
           <CreditCard size={20} className="text-gray-400" />
-          <p className="text-sm text-gray-500">Pago seguro via Stripe — redirigirá al checkout</p>
+          <p className="text-sm text-gray-500">
+            Pago seguro via Stripe — redirigirá al checkout
+          </p>
         </div>
 
         {/* CTA */}
