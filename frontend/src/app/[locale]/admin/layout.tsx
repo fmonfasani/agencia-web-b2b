@@ -1,7 +1,8 @@
 import React from "react";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { Zap, User as UserIcon } from "lucide-react";
+import { User as UserIcon } from "lucide-react";
+import { WebshooksLogo } from "@/components/WebshooksLogo";
 import LogoutButton from "@/components/admin/LogoutButton";
 import SidebarNavItem from "@/components/admin/SidebarNavItem";
 import SidebarCategory from "@/components/admin/SidebarCategory";
@@ -63,57 +64,59 @@ export default async function AdminLayout({
       >
         {/* Brand Header */}
         <div style={{ padding: "22px 20px 16px" }}>
-          <div className="flex items-center gap-3">
-            <div
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 10,
-                background: branding.brandingEnabled ? primaryColor : "#4a7fa5",
-                boxShadow: branding.brandingEnabled
-                  ? `0 4px 12px ${primaryColor}66`
-                  : "0 4px 12px rgba(59,130,246,0.40)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                overflow: "hidden",
-              }}
-            >
-              {logoUrl ? (
-                <img
-                  src={logoUrl}
-                  alt={appName}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <Zap size={18} className="text-white fill-white" />
-              )}
-            </div>
-            <div className="flex flex-col">
-              <span
+          {!branding.brandingEnabled ? (
+            <WebshooksLogo variant="lockup" theme="dark" fontSize={14} />
+          ) : (
+            <div className="flex items-center gap-3">
+              <div
                 style={{
-                  fontSize: 13,
-                  fontWeight: 800,
-                  color: "#ffffff",
-                  lineHeight: 1.2,
+                  width: 36,
+                  height: 36,
+                  borderRadius: 10,
+                  background: primaryColor,
+                  boxShadow: `0 4px 12px ${primaryColor}66`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  overflow: "hidden",
                 }}
               >
-                {appName}
-              </span>
-              <span
-                style={{
-                  fontSize: 10,
-                  fontWeight: 500,
-                  color: "#c8daea",
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                }}
-              >
-                {branding.subName ||
-                  (branding.brandingEnabled ? "" : "Agencia Leads")}
-              </span>
+                {logoUrl ? (
+                  <img
+                    src={logoUrl}
+                    alt={appName}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <WebshooksLogo variant="icon" theme="dark" fontSize={24} />
+                )}
+              </div>
+              <div className="flex flex-col">
+                <span
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 800,
+                    color: "#ffffff",
+                    lineHeight: 1.2,
+                  }}
+                >
+                  {appName}
+                </span>
+                <span
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 500,
+                    color: "#c8daea",
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {branding.subName ||
+                    (branding.brandingEnabled ? "" : "Agencia Leads")}
+                </span>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Navigation */}

@@ -1,13 +1,7 @@
 "use client";
 import React, { useState } from "react";
-import {
-  Code2,
-  ArrowUpRight,
-  Send,
-  Mail,
-  MapPin,
-  CheckCircle2,
-} from "lucide-react";
+import { ArrowUpRight, Send, Mail, MapPin, CheckCircle2 } from "lucide-react";
+import { WebshooksLogo } from "@/components/WebshooksLogo";
 import { motion, AnimatePresence } from "framer-motion";
 import { trackFormSubmit } from "@/lib/analytics";
 import { useTranslations } from "next-intl";
@@ -57,14 +51,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
           {/* Brand & Claim */}
           <div className="lg:col-span-6 space-y-12">
-            <div className="flex items-center gap-3">
-              <div className="size-10 bg-primary rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary/20">
-                <Code2 size={24} />
-              </div>
-              <span className="text-2xl font-bold tracking-tight">
-                Agencia Web
-              </span>
-            </div>
+            <WebshooksLogo variant="lockup" theme="dark" fontSize={22} />
 
             <h2 className="text-4xl md:text-5xl font-extrabold leading-[1.1] tracking-tight text-white max-w-lg">
               {t("claim")}

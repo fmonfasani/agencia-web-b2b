@@ -15,3 +15,5 @@ python-json-logger
 slowapi
 python-dotenv
 python-multipart
+beautifulsoup4
+duckduckgo-search

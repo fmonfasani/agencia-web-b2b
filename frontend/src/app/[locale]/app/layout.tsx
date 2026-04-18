@@ -2,7 +2,6 @@ import React from "react";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import {
-  Zap,
   LogOut,
   Home,
   Cpu,
@@ -17,6 +16,7 @@ import {
   BrainCircuit,
   FlaskConical,
 } from "lucide-react";
+import { WebshooksLogo } from "@/components/WebshooksLogo";
 import Link from "next/link";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import AuthSessionProvider from "@/components/providers/AuthSessionProvider";
@@ -85,15 +85,7 @@ export default async function ClientLayout({
       <aside className="w-64 bg-white border-r border-gray-200 shadow-sm">
         {/* Logo */}
         <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-              <Zap size={24} className="text-white" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold text-gray-900">Webshooks</h1>
-              <p className="text-xs text-gray-500">Cliente Portal</p>
-            </div>
-          </div>
+          <WebshooksLogo variant="lockup" theme="light" fontSize={16} />
         </div>
 
         {/* Navigation */}

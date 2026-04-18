@@ -1,11 +1,6 @@
-from typing import Any
-from app.tools.registry import Tool
+from app.tools.registry import scrape_tool, Tool
 
-async def scrape(input_data: Any, tenant_id: str):
-    url = input_data.get("url") if isinstance(input_data, dict) else None
-    if not url:
-        return {"text": "no url provided"}
-    # Placeholder: real scraping would happen here
-    return {"text": f"scraped content from {url} for tenant {tenant_id}"}
-
-scrape_tool = Tool("scrape", {"url": str}, scrape)
+# scrape_tool is defined and registered in registry.py
+# This module re-exports it for any code that imports directly from here.
+scrape = scrape_tool
+scrape_tool_instance = Tool("scrape", scrape_tool)
