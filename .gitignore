@@ -172,7 +172,24 @@ backend/uploads/
 /*.ps1
 
 # Informes y docs temporales en root (mantiene README.md y CLAUDE.md)
+# Excepto documentos principales del proyecto
 /docs/
+!docs/PROJECT_STATUS.md
+!docs/QUICK_START.md
+!docs/DESIGN_SYSTEM.md
+!docs/INDEX.md
+!docs/Infraestructura.md
+!docs/walkthrough.md
+!docs/task.md
+!docs/CONTRIBUTING_BACKEND.md
+!docs/E2E_TEST.md
+!docs/ENVIRONMENTS.md
+!docs/Jobsflow.md
+!docs/dashboard.md
+!docs/estrategia-negocio.md
+!docs/guia_ia_local.md
+!docs/tracing/
+!docs/Security/
 /*.txt
 /CLAUDE-INSTRUCCIONES.md
 /POST-MIGRACION-CHECKLIST.md

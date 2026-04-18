@@ -1,5 +1,42 @@
 # Walkthrough técnico — Webshooks
-> Última actualización: 2026-04-10
+> Última actualización: 2026-04-18
+
+---
+
+## Fase 0 — Diseño Visual (Warm Neutral) 🎨
+
+**Estado:** ✅ Completo (2026-04-18)
+
+**Cambio principal:** Redesign completo de la paleta de colores, reemplazando negra/naranja saturada por "warm neutral" tipo Notion/Linear.
+
+### Paleta actualizada
+| Token | Valor | Uso |
+|-------|-------|-----|
+| bg-main | #F1EFEA | Background principal |
+| bg-sidebar | #EDEBE6 | Sidebar claro (colapsable) |
+| accent | #F59E0B | Accent principal (ámbar cálido) |
+| text-primary | #1C1C1C | Texto principal |
+| text-muted | #9A9A9A | Labels/muted |
+| border | #E5E3DF | Separadores |
+| green | #1F7A63 | Status positivo |
+| blue | #3B82F6 | Status "nuevo" |
+| purple | #8B5CF6 | Status "contactado" |
+
+### Archivos modificados
+- `frontend/src/app/globals.css` — Reescrito @theme con nueva paleta
+- `frontend/src/components/layouts/ClientLayoutContent.tsx` — **NUEVO**: Sidebar colapsable
+- `frontend/src/components/dashboard/KPICard.tsx` — Colores accent actualizados
+- `frontend/src/components/ui/status-badge.tsx` — Badges con colores warm
+- `frontend/src/components/ui/data-table.tsx` — Tablas color warm
+- `frontend/src/app/[locale]/app/layout.tsx` — Server component con session
+- `frontend/src/app/[locale]/admin/layout.tsx` — Admin sidebar warm neutral
+
+### Sidebar colapsable
+- Estado: `useState(isCollapsed)` + `useState(isHovered)`
+- Expandido: `w-60` (iconos + labels)
+- Colapsado: `w-16` (solo iconos)
+- Hover en colapsado → expande temporalmente
+- Toggle button con ChevronLeft/Right
 
 ---
 

@@ -1,9 +1,9 @@
 # Infraestructura Webshooks
 
-**Documento Técnico de Configuración v2.0**
+**Documento Técnico de Configuración v3.0**
 Docker Compose · PostgreSQL 16 · Qdrant · Redis · Ollama · FastAPI
 
-> Última actualización: 2026-04-10
+> Última actualización: 2026-04-18
 
 ---
 
