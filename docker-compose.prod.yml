@@ -4,7 +4,7 @@ services:
   # PostgreSQL - Base de datos principal
   postgres:
     image: postgres:16-alpine
-    container_name: agencia_postgres
+    container_name: webshooks_postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -25,7 +25,7 @@ services:
   # Qdrant - Vector Database
   qdrant:
     image: qdrant/qdrant:latest
-    container_name: agencia_qdrant
+    container_name: webshooks_qdrant
     restart: unless-stopped
     expose:
       - "6333"
@@ -41,7 +41,7 @@ services:
   # Redis - Cache y Rate Limiting
   redis:
     image: redis:7-alpine
-    container_name: agencia_redis
+    container_name: webshooks_redis
     restart: unless-stopped
     expose:
       - "6379"
@@ -59,7 +59,7 @@ services:
   # Ollama - LLM Local
   ollama:
     image: ollama/ollama:latest
-    container_name: agencia_ollama
+    container_name: webshooks_ollama
     restart: unless-stopped
     expose:
       - "11434"
@@ -75,7 +75,7 @@ services:
     build:
       context: ./backend-saas
       dockerfile: Dockerfile
-    container_name: agencia_backend_saas
+    container_name: webshooks_backend_saas
     restart: unless-stopped
     ports:
       - "8000:8000"
@@ -108,7 +108,7 @@ services:
     build:
       context: ./backend-agents
       dockerfile: Dockerfile
-    container_name: agencia_backend_agents
+    container_name: webshooks_backend_agents
     restart: unless-stopped
     expose:
       - "8001"
@@ -140,6 +140,43 @@ services:
       - ./backend-agents/openrouter_usage.json:/app/openrouter_usage.json:rw
       - ./backend-agents/logs:/app/logs:rw
       - ./backend-saas/uploads:/app/uploads:ro
+
+  # Frontend - Next.js (Client)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_SAAS_API_URL: http://backend-saas:8000
+        NEXT_PUBLIC_AGENT_API_URL: http://backend-agents:8001
+    container_name: webshooks_frontend
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    env_file:
+      - .env
+      - ./frontend/.env.local
+    environment:
+      - NEXT_PUBLIC_SAAS_API_URL=http://backend-saas:8000
+      - NEXT_PUBLIC_AGENT_API_URL=http://backend-agents:8001
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - AUTH_SECRET=${AUTH_SECRET}
+      - INTERNAL_API_SECRET=${INTERNAL_API_SECRET}
+      - NODE_ENV=production
+    depends_on:
+      backend-saas:
+        condition: service_healthy
+      backend-agents:
+        condition: service_healthy
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 networks:
   app-network:

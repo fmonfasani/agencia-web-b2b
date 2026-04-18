@@ -6,12 +6,12 @@ const statusBadgeVariants = cva(
   {
     variants: {
       status: {
-        new: "bg-[#EFF6FF] text-[#1D4ED8] border-[#BFDBFE]",
-        contacted: "bg-[#FFFBEB] text-[#92400E] border-[#FED7AA]",
-        qualified: "bg-[#F0FDF4] text-[#15803D] border-[#BBF7D0]",
-        paused: "bg-[#FFF7ED] text-[#EA580C] border-[#FDBA74]",
-        won: "bg-[#111111] text-white border-[#000000]",
-        lost: "bg-[#F3F4F6] text-[#6B7280] border-[#E5E7EB]",
+        new: "bg-[#EAF2FF] text-[#3B82F6] border-[#BFDBFE]",
+        contacted: "bg-[#F3EEFF] text-[#8B5CF6] border-[#DDD6FE]",
+        qualified: "bg-[#E6F4EE] text-[#2E8B57] border-[#BBF7D0]",
+        paused: "bg-[#FFF4E5] text-[#D97706] border-[#FED7AA]",
+        won: "bg-[#111111] text-white border-[#111111]",
+        lost: "bg-[#F7F6F3] text-[#9A9A9A] border-[#E5E3DF]",
       },
     },
     defaultVariants: {

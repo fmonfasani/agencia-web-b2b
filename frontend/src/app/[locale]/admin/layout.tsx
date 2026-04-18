@@ -37,8 +37,8 @@ export default async function AdminLayout({
 
   const membership = { role: userRole };
 
-  const primaryColor = branding.primaryColor || "#4a7fa5";
-  const sidebarColor = branding.sidebarColor || "#2c3e55";
+  const primaryColor = branding.primaryColor || "#f59e0b";
+  const sidebarColor = branding.sidebarColor || "#edebe6";
   const appName = branding.appName || tenantName;
   const logoUrl = branding.logoUrl;
 
@@ -51,13 +51,14 @@ export default async function AdminLayout({
           : "'DM Sans', 'Nunito', sans-serif",
       }}
     >
-      {/* Sidebar — Webshooks Design System v2 */}
+      {/* Sidebar — Webshooks Design System v3 (Warm Neutral) */}
       <aside
-        className="w-[240px] text-white hidden md:flex flex-col relative z-50 shrink-0 sidebar-dark"
+        className="w-[240px] hidden md:flex flex-col relative z-50 shrink-0 sidebar-light"
         style={{
-          background: branding.brandingEnabled ? sidebarColor : "#111111",
-          boxShadow: "2px 0 12px rgba(0,0,0,0.08)",
-          borderRight: "1px solid rgba(255,255,255,0.05)",
+          background: branding.brandingEnabled ? sidebarColor : "#edebe6",
+          color: "#1c1c1c",
+          boxShadow: "2px 0 8px rgba(0,0,0,0.04)",
+          borderRight: "1px solid #e5e3df",
         }}
       >
         {/* Brand Header */}
@@ -94,7 +95,7 @@ export default async function AdminLayout({
                   style={{
                     fontSize: 13,
                     fontWeight: 800,
-                    color: "#ffffff",
+                    color: "#1c1c1c",
                     lineHeight: 1.2,
                   }}
                 >
@@ -104,7 +105,7 @@ export default async function AdminLayout({
                   style={{
                     fontSize: 10,
                     fontWeight: 500,
-                    color: "#c8daea",
+                    color: "#9a9a9a",
                     letterSpacing: "0.1em",
                     textTransform: "uppercase",
                   }}

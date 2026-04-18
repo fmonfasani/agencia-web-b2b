@@ -217,3 +217,8 @@ DECOUPLING_REPORT.json
 
 # Git worktrees (project-local isolation)
 .worktrees/
+
+# Environment variable folder expansions (Windows)
+$HOME/
+%USERPROFILE%/
+Init.md

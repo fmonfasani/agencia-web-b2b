@@ -115,7 +115,7 @@ export function DataTable<T extends Record<string, any>>({
     <div className="space-y-4">
       {/* Toolbar */}
       {searchable && (
-        <div className="bg-white p-4 rounded-lg border border-[#E5E7EB] shadow-sm">
+        <div className="bg-white p-4 rounded-lg border border-[#E5E3DF] shadow-sm">
           <SearchInput
             placeholder={searchPlaceholder}
             value={search}
@@ -128,14 +128,14 @@ export function DataTable<T extends Record<string, any>>({
       )}
 
       {/* Table */}
-      <div className="bg-white border border-[#E5E7EB] rounded-lg shadow-sm overflow-hidden overflow-x-auto">
+      <div className="bg-white border border-[#E5E3DF] rounded-lg shadow-sm overflow-hidden overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow className="bg-[#F9FAFB] border-b border-[#E5E7EB] hover:bg-[#F9FAFB]">
+            <TableRow className="bg-[#F7F6F3] border-b border-[#E5E3DF] hover:bg-[#F7F6F3]">
               {columns.map((column) => (
                 <TableHead
                   key={String(column.key)}
-                  className={`h-10 px-4 text-left align-middle text-[11px] font-semibold uppercase tracking-wider text-[#6B7280] ${
+                  className={`h-10 px-4 text-left align-middle text-[11px] font-semibold uppercase tracking-wider text-[#6F6F6F] ${
                     column.sortable && sortable
                       ? "cursor-pointer hover:bg-[#F3F4F6]"
                       : ""
@@ -153,9 +153,9 @@ export function DataTable<T extends Record<string, any>>({
                       sortable &&
                       sortField === column.key &&
                       (sortDir === "asc" ? (
-                        <ChevronUp size={14} className="text-[#6B7280]" />
+                        <ChevronUp size={14} className="text-[#6F6F6F]" />
                       ) : (
-                        <ChevronDown size={14} className="text-[#6B7280]" />
+                        <ChevronDown size={14} className="text-[#6F6F6F]" />
                       ))}
                   </div>
                 </TableHead>
@@ -171,7 +171,7 @@ export function DataTable<T extends Record<string, any>>({
                   className="text-center py-8"
                 >
                   {emptyState || (
-                    <p className="text-sm text-[#9CA3AF]">
+                    <p className="text-sm text-[#9A9A9A]">
                       No hay datos para mostrar
                     </p>
                   )}
@@ -181,7 +181,7 @@ export function DataTable<T extends Record<string, any>>({
               paginatedData.map((row, idx) => (
                 <TableRow
                   key={idx}
-                  className={`border-b border-[#E5E7EB] hover:bg-[#F9FAFB] transition-colors ${
+                  className={`border-b border-[#E5E3DF] hover:bg-[#FAFAF8] transition-colors ${
                     onRowClick ? "cursor-pointer" : ""
                   } ${rowClassName?.(row) || ""}`}
                   onClick={() => onRowClick?.(row)}
@@ -214,21 +214,21 @@ export function DataTable<T extends Record<string, any>>({
       {/* Pagination */}
       {paginated && pageCount > 1 && (
         <div className="flex items-center justify-between px-4 py-2">
-          <p className="text-xs font-semibold uppercase tracking-widest text-[#6B7280]">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[#6F6F6F]">
             Página {currentPage} de {pageCount}
           </p>
           <div className="flex gap-2">
             <button
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((p) => p - 1)}
-              className="px-4 py-2 bg-white border border-[#E5E7EB] rounded-lg text-sm font-semibold text-[#111111] disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#F9FAFB] transition-colors"
+              className="px-4 py-2 bg-white border border-[#E5E3DF] rounded-lg text-sm font-semibold text-[#1C1C1C] disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#FAFAF8] transition-colors"
             >
               Anterior
             </button>
             <button
               disabled={currentPage === pageCount}
               onClick={() => setCurrentPage((p) => p + 1)}
-              className="px-4 py-2 bg-white border border-[#E5E7EB] rounded-lg text-sm font-semibold text-[#111111] disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#F9FAFB] transition-colors"
+              className="px-4 py-2 bg-white border border-[#E5E3DF] rounded-lg text-sm font-semibold text-[#1C1C1C] disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#FAFAF8] transition-colors"
             >
               Siguiente
             </button>

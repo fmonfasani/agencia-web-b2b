@@ -28,9 +28,9 @@ interface KPICardProps {
 
 const accentColorMap = {
   blue: "#3B82F6",
-  orange: "#F97316",
-  green: "#10B981",
-  gray: "#9CA3AF",
+  orange: "#F59E0B",
+  green: "#1F7A63",
+  gray: "#9A9A9A",
 };
 
 const iconMap: Record<string, LucideIcon> = {
@@ -60,7 +60,7 @@ export function KPICard({
     typeof value === "string" ? value : animated ? animatedValue : value;
 
   const trendColorClass = trend?.isPositive
-    ? "text-[#10B981]"
+    ? "text-[#1F7A63]"
     : "text-[#DC2626]";
   const TrendIcon = trend?.isPositive ? ArrowUpIcon : ArrowDownIcon;
   const Icon = icon ? iconMap[icon] : undefined;
@@ -69,7 +69,7 @@ export function KPICard({
 
   return (
     <motion.div
-      className="bg-white border border-[#E5E7EB] border-l-4 rounded-lg p-6 transition-all hover:shadow-lg"
+      className="bg-white border border-[#E5E3DF] border-l-4 rounded-lg p-6 transition-all hover:shadow-lg"
       style={{ borderLeftColor: accentHex }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}

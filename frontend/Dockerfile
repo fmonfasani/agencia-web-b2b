@@ -8,12 +8,15 @@ RUN npm install --legacy-peer-deps
 
 COPY prisma ./prisma/
 COPY src ./src/
-COPY next.config.ts .
-COPY tsconfig.json .
-COPY postcss.config.mjs .
-COPY next-env.d.ts .
 COPY public ./public/
 COPY messages ./messages/
+COPY next.config.ts .
+COPY tsconfig.json .
+COPY next-env.d.ts .
+COPY postcss.config.mjs .
+COPY auth.config.ts .
+COPY branding.ts .
+COPY instrumentation.ts .
 
 # Build-time environment variables
 ARG NEXT_PUBLIC_SAAS_API_URL
