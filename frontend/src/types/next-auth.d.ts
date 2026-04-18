@@ -7,18 +7,21 @@ declare module "next-auth" {
       tenantId: string;
       role: string;
     } & DefaultSession["user"];
+    apiKey?: string;
   }
 
   interface User {
     tenantId?: string;
     role?: string;
+    apiKey?: string;
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
-    userId?: string;
+    id?: string;
     tenantId?: string;
     role?: string;
+    apiKey?: string;
   }
 }

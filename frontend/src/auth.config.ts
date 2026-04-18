@@ -96,9 +96,8 @@ export const authConfig = {
         session.user.id = (token.id as string) || (token.sub as string);
         session.user.tenantId = (token.tenantId as string) || "default";
         session.user.role = (token.role as string) || "MEMBER";
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (session.user as any).apiKey = token.apiKey;
       }
+      session.apiKey = token.apiKey as string | undefined;
       return session;
     },
   },

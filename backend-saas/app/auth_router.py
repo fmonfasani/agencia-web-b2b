@@ -3,15 +3,14 @@ auth_router.py — Endpoints de autenticación en FastAPI/Swagger
 """
 import logging
 from typing import Optional
-from fastapi import APIRouter, HTTPException, Security, Depends
-from fastapi.security import APIKeyHeader
+from fastapi import APIRouter, HTTPException, Depends
 
 from app.auth_models import (
     RegisterRequest, LoginRequest, LoginResponse,
     UserResponse, ActivateRequest, Rol, RegisterCompanyRequest
 )
 from app.auth_service import (
-    create_user, login_user, get_user_by_api_key,
+    create_user, login_user,
     list_users, activate_user, setup_users_table, rotate_api_key
 )
 from app.lib.exceptions import (
@@ -22,45 +21,15 @@ from app.lib.exceptions import (
     DuplicateEmailError,
 )
 
+# Dependencias RBAC centralizadas
+from app.auth.dependencies import get_current_user, require_admin
+
 logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# Setup de seguridad para Swagger
-# ---------------------------------------------------------------------------
-
-API_KEY_HEADER = APIKeyHeader(
-    name="X-API-Key",
-    description="API Key obtenida en POST /auth/login. Formato: wh_xxxxx",
-    auto_error=False,
-)
-
-
-def get_current_user(api_key: str = Security(API_KEY_HEADER)) -> dict:
-    """Dependency — valida la API key y retorna el usuario."""
-    logger.info(f"[AUTH] get_current_user called with api_key: {api_key}")
-    if not api_key:
-        logger.warning("[AUTH] No API key provided in header")
-        raise HTTPException(
-            status_code=401,
-            detail="API Key requerida. Usá POST /auth/login para obtenerla.",
-            headers={"WWW-Authenticate": "ApiKey"},
-        )
-    user = get_user_by_api_key(api_key)
-    logger.info(f"[AUTH] API Key lookup result: {user}")
-    if not user:
-        logger.warning(f"[AUTH] API Key not found or user inactive: {api_key[:20]}...")
-        raise HTTPException(status_code=401, detail="API Key inválida o usuario inactivo")
-    return user
-
-
-def require_admin(user: dict = Depends(get_current_user)) -> dict:
-    if user["rol"] not in ("ADMIN", "SUPER_ADMIN"):
-        raise HTTPException(status_code=403, detail="Solo admins pueden realizar esta acción")
-    return user
-
-
+# Shortcuts para compatibilidad con código existente
 def require_analista_or_admin(user: dict = Depends(get_current_user)) -> dict:
-    if user["rol"] not in ("ADMIN", "SUPER_ADMIN", "ANALISTA"):
+    role = user.get("role", user.get("rol", "CLIENTE")).upper()
+    if role not in ("ADMIN", "SUPER_ADMIN", "ANALISTA"):
         raise HTTPException(status_code=403, detail="Se requiere rol analista o admin")
     return user
 

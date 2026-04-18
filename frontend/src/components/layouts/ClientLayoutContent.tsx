@@ -41,48 +41,118 @@ export default function ClientLayoutContent({
 
   const isExpanded = !isCollapsed || isHovered;
 
-  const userRole = (session?.user?.role as string) ?? "";
-  const isAdminOrAnalista = ["ADMIN", "SUPER_ADMIN", "ANALISTA"].includes(
-    userRole,
-  );
+  type Role =
+    | "SUPER_ADMIN"
+    | "ADMIN"
+    | "ANALISTA"
+    | "CLIENTE"
+    | "MEMBER"
+    | "VIEWER";
 
-  const navItems = [
-    { href: `/${locale}/app`, label: "Dashboard", icon: Home },
-    { href: `/${locale}/app/agents`, label: "Mis Agentes", icon: Cpu },
+  const userRole = (session?.user?.role as Role) ?? "CLIENTE";
+
+  const allNavItems = [
+    {
+      href: `/${locale}/app`,
+      label: "Dashboard",
+      icon: Home,
+      roles: [
+        "SUPER_ADMIN",
+        "ADMIN",
+        "ANALISTA",
+        "CLIENTE",
+        "MEMBER",
+        "VIEWER",
+      ] as Role[],
+    },
+    {
+      href: `/${locale}/app/agents`,
+      label: "Mis Agentes",
+      icon: Cpu,
+      roles: ["SUPER_ADMIN", "ADMIN", "ANALISTA", "CLIENTE"] as Role[],
+    },
     {
       href: `/${locale}/app/training`,
       label: "Entrenamiento",
       icon: BrainCircuit,
+      roles: ["SUPER_ADMIN", "ADMIN", "ANALISTA", "CLIENTE"] as Role[],
     },
-    { href: `/${locale}/app/chat`, label: "Chat IA", icon: Zap },
+    {
+      href: `/${locale}/app/chat`,
+      label: "Chat IA",
+      icon: Zap,
+      roles: [
+        "SUPER_ADMIN",
+        "ADMIN",
+        "ANALISTA",
+        "CLIENTE",
+        "MEMBER",
+      ] as Role[],
+    },
     {
       href: `/${locale}/app/marketplace`,
       label: "Marketplace",
       icon: ShoppingBag,
+      roles: ["SUPER_ADMIN", "ADMIN", "ANALISTA", "CLIENTE"] as Role[],
     },
     {
       href: `/${locale}/app/observability`,
       label: "Observabilidad",
       icon: BarChart3,
+      roles: ["SUPER_ADMIN", "ADMIN", "ANALISTA", "CLIENTE"] as Role[],
     },
-    ...(isAdminOrAnalista
-      ? [{ href: `/${locale}/app/lab`, label: "Agent Lab", icon: FlaskConical }]
-      : []),
-    { href: `/${locale}/app/billing`, label: "Facturación", icon: CreditCard },
-    { href: `/${locale}/app/reports`, label: "Reportes", icon: FileText },
-    { href: `/${locale}/app/settings`, label: "Configuración", icon: Settings },
-    { href: `/${locale}/app/settings/team`, label: "Equipo", icon: Users },
+    {
+      href: `/${locale}/app/lab`,
+      label: "Agent Lab",
+      icon: FlaskConical,
+      roles: ["SUPER_ADMIN", "ADMIN", "ANALISTA"] as Role[],
+    },
+    {
+      href: `/${locale}/app/billing`,
+      label: "Facturación",
+      icon: CreditCard,
+      roles: ["SUPER_ADMIN", "ADMIN", "CLIENTE"] as Role[],
+    },
+    {
+      href: `/${locale}/app/reports`,
+      label: "Reportes",
+      icon: FileText,
+      roles: [
+        "SUPER_ADMIN",
+        "ADMIN",
+        "ANALISTA",
+        "CLIENTE",
+        "MEMBER",
+        "VIEWER",
+      ] as Role[],
+    },
+    {
+      href: `/${locale}/app/settings`,
+      label: "Configuración",
+      icon: Settings,
+      roles: ["SUPER_ADMIN", "ADMIN", "CLIENTE"] as Role[],
+    },
+    {
+      href: `/${locale}/app/settings/team`,
+      label: "Equipo",
+      icon: Users,
+      roles: ["SUPER_ADMIN", "ADMIN", "CLIENTE"] as Role[],
+    },
     {
       href: `/${locale}/app/settings/webhooks`,
       label: "Webhooks",
       icon: Webhook,
+      roles: ["SUPER_ADMIN", "ADMIN", "CLIENTE"] as Role[],
     },
     {
       href: `/${locale}/app/settings/activity`,
       label: "Activity Log",
       icon: Activity,
+      roles: ["SUPER_ADMIN", "ADMIN", "CLIENTE"] as Role[],
     },
   ];
+
+  const navItems = allNavItems.filter((item) => item.roles.includes(userRole));
 
   return (
     <div className="min-h-screen theme-client flex">
