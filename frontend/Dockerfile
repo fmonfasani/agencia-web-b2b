@@ -12,7 +12,6 @@ COPY public ./public/
 COPY messages ./messages/
 COPY next.config.ts .
 COPY tsconfig.json .
-COPY next-env.d.ts .
 COPY postcss.config.mjs .
 COPY auth.config.ts .
 COPY branding.ts .
