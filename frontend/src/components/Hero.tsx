@@ -162,7 +162,7 @@ export default function Hero() {
           >
             Iniciá tu
             <br />
-            <span style={{ color: "#F97316" }}>transformación digital</span>
+            <span style={{ color: "#4285F4" }}>transformación digital</span>
             <br />
             con nosotros.
           </h1>
