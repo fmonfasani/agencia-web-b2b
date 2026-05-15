@@ -137,7 +137,7 @@ export function DataTable<T extends Record<string, any>>({
                   key={String(column.key)}
                   className={`h-10 px-4 text-left align-middle text-[11px] font-semibold uppercase tracking-wider text-[#6F6F6F] ${
                     column.sortable && sortable
-                      ? "cursor-pointer hover:bg-[#F3F4F6]"
+                      ? "cursor-pointer hover:bg-[#F1EFEA]"
                       : ""
                   } ${column.className || ""}`}
                   style={{ width: column.width }}
@@ -181,7 +181,7 @@ export function DataTable<T extends Record<string, any>>({
               paginatedData.map((row, idx) => (
                 <TableRow
                   key={idx}
-                  className={`border-b border-[#E5E3DF] hover:bg-[#FAFAF8] transition-colors ${
+                  className={`border-b border-[#E5E3DF] hover:bg-[#F7F6F3] transition-colors ${
                     onRowClick ? "cursor-pointer" : ""
                   } ${rowClassName?.(row) || ""}`}
                   onClick={() => onRowClick?.(row)}
@@ -221,14 +221,14 @@ export function DataTable<T extends Record<string, any>>({
             <button
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((p) => p - 1)}
-              className="px-4 py-2 bg-white border border-[#E5E3DF] rounded-lg text-sm font-semibold text-[#1C1C1C] disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#FAFAF8] transition-colors"
+              className="px-4 py-2 bg-white border border-[#E5E3DF] rounded-lg text-sm font-semibold text-[#111111] disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#FAFAF8] transition-colors"
             >
               Anterior
             </button>
             <button
               disabled={currentPage === pageCount}
               onClick={() => setCurrentPage((p) => p + 1)}
-              className="px-4 py-2 bg-white border border-[#E5E3DF] rounded-lg text-sm font-semibold text-[#1C1C1C] disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#FAFAF8] transition-colors"
+              className="px-4 py-2 bg-white border border-[#E5E3DF] rounded-lg text-sm font-semibold text-[#111111] disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#FAFAF8] transition-colors"
             >
               Siguiente
             </button>

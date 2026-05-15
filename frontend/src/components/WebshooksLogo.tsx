@@ -1,5 +1,3 @@
-import React from "react";
-
 // Glasses SVG mark — the two "oo" in webshooks styled as nerd glasses
 // with orange pupils. From the Claude Design handoff (Webshooks Logo.html).
 const GlassesMark = ({
@@ -35,8 +33,8 @@ const GlassesMark = ({
       strokeWidth={3 / size}
       fill="none"
     />
-    <circle cx="15" cy="33" r="3.2" fill="#d98a3a" />
-    <circle cx="49" cy="33" r="3.2" fill="#d98a3a" />
+    <circle cx="15" cy="33" r="3.2" fill="#E07A2F" />
+    <circle cx="49" cy="33" r="3.2" fill="#E07A2F" />
   </svg>
 );
 
@@ -62,9 +60,10 @@ export function WebshooksLogo({
   fontSize = 32,
   className,
 }: WebshooksLogoProps) {
-  const ink = theme === "dark" ? "#f3f1ea" : "#1a1917";
-  const iconBg = theme === "dark" ? "#f3f1ea" : "#1a1917";
-  const iconStroke = theme === "dark" ? "#1a1917" : "#f3f1ea";
+  // "light" = on white/light bg → black text; "dark" = on dark bg → white text
+  const ink = theme === "dark" ? "#FFFFFF" : "#111111";
+  const iconBg = theme === "dark" ? "#FFFFFF" : "#111111";
+  const iconStroke = theme === "dark" ? "#111111" : "#FFFFFF";
   const glyphSize = fontSize / 56; // scale SVG relative to font size
 
   if (variant === "icon") {
@@ -114,7 +113,7 @@ export function WebshooksLogo({
           <GlassesMark stroke={ink} size={svgScale} />
         </span>
         <span>
-          ks<span style={{ color: "#d98a3a" }}>.</span>
+          ks<span style={{ color: "#E07A2F" }}>.</span>
         </span>
       </div>
     );
@@ -157,7 +156,7 @@ export function WebshooksLogo({
           lineHeight: 1,
         }}
       >
-        webshooks<span style={{ color: "#d98a3a" }}>.</span>
+        webshooks<span style={{ color: "#E07A2F" }}>.</span>
       </span>
     </div>
   );

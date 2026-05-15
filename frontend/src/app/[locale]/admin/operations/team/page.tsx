@@ -22,7 +22,7 @@ export default async function TeamPerformanceDashboard({
   const session = await auth();
   if (!session?.user) redirect(`/${locale}/auth/sign-in`);
 
-  const apiKey = (session.user as any)?.apiKey as string | undefined;
+  const apiKey = session?.apiKey;
 
   // Load team members via backend-saas API
   let members: Array<{

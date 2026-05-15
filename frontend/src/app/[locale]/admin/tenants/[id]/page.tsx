@@ -69,7 +69,7 @@ export default async function TenantDetailPage({
   const session = await auth();
   if (!session?.user) redirect(`/${locale}/auth/sign-in`);
 
-  const apiKey = (session.user as any)?.apiKey as string | undefined;
+  const apiKey = session?.apiKey;
   if (!apiKey) redirect(`/${locale}/admin/dashboard`);
 
   const client = saasClientFor(apiKey);

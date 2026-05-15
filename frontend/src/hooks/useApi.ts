@@ -27,8 +27,7 @@ export function useApi<T = any>(endpoint: string, options: UseApiOptions = {}) {
 
   // ─── API Key: primero desde sesión NextAuth, luego localStorage ───────────
   const getApiKey = useCallback((): string | null => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const fromSession = (session?.user as any)?.apiKey;
+    const fromSession = session?.apiKey;
     if (fromSession) return fromSession;
     if (typeof window !== "undefined") {
       return localStorage.getItem("api_key");

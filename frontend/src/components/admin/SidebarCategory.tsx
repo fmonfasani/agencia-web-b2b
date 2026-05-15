@@ -28,6 +28,7 @@ const ICONS: Record<string, React.ElementType> = {
   Layers: LucideIcons.Layers,
   Key: LucideIcons.Key,
   History: LucideIcons.History,
+  Building2: LucideIcons.Building2,
 };
 
 interface SidebarCategoryProps {
@@ -47,47 +48,56 @@ export default function SidebarCategory({
   const pathname = usePathname();
   const Icon = ICONS[iconName] || LucideIcons.HelpCircle;
 
-  // Derive if it should be open based on children and pathname
-  const hasActiveChild = React.Children.toArray(children).some((child) => {
-    return (
+  const hasActiveChild = React.Children.toArray(children).some(
+    (child) =>
       React.isValidElement(child) &&
-      (child.props as { href?: string }).href === pathname
-    );
-  });
+      typeof (child.props as { href?: string }).href === "string" &&
+      (child.props as { href: string }).href !== "#" &&
+      pathname.startsWith((child.props as { href: string }).href),
+  );
 
   const isOpen =
     userIsOpen !== null ? userIsOpen : defaultOpen || hasActiveChild;
 
   return (
-    <div className="space-y-1">
+    <div style={{ marginTop: 4 }}>
+      {/* Group header — overline style */}
       <button
         onClick={() => setUserIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-bold transition-all group ${
-          isOpen
-            ? "text-white"
-            : "text-slate-400 hover:text-white hover:bg-white/5"
-        }`}
+        style={{
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "6px 12px",
+          borderRadius: 6,
+          fontSize: 11,
+          fontWeight: 600,
+          letterSpacing: "0.05em",
+          textTransform: "uppercase",
+          color: "#9A9A9A",
+          backgroundColor: "transparent",
+          transition: "color 120ms ease",
+          cursor: "pointer",
+        }}
+        className="hover:!text-[#6F6F6F]"
       >
-        <div className="flex items-center gap-3">
-          <Icon
-            size={18}
-            className={
-              isOpen
-                ? "text-white animate-pulse"
-                : "text-slate-500 group-hover:text-white"
-            }
-          />
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <Icon size={12} strokeWidth={2} style={{ flexShrink: 0 }} />
           <span>{label}</span>
         </div>
-        {isOpen ? (
-          <ChevronDown size={14} className="text-slate-500" />
-        ) : (
-          <ChevronRight size={14} className="text-slate-600" />
-        )}
+        {isOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
       </button>
 
       {isOpen && (
-        <div className="ml-4 pl-4 border-l border-white/10 space-y-1 py-1 animate-in fade-in slide-in-from-left-2 duration-200">
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 1,
+            paddingTop: 2,
+          }}
+        >
           {children}
         </div>
       )}

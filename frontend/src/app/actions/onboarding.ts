@@ -10,7 +10,7 @@ export async function uploadDocuments(formData: FormData) {
     throw new Error("No autenticado");
   }
 
-  const apiKey = (session.user as any)?.apiKey;
+  const apiKey = session?.apiKey;
   const tenantId = session.user?.tenantId;
 
   if (!apiKey || !tenantId) {
@@ -59,7 +59,7 @@ export async function getOnboardingStatus(): Promise<{
     throw new Error("No autenticado");
   }
 
-  const apiKey = (session.user as any)?.apiKey;
+  const apiKey = session?.apiKey;
   const tenantId = session.user?.tenantId;
 
   if (!apiKey || !tenantId) {

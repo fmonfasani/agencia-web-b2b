@@ -42,7 +42,7 @@ interface UseAgentsState {
 
 export function useAgents(): UseAgentsState {
   const { data: session } = useSession();
-  const apiKey = (session?.user as any)?.apiKey as string | undefined;
+  const apiKey = session?.apiKey;
 
   const [instances, setInstances] = useState<AgentInstance[]>([]);
   const [templates, setTemplates] = useState<AgentTemplate[]>([]);

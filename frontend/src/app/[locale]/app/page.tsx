@@ -24,7 +24,7 @@ export default async function ClientDashboard({
     throw new Error("No autenticado");
   }
 
-  const apiKey = (session.user as any)?.apiKey;
+  const apiKey = session.apiKey;
   const tenantId = session.user?.tenantId;
 
   if (!apiKey || !tenantId) {
@@ -43,10 +43,6 @@ export default async function ClientDashboard({
     ]);
 
   // Extraer datos seguros
-  const tenant =
-    tenantData.status === "fulfilled"
-      ? tenantData.value
-      : { tenant: { name: "Mi Empresa" } };
   const metrics =
     metricsData.status === "fulfilled"
       ? metricsData.value
@@ -153,13 +149,13 @@ export default async function ClientDashboard({
                   <div
                     className="bg-[#3B82F6] h-2 rounded-full"
                     style={{
-                      width: `${onboarding.postgresql ? 100 : 0}%`,
+                      width: `${onboarding.postgres_ok ? 100 : 0}%`,
                     }}
                   ></div>
                 </div>
               </div>
               <p className="text-sm text-[#6B7280]">
-                {onboarding.postgresql
+                {onboarding.postgres_ok
                   ? "✅ Base de datos lista"
                   : "⏳ Cargando documentos..."}
               </p>

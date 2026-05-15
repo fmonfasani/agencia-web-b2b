@@ -27,8 +27,7 @@ export interface ReportType {
 
 async function getClient() {
   const session = await auth();
-  const apiKey =
-    (session?.user as any)?.apiKey || (session as any)?.backendApiKey;
+  const apiKey = session?.apiKey;
   if (!apiKey) throw new Error("No API key in session");
   return saasClientFor(apiKey);
 }
@@ -121,8 +120,7 @@ export async function generateReport(
   if (format === "csv" && reportId !== "billing") {
     // CSV export is streamed directly — return URL for client to download
     const session = await auth();
-    const apiKey =
-      (session?.user as any)?.apiKey || (session as any)?.backendApiKey;
+    const apiKey = session?.apiKey;
     if (!apiKey) return { success: false, error: "No autenticado" };
 
     const client = saasClientFor(apiKey);

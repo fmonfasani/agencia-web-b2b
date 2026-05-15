@@ -9,8 +9,7 @@ import type {
 
 async function getClient() {
   const session = await auth();
-  const apiKey =
-    (session?.user as any)?.apiKey || (session as any)?.backendApiKey;
+  const apiKey = session?.apiKey;
   if (!apiKey) throw new Error("No API key in session");
   return saasClientFor(apiKey);
 }

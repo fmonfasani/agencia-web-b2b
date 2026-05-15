@@ -52,7 +52,7 @@ export default function AgentsPage() {
   const [showPicker, setShowPicker] = useState(false);
   const [creating, setCreating] = useState<string | null>(null); // template_id being created
 
-  const apiKey = (session?.user as any)?.apiKey as string | undefined;
+  const apiKey = session?.apiKey;
 
   useEffect(() => {
     if (!apiKey) return;

@@ -10,8 +10,7 @@ import type {
 
 async function getClient() {
   const session = await auth();
-  const apiKey =
-    (session?.user as any)?.apiKey || (session as any)?.backendApiKey;
+  const apiKey = session?.apiKey;
   if (!apiKey) throw new Error("No API key in session");
   return saasClientFor(apiKey);
 }
@@ -29,9 +28,7 @@ export async function getMyDocuments(): Promise<TrainingDocument[]> {
   }
 }
 
-export async function uploadTrainingDocument(
-  formData: FormData,
-): Promise<{
+export async function uploadTrainingDocument(formData: FormData): Promise<{
   success: boolean;
   error?: string;
   results?: Array<{

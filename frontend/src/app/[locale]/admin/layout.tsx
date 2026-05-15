@@ -1,7 +1,6 @@
 import React from "react";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { User as UserIcon } from "lucide-react";
 import { WebshooksLogo } from "@/components/WebshooksLogo";
 import LogoutButton from "@/components/admin/LogoutButton";
 import SidebarNavItem from "@/components/admin/SidebarNavItem";
@@ -44,40 +43,48 @@ export default async function AdminLayout({
 
   return (
     <div
-      className="min-h-screen theme-admin flex overflow-hidden"
+      className="min-h-screen flex overflow-hidden"
       style={{
+        backgroundColor: "#F7F6F3",
         fontFamily: branding.fontFamily
           ? `'${branding.fontFamily}', sans-serif`
-          : "'DM Sans', 'Nunito', sans-serif",
+          : undefined,
       }}
     >
-      {/* Sidebar — Webshooks Design System v3 (Warm Neutral) */}
+      {/* Sidebar — Webshooks Design System v4 */}
       <aside
-        className="w-[240px] hidden md:flex flex-col relative z-50 shrink-0 sidebar-light"
+        className="w-[240px] hidden md:flex flex-col relative z-50 shrink-0"
         style={{
-          background: branding.brandingEnabled ? sidebarColor : "#edebe6",
-          color: "#1c1c1c",
-          boxShadow: "2px 0 8px rgba(0,0,0,0.04)",
-          borderRight: "1px solid #e5e3df",
+          backgroundColor: branding.brandingEnabled ? sidebarColor : "#FFFFFF",
+          borderRight: "1px solid #E5E3DF",
         }}
       >
         {/* Brand Header */}
-        <div style={{ padding: "22px 20px 16px" }}>
+        <div
+          style={{
+            padding: "0 16px",
+            height: 56,
+            display: "flex",
+            alignItems: "center",
+            borderBottom: "1px solid #E5E3DF",
+            flexShrink: 0,
+          }}
+        >
           {!branding.brandingEnabled ? (
-            <WebshooksLogo variant="lockup" theme="dark" fontSize={14} />
+            <WebshooksLogo variant="lockup" theme="light" fontSize={14} />
           ) : (
             <div className="flex items-center gap-3">
               <div
                 style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 10,
+                  width: 32,
+                  height: 32,
+                  borderRadius: 8,
                   background: primaryColor,
-                  boxShadow: `0 4px 12px ${primaryColor}66`,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   overflow: "hidden",
+                  flexShrink: 0,
                 }}
               >
                 {logoUrl ? (
@@ -87,32 +94,36 @@ export default async function AdminLayout({
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <WebshooksLogo variant="icon" theme="dark" fontSize={24} />
+                  <WebshooksLogo variant="icon" theme="light" fontSize={20} />
                 )}
               </div>
-              <div className="flex flex-col">
+              <div className="flex flex-col min-w-0">
                 <span
                   style={{
                     fontSize: 13,
-                    fontWeight: 800,
-                    color: "#1c1c1c",
+                    fontWeight: 700,
+                    color: "#111111",
                     lineHeight: 1.2,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
                   }}
                 >
                   {appName}
                 </span>
-                <span
-                  style={{
-                    fontSize: 10,
-                    fontWeight: 500,
-                    color: "#9a9a9a",
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  {branding.subName ||
-                    (branding.brandingEnabled ? "" : "Agencia Leads")}
-                </span>
+                {branding.subName && (
+                  <span
+                    style={{
+                      fontSize: 10,
+                      fontWeight: 500,
+                      color: "#9A9A9A",
+                      letterSpacing: "0.05em",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {branding.subName}
+                  </span>
+                )}
               </div>
             </div>
           )}
@@ -327,72 +338,62 @@ export default async function AdminLayout({
         </div>
 
         {/* Footer User Profile */}
-        <div
-          style={{
-            padding: "16px 12px",
-            borderTop: "1px solid rgba(255,255,255,0.06)",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              padding: "10px 12px",
-              background: "rgba(255,255,255,0.05)",
-              borderRadius: 10,
-              border: "1px solid rgba(255,255,255,0.06)",
-            }}
-          >
+        <div style={{ borderTop: "1px solid #E5E3DF", padding: 12 }}>
+          <div className="flex items-center gap-3 mb-2">
             <div
               style={{
                 width: 32,
                 height: 32,
-                borderRadius: 8,
-                background: "rgba(74,127,165,0.25)",
+                borderRadius: "50%",
+                backgroundColor: "#F1F5F9",
+                border: "1px solid #E5E3DF",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                flexShrink: 0,
+                fontSize: 12,
+                fontWeight: 600,
+                color: "#475569",
               }}
             >
-              <UserIcon size={15} className="text-slate-300" />
+              {(session?.user?.email?.[0] ?? "A").toUpperCase()}
             </div>
-            <div className="flex flex-col min-w-0">
-              <span
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <p
                 style={{
-                  fontSize: 12,
-                  fontWeight: 700,
-                  color: "#ffffff",
-                  lineHeight: 1.3,
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: "#111111",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
                 }}
               >
-                Core Admin
-              </span>
-              <span
+                {session?.user?.email || "Admin"}
+              </p>
+              <p
                 style={{
-                  fontSize: 9,
-                  fontWeight: 600,
-                  color: "#2ecc8f",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.12em",
+                  fontSize: 11,
+                  color: "#9A9A9A",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
                 }}
               >
                 {membership.role}
-              </span>
+              </p>
             </div>
           </div>
-          <div className="mt-2 px-1">
-            <LogoutButton locale={locale} />
-          </div>
+          <LogoutButton locale={locale} />
         </div>
       </aside>
 
       {/* Main content */}
       <main
-        className="flex-1 overflow-auto relative admin-scroll"
-        style={{ background: "var(--color-admin-bg)" }}
+        className="flex-1 overflow-auto admin-scroll"
+        style={{ backgroundColor: "#F7F6F3" }}
       >
-        <div className="relative z-10">{children}</div>
+        {children}
       </main>
     </div>
   );

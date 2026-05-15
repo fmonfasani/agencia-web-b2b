@@ -6,7 +6,14 @@ import { motion } from "framer-motion";
 import { ArrowLeft, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import Link from "next/link";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
 } from "recharts";
 import { PageTransition } from "@/components/animations/PageTransition";
 import { useToast } from "@/hooks/useToast";
@@ -14,23 +21,43 @@ import { getAgentComparison } from "@/app/actions/agent";
 import { useSession } from "next-auth/react";
 
 interface ComparisonData {
-  myMetrics: { queries: number; latency: number; errorRate: number; successRate: number };
-  marketAverage: { queries: number; latency: number; errorRate: number; successRate: number };
+  myMetrics: {
+    queries: number;
+    latency: number;
+    errorRate: number;
+    successRate: number;
+  };
+  marketAverage: {
+    queries: number;
+    latency: number;
+    errorRate: number;
+    successRate: number;
+  };
 }
 
-function DiffBadge({ diff, invertGood = false }: { diff: number; invertGood?: boolean }) {
+function DiffBadge({
+  diff,
+  invertGood = false,
+}: {
+  diff: number;
+  invertGood?: boolean;
+}) {
   const isGood = invertGood ? diff < 0 : diff > 0;
   const Icon = diff > 0 ? TrendingUp : diff < 0 ? TrendingDown : Minus;
-  const cls = diff === 0
-    ? "bg-gray-100 text-gray-600"
-    : isGood
-    ? "bg-green-100 text-green-700"
-    : "bg-red-100 text-red-700";
+  const cls =
+    diff === 0
+      ? "bg-gray-100 text-gray-600"
+      : isGood
+        ? "bg-green-100 text-green-700"
+        : "bg-red-100 text-red-700";
 
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${cls}`}>
+    <span
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${cls}`}
+    >
       <Icon size={12} />
-      {diff > 0 ? "+" : ""}{diff.toFixed(1)}%
+      {diff > 0 ? "+" : ""}
+      {diff.toFixed(1)}%
     </span>
   );
 }
@@ -45,7 +72,7 @@ export default function AgentComparePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const apiKey = (session?.user as any)?.apiKey;
+    const apiKey = session?.apiKey;
     if (!apiKey) return;
 
     getAgentComparison(agentId, apiKey).then((res) => {
@@ -114,20 +141,30 @@ export default function AgentComparePage() {
   return (
     <PageTransition>
       <div className="space-y-6">
-        <Link href={`../${agentId}`} className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700">
+        <Link
+          href={`../${agentId}`}
+          className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700"
+        >
           <ArrowLeft size={16} />
           Volver al agente
         </Link>
 
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Comparación de Rendimiento</h1>
-          <p className="text-gray-500 mt-1">Tu agente vs. el promedio del mercado</p>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Comparación de Rendimiento
+          </h1>
+          <p className="text-gray-500 mt-1">
+            Tu agente vs. el promedio del mercado
+          </p>
         </div>
 
         {loading ? (
           <div className="space-y-4">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-12 bg-gray-200 rounded-lg animate-pulse" />
+              <div
+                key={i}
+                className="h-12 bg-gray-200 rounded-lg animate-pulse"
+              />
             ))}
           </div>
         ) : data ? (
@@ -141,17 +178,26 @@ export default function AgentComparePage() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="text-left py-3 px-5 font-semibold text-gray-700">Métrica</th>
-                    <th className="text-right py-3 px-5 font-semibold text-blue-700">Mi Agente</th>
-                    <th className="text-right py-3 px-5 font-semibold text-gray-500">Promedio</th>
-                    <th className="text-right py-3 px-5 font-semibold text-gray-700">Diferencia</th>
+                    <th className="text-left py-3 px-5 font-semibold text-gray-700">
+                      Métrica
+                    </th>
+                    <th className="text-right py-3 px-5 font-semibold text-blue-700">
+                      Mi Agente
+                    </th>
+                    <th className="text-right py-3 px-5 font-semibold text-gray-500">
+                      Promedio
+                    </th>
+                    <th className="text-right py-3 px-5 font-semibold text-gray-700">
+                      Diferencia
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {rows.map((row, i) => {
-                    const diff = row.avg !== 0
-                      ? ((row.mine - row.avg) / row.avg) * 100
-                      : 0;
+                    const diff =
+                      row.avg !== 0
+                        ? ((row.mine - row.avg) / row.avg) * 100
+                        : 0;
                     return (
                       <motion.tr
                         key={row.metric}
@@ -160,12 +206,16 @@ export default function AgentComparePage() {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: i * 0.07 }}
                       >
-                        <td className="py-4 px-5 font-medium text-gray-700">{row.metric}</td>
+                        <td className="py-4 px-5 font-medium text-gray-700">
+                          {row.metric}
+                        </td>
                         <td className="py-4 px-5 text-right font-bold text-blue-700">
-                          {row.mine.toLocaleString()}{row.unit}
+                          {row.mine.toLocaleString()}
+                          {row.unit}
                         </td>
                         <td className="py-4 px-5 text-right text-gray-500">
-                          {row.avg.toLocaleString()}{row.unit}
+                          {row.avg.toLocaleString()}
+                          {row.unit}
                         </td>
                         <td className="py-4 px-5 text-right">
                           <DiffBadge diff={diff} invertGood={row.invertGood} />
@@ -184,7 +234,9 @@ export default function AgentComparePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Comparación Visual</h3>
+              <h3 className="text-lg font-bold text-gray-900 mb-4">
+                Comparación Visual
+              </h3>
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -192,8 +244,16 @@ export default function AgentComparePage() {
                   <YAxis tick={{ fontSize: 11 }} />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="Mi Agente" fill="#0066FF" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="Promedio" fill="#D1D5DB" radius={[4, 4, 0, 0]} />
+                  <Bar
+                    dataKey="Mi Agente"
+                    fill="#0066FF"
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Bar
+                    dataKey="Promedio"
+                    fill="#D1D5DB"
+                    radius={[4, 4, 0, 0]}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </motion.div>
@@ -208,7 +268,9 @@ export default function AgentComparePage() {
               <h3 className="text-lg font-bold text-gray-900 mb-4">Insights</h3>
               <ul className="space-y-3">
                 {insights.map((insight, i) => (
-                  <li key={i} className="text-sm text-gray-700 leading-relaxed">{insight}</li>
+                  <li key={i} className="text-sm text-gray-700 leading-relaxed">
+                    {insight}
+                  </li>
                 ))}
               </ul>
             </motion.div>

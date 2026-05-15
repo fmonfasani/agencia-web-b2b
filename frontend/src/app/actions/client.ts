@@ -45,8 +45,7 @@ export async function getClientDashboardData(): Promise<ClientDashboardData> {
 
   try {
     const session = await auth();
-    const apiKey =
-      (session?.user as any)?.apiKey || (session as any)?.backendApiKey;
+    const apiKey = session?.apiKey;
     if (!apiKey) throw new Error("API Key not found in session");
 
     const client = saasClientFor(apiKey);

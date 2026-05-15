@@ -9,6 +9,6 @@ export default async function AgentDetailsPage({
 }) {
   const { agentId } = await params;
   const session = await auth();
-  const apiKey = (session?.user as any)?.apiKey ?? "";
+  const apiKey = session?.apiKey ?? "";
   return <AgentDetailsClient agentId={agentId} apiKey={apiKey} />;
 }

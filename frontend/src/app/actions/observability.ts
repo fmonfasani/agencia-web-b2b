@@ -7,7 +7,7 @@ export async function getObservabilityData(filterTenantId?: string) {
   const session = await auth();
   if (!session?.user) return null;
 
-  const apiKey = (session.user as any)?.apiKey;
+  const apiKey = session?.apiKey;
   if (!apiKey) return null;
 
   const userRole = ((session.user as any)?.role ?? "").toUpperCase();

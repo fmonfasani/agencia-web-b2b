@@ -44,7 +44,7 @@ export async function runLabComparison(
   const session = await auth();
   if (!session?.user) throw new Error("No autenticado");
 
-  const apiKey = (session.user as any)?.apiKey;
+  const apiKey = session?.apiKey;
   const tenantId = (session.user as any)?.tenantId;
   if (!apiKey || !tenantId) throw new Error("Credenciales incompletas");
 
@@ -122,7 +122,7 @@ export async function runLabSingle(
   if (!session?.user)
     return { success: false, error: "No autenticado", durationMs: 0 };
 
-  const apiKey = (session.user as any)?.apiKey;
+  const apiKey = session?.apiKey;
   const tenantId = (session.user as any)?.tenantId;
   if (!apiKey || !tenantId)
     return { success: false, error: "Credenciales incompletas", durationMs: 0 };
@@ -155,7 +155,7 @@ export async function getLabProviders(): Promise<AgentProvidersResponse | null> 
   const session = await auth();
   if (!session?.user) return null;
 
-  const apiKey = (session.user as any)?.apiKey;
+  const apiKey = session?.apiKey;
   if (!apiKey) return null;
 
   try {
@@ -173,7 +173,7 @@ export async function getLabTraces() {
   const session = await auth();
   if (!session?.user) return [];
 
-  const apiKey = (session.user as any)?.apiKey;
+  const apiKey = session?.apiKey;
   if (!apiKey) return [];
 
   try {

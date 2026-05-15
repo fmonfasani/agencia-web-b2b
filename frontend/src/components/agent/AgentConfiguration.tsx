@@ -5,7 +5,10 @@ import { AgentDetails, updateAgentConfig } from "@/app/actions/agent";
 import { useSession } from "next-auth/react";
 import { useToast } from "@/hooks/useToast";
 
-interface Props { agent: AgentDetails; agentId: string; }
+interface Props {
+  agent: AgentDetails;
+  agentId: string;
+}
 
 export default function AgentConfiguration({ agent, agentId }: Props) {
   const { data: session } = useSession();
@@ -19,7 +22,7 @@ export default function AgentConfiguration({ agent, agentId }: Props) {
   });
 
   const handleSave = async () => {
-    const apiKey = (session?.user as any)?.apiKey;
+    const apiKey = session?.apiKey;
     if (!apiKey) return;
 
     setIsSaving(true);
@@ -32,7 +35,10 @@ export default function AgentConfiguration({ agent, agentId }: Props) {
         throw new Error(res.error);
       }
     } catch (err) {
-      addToast(err instanceof Error ? err.message : "Error al guardar", "error");
+      addToast(
+        err instanceof Error ? err.message : "Error al guardar",
+        "error",
+      );
     } finally {
       setIsSaving(false);
     }
@@ -42,7 +48,9 @@ export default function AgentConfiguration({ agent, agentId }: Props) {
     <div className="space-y-6">
       <div className="border border-gray-200 rounded-lg p-6 bg-white">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-bold text-gray-900">Configuración del Agente</h3>
+          <h3 className="text-lg font-bold text-gray-900">
+            Configuración del Agente
+          </h3>
           {!isEditing && (
             <button
               onClick={() => setIsEditing(true)}
@@ -78,11 +86,15 @@ export default function AgentConfiguration({ agent, agentId }: Props) {
                 max="2"
                 step="0.1"
                 value={form.temperature}
-                onChange={(e) => setForm({ ...form, temperature: parseFloat(e.target.value) })}
+                onChange={(e) =>
+                  setForm({ ...form, temperature: parseFloat(e.target.value) })
+                }
                 disabled={!isEditing}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:bg-gray-50"
               />
-              <p className="text-xs text-gray-500 mt-1">Menor = más determinista. Mayor = más creativo.</p>
+              <p className="text-xs text-gray-500 mt-1">
+                Menor = más determinista. Mayor = más creativo.
+              </p>
             </div>
 
             <div>
@@ -92,11 +104,15 @@ export default function AgentConfiguration({ agent, agentId }: Props) {
               <input
                 type="number"
                 value={form.maxTokens}
-                onChange={(e) => setForm({ ...form, maxTokens: parseInt(e.target.value) })}
+                onChange={(e) =>
+                  setForm({ ...form, maxTokens: parseInt(e.target.value) })
+                }
                 disabled={!isEditing}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:bg-gray-50"
               />
-              <p className="text-xs text-gray-500 mt-1">Límite máximo de tokens en la respuesta.</p>
+              <p className="text-xs text-gray-500 mt-1">
+                Límite máximo de tokens en la respuesta.
+              </p>
             </div>
           </div>
 
@@ -112,7 +128,11 @@ export default function AgentConfiguration({ agent, agentId }: Props) {
               <button
                 onClick={() => {
                   setIsEditing(false);
-                  setForm({ prompt: agent.config.prompt, temperature: agent.config.temperature, maxTokens: agent.config.maxTokens });
+                  setForm({
+                    prompt: agent.config.prompt,
+                    temperature: agent.config.temperature,
+                    maxTokens: agent.config.maxTokens,
+                  });
                 }}
                 className="px-4 py-2 border border-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
               >

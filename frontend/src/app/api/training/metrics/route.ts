@@ -8,8 +8,7 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const apiKey =
-    (session.user as any)?.apiKey || (session as any)?.backendApiKey;
+  const apiKey = session?.apiKey;
   if (!apiKey) {
     return NextResponse.json({ error: "No API key" }, { status: 401 });
   }

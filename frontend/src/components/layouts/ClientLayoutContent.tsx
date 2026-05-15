@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { WebshooksLogo } from "@/components/WebshooksLogo";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import AuthSessionProvider from "@/components/providers/AuthSessionProvider";
 import type { Session } from "next-auth";
@@ -31,6 +32,27 @@ interface ClientLayoutContentProps {
   session: Session | null;
 }
 
+type Role =
+  | "SUPER_ADMIN"
+  | "ADMIN"
+  | "ANALISTA"
+  | "CLIENTE"
+  | "MEMBER"
+  | "VIEWER";
+
+interface NavItem {
+  href: string;
+  label: string;
+  icon: React.ElementType;
+  roles: Role[];
+  isAI?: boolean;
+}
+
+interface NavGroup {
+  label: string;
+  items: NavItem[];
+}
+
 export default function ClientLayoutContent({
   children,
   locale,
@@ -38,223 +60,395 @@ export default function ClientLayoutContent({
 }: ClientLayoutContentProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const pathname = usePathname();
 
   const isExpanded = !isCollapsed || isHovered;
-
-  type Role =
-    | "SUPER_ADMIN"
-    | "ADMIN"
-    | "ANALISTA"
-    | "CLIENTE"
-    | "MEMBER"
-    | "VIEWER";
-
   const userRole = (session?.user?.role as Role) ?? "CLIENTE";
 
-  const allNavItems = [
+  const navGroups: NavGroup[] = [
     {
-      href: `/${locale}/app`,
-      label: "Dashboard",
-      icon: Home,
-      roles: [
-        "SUPER_ADMIN",
-        "ADMIN",
-        "ANALISTA",
-        "CLIENTE",
-        "MEMBER",
-        "VIEWER",
-      ] as Role[],
+      label: "Core",
+      items: [
+        {
+          href: `/${locale}/app`,
+          label: "Dashboard",
+          icon: Home,
+          roles: [
+            "SUPER_ADMIN",
+            "ADMIN",
+            "ANALISTA",
+            "CLIENTE",
+            "MEMBER",
+            "VIEWER",
+          ],
+        },
+        {
+          href: `/${locale}/app/agents`,
+          label: "Mis Agentes",
+          icon: Cpu,
+          roles: ["SUPER_ADMIN", "ADMIN", "ANALISTA", "CLIENTE"],
+        },
+        {
+          href: `/${locale}/app/chat`,
+          label: "Chat IA",
+          icon: Zap,
+          roles: ["SUPER_ADMIN", "ADMIN", "ANALISTA", "CLIENTE", "MEMBER"],
+          isAI: true,
+        },
+      ],
     },
     {
-      href: `/${locale}/app/agents`,
-      label: "Mis Agentes",
-      icon: Cpu,
-      roles: ["SUPER_ADMIN", "ADMIN", "ANALISTA", "CLIENTE"] as Role[],
+      label: "IA",
+      items: [
+        {
+          href: `/${locale}/app/training`,
+          label: "Entrenamiento",
+          icon: BrainCircuit,
+          roles: ["SUPER_ADMIN", "ADMIN", "ANALISTA", "CLIENTE"],
+          isAI: true,
+        },
+        {
+          href: `/${locale}/app/marketplace`,
+          label: "Marketplace",
+          icon: ShoppingBag,
+          roles: ["SUPER_ADMIN", "ADMIN", "ANALISTA", "CLIENTE"],
+        },
+        {
+          href: `/${locale}/app/observability`,
+          label: "Observabilidad",
+          icon: BarChart3,
+          roles: ["SUPER_ADMIN", "ADMIN", "ANALISTA", "CLIENTE"],
+        },
+        {
+          href: `/${locale}/app/lab`,
+          label: "Agent Lab",
+          icon: FlaskConical,
+          roles: ["SUPER_ADMIN", "ADMIN", "ANALISTA"],
+          isAI: true,
+        },
+      ],
     },
     {
-      href: `/${locale}/app/training`,
-      label: "Entrenamiento",
-      icon: BrainCircuit,
-      roles: ["SUPER_ADMIN", "ADMIN", "ANALISTA", "CLIENTE"] as Role[],
-    },
-    {
-      href: `/${locale}/app/chat`,
-      label: "Chat IA",
-      icon: Zap,
-      roles: [
-        "SUPER_ADMIN",
-        "ADMIN",
-        "ANALISTA",
-        "CLIENTE",
-        "MEMBER",
-      ] as Role[],
-    },
-    {
-      href: `/${locale}/app/marketplace`,
-      label: "Marketplace",
-      icon: ShoppingBag,
-      roles: ["SUPER_ADMIN", "ADMIN", "ANALISTA", "CLIENTE"] as Role[],
-    },
-    {
-      href: `/${locale}/app/observability`,
-      label: "Observabilidad",
-      icon: BarChart3,
-      roles: ["SUPER_ADMIN", "ADMIN", "ANALISTA", "CLIENTE"] as Role[],
-    },
-    {
-      href: `/${locale}/app/lab`,
-      label: "Agent Lab",
-      icon: FlaskConical,
-      roles: ["SUPER_ADMIN", "ADMIN", "ANALISTA"] as Role[],
-    },
-    {
-      href: `/${locale}/app/billing`,
-      label: "Facturación",
-      icon: CreditCard,
-      roles: ["SUPER_ADMIN", "ADMIN", "CLIENTE"] as Role[],
-    },
-    {
-      href: `/${locale}/app/reports`,
-      label: "Reportes",
-      icon: FileText,
-      roles: [
-        "SUPER_ADMIN",
-        "ADMIN",
-        "ANALISTA",
-        "CLIENTE",
-        "MEMBER",
-        "VIEWER",
-      ] as Role[],
-    },
-    {
-      href: `/${locale}/app/settings`,
-      label: "Configuración",
-      icon: Settings,
-      roles: ["SUPER_ADMIN", "ADMIN", "CLIENTE"] as Role[],
-    },
-    {
-      href: `/${locale}/app/settings/team`,
-      label: "Equipo",
-      icon: Users,
-      roles: ["SUPER_ADMIN", "ADMIN", "CLIENTE"] as Role[],
-    },
-    {
-      href: `/${locale}/app/settings/webhooks`,
-      label: "Webhooks",
-      icon: Webhook,
-      roles: ["SUPER_ADMIN", "ADMIN", "CLIENTE"] as Role[],
-    },
-    {
-      href: `/${locale}/app/settings/activity`,
-      label: "Activity Log",
-      icon: Activity,
-      roles: ["SUPER_ADMIN", "ADMIN", "CLIENTE"] as Role[],
+      label: "Admin",
+      items: [
+        {
+          href: `/${locale}/app/billing`,
+          label: "Facturación",
+          icon: CreditCard,
+          roles: ["SUPER_ADMIN", "ADMIN", "CLIENTE"],
+        },
+        {
+          href: `/${locale}/app/reports`,
+          label: "Reportes",
+          icon: FileText,
+          roles: [
+            "SUPER_ADMIN",
+            "ADMIN",
+            "ANALISTA",
+            "CLIENTE",
+            "MEMBER",
+            "VIEWER",
+          ],
+        },
+        {
+          href: `/${locale}/app/settings`,
+          label: "Configuración",
+          icon: Settings,
+          roles: ["SUPER_ADMIN", "ADMIN", "CLIENTE"],
+        },
+        {
+          href: `/${locale}/app/settings/team`,
+          label: "Equipo",
+          icon: Users,
+          roles: ["SUPER_ADMIN", "ADMIN", "CLIENTE"],
+        },
+        {
+          href: `/${locale}/app/settings/webhooks`,
+          label: "Webhooks",
+          icon: Webhook,
+          roles: ["SUPER_ADMIN", "ADMIN", "CLIENTE"],
+        },
+        {
+          href: `/${locale}/app/settings/activity`,
+          label: "Activity Log",
+          icon: Activity,
+          roles: ["SUPER_ADMIN", "ADMIN", "CLIENTE"],
+        },
+      ],
     },
   ];
 
-  const navItems = allNavItems.filter((item) => item.roles.includes(userRole));
+  const isActive = (href: string) => {
+    // Exact match for dashboard, prefix match for the rest
+    if (href === `/${locale}/app`) return pathname === href;
+    return pathname.startsWith(href);
+  };
 
   return (
-    <div className="min-h-screen theme-client flex">
-      {/* Sidebar */}
+    <div className="min-h-screen flex" style={{ backgroundColor: "#F7F6F3" }}>
+      {/* ── Sidebar ── */}
       <aside
-        className={`sidebar-light border-r border-[#E5E3DF] flex flex-col transition-all duration-300 ${
-          isExpanded ? "w-60" : "w-16"
-        }`}
+        className="flex flex-col transition-all duration-200 ease-in-out flex-shrink-0"
+        style={{
+          width: isExpanded ? 240 : 64,
+          backgroundColor: "#FFFFFF",
+          borderRight: "1px solid #E5E3DF",
+        }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* Logo / Toggle */}
-        <div className="flex items-center justify-between p-4 border-b border-[#E5E3DF] relative">
+        {/* Logo + Toggle */}
+        <div
+          className="flex items-center justify-between"
+          style={{
+            padding: "16px 16px",
+            borderBottom: "1px solid #E5E3DF",
+            height: 56,
+          }}
+        >
           {isExpanded && (
-            <div className="flex-1">
-              <WebshooksLogo variant="lockup" theme="dark" fontSize={14} />
-            </div>
-          )}
-          {!isExpanded && isHovered && (
-            <div className="absolute left-1/2 -translate-x-1/2 w-12">
-              <WebshooksLogo variant="lockup" theme="dark" fontSize={12} />
+            <div className="flex-1 min-w-0">
+              <WebshooksLogo variant="lockup" theme="light" fontSize={14} />
             </div>
           )}
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="ml-auto p-1.5 hover:bg-[#E2E0DA] rounded-lg transition-colors text-[#6F6F6F]"
-            title={isExpanded ? "Collapse sidebar" : "Expand sidebar"}
+            style={{
+              padding: 6,
+              borderRadius: 6,
+              color: "#9A9A9A",
+              backgroundColor: "transparent",
+              transition: "background-color 120ms ease",
+              flexShrink: 0,
+              marginLeft: isExpanded ? 8 : "auto",
+            }}
+            className="hover:bg-[#F7F6F3]"
+            title={isExpanded ? "Colapsar sidebar" : "Expandir sidebar"}
           >
             {isExpanded ? (
-              <ChevronLeft size={18} />
+              <ChevronLeft size={16} />
             ) : (
-              <ChevronRight size={18} />
+              <ChevronRight size={16} />
             )}
           </button>
         </div>
 
         {/* Navigation */}
-        <nav className="p-2 flex flex-col gap-1 flex-1">
-          {navItems.map((item) => {
-            const Icon = item.icon;
+        <nav className="flex-1 overflow-y-auto" style={{ padding: "8px 8px" }}>
+          {navGroups.map((group) => {
+            const visibleItems = group.items.filter((item) =>
+              item.roles.includes(userRole),
+            );
+            if (visibleItems.length === 0) return null;
+
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#9A9A9A] hover:bg-[#E2E0DA] hover:text-[#1C1C1C] transition-colors font-medium text-sm"
-                title={!isExpanded ? item.label : undefined}
+              <div
+                key={group.label}
+                style={{ marginTop: isExpanded ? 24 : 16 }}
               >
-                <Icon size={18} className="flex-shrink-0" />
-                {isExpanded && <span>{item.label}</span>}
-              </Link>
+                {/* Group label */}
+                {isExpanded && (
+                  <div
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 600,
+                      letterSpacing: "0.05em",
+                      textTransform: "uppercase",
+                      color: "#9A9A9A",
+                      paddingLeft: 12,
+                      marginBottom: 4,
+                    }}
+                  >
+                    {group.label}
+                  </div>
+                )}
+
+                {/* Items */}
+                <div className="flex flex-col" style={{ gap: 1 }}>
+                  {visibleItems.map((item) => {
+                    const Icon = item.icon;
+                    const active = isActive(item.href);
+
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        title={!isExpanded ? item.label : undefined}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 10,
+                          padding: isExpanded ? "8px 12px" : "8px",
+                          borderRadius: 8,
+                          fontSize: 14,
+                          fontWeight: active ? 600 : 400,
+                          color: active ? "#475569" : "#6F6F6F",
+                          backgroundColor: active ? "#F1F5F9" : "transparent",
+                          borderLeft: active
+                            ? "3px solid #475569"
+                            : "3px solid transparent",
+                          transition: "all 120ms ease",
+                          textDecoration: "none",
+                          justifyContent: isExpanded ? "flex-start" : "center",
+                          position: "relative",
+                        }}
+                        className="hover:bg-[#F7F6F3] hover:!text-[#111111]"
+                      >
+                        <Icon
+                          size={18}
+                          strokeWidth={active ? 2 : 1.5}
+                          style={{ flexShrink: 0 }}
+                        />
+                        {isExpanded && (
+                          <span style={{ flex: 1, minWidth: 0 }}>
+                            {item.label}
+                          </span>
+                        )}
+                        {/* AI dot indicator */}
+                        {isExpanded && item.isAI && (
+                          <span
+                            style={{
+                              display: "inline-block",
+                              width: 6,
+                              height: 6,
+                              backgroundColor: "#E07A2F",
+                              borderRadius: "50%",
+                              flexShrink: 0,
+                            }}
+                          />
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
             );
           })}
         </nav>
 
-        {/* Footer */}
-        <div className="border-t border-[#E5E3DF] bg-[#F7F6F3]">
-          <div className="p-3">
-            {isExpanded && (
-              <>
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 bg-[#E2E0DA] rounded-full flex-shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-[#1C1C1C] truncate">
-                      {session?.user?.email || "Usuario"}
-                    </p>
-                    <p className="text-xs text-[#9A9A9A] truncate">
-                      {(session?.user?.role as string) || "Cliente"}
-                    </p>
-                  </div>
-                </div>
-                <Link
-                  href="/api/auth/signout"
-                  className="flex items-center gap-2 w-full px-3 py-2 text-sm font-medium text-[#9A9A9A] hover:bg-[#E2E0DA] hover:text-[#1C1C1C] rounded-lg transition-colors border border-[#E5E3DF]"
+        {/* Footer — user info */}
+        <div
+          style={{
+            borderTop: "1px solid #E5E3DF",
+            padding: 12,
+          }}
+        >
+          {isExpanded ? (
+            <>
+              <div className="flex items-center gap-3 mb-2">
+                {/* Avatar */}
+                <div
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: "50%",
+                    backgroundColor: "#F1F5F9",
+                    border: "1px solid #E5E3DF",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: "#475569",
+                  }}
                 >
-                  <LogOut size={16} />
-                  Cerrar sesión
-                </Link>
-              </>
-            )}
-            {!isExpanded && isHovered && (
+                  {(session?.user?.email?.[0] ?? "U").toUpperCase()}
+                </div>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <p
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 500,
+                      color: "#111111",
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    {session?.user?.email || "Usuario"}
+                  </p>
+                  <p
+                    style={{
+                      fontSize: 11,
+                      color: "#9A9A9A",
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    {(session?.user?.role as string) || "Cliente"}
+                  </p>
+                </div>
+              </div>
               <Link
                 href="/api/auth/signout"
-                className="flex items-center justify-center w-full p-2 text-sm hover:bg-[#E2E0DA] rounded-lg transition-colors text-[#9A9A9A]"
-                title="Sign out"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "7px 12px",
+                  borderRadius: 8,
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: "#9A9A9A",
+                  border: "1px solid #E5E3DF",
+                  textDecoration: "none",
+                  transition: "all 120ms ease",
+                }}
+                className="hover:bg-[#F7F6F3] hover:!text-[#111111]"
               >
-                <LogOut size={18} />
+                <LogOut size={14} />
+                Cerrar sesión
               </Link>
-            )}
-          </div>
+            </>
+          ) : (
+            <Link
+              href="/api/auth/signout"
+              title="Cerrar sesión"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: 8,
+                borderRadius: 8,
+                color: "#9A9A9A",
+                textDecoration: "none",
+              }}
+              className="hover:bg-[#F7F6F3] hover:!text-[#111111]"
+            >
+              <LogOut size={16} />
+            </Link>
+          )}
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-auto flex flex-col bg-[#F1EFEA]">
-        {/* Topbar */}
-        <div className="sticky top-0 z-10 bg-white border-b border-[#E5E3DF] px-8 py-4 flex items-center justify-end gap-3 shadow-sm">
+      {/* ── Main content ── */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Top bar */}
+        <header
+          style={{
+            height: 56,
+            backgroundColor: "#FFFFFF",
+            borderBottom: "1px solid #E5E3DF",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end",
+            padding: "0 32px",
+            gap: 12,
+            position: "sticky",
+            top: 0,
+            zIndex: 10,
+          }}
+        >
           <NotificationBell />
-        </div>
-        <div className="p-8 w-full">
+        </header>
+
+        {/* Page content */}
+        <main className="flex-1 overflow-auto" style={{ padding: 32 }}>
           <AuthSessionProvider>{children}</AuthSessionProvider>
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }

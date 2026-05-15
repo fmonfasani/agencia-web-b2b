@@ -96,7 +96,7 @@ export async function getBillingData(
     const session = await auth();
     if (!session?.user) return null;
 
-    const apiKey = (session.user as any)?.apiKey as string | undefined;
+    const apiKey = session?.apiKey;
     if (!apiKey) return null;
 
     const userRole =

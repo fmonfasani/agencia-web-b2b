@@ -83,7 +83,7 @@ export default async function AdminDashboard({
   const session = await auth();
   if (!session?.user) redirect(`/${locale}/auth/sign-in`);
 
-  const apiKey = (session.user as any)?.apiKey as string | undefined;
+  const apiKey = session?.apiKey;
 
   let stats: AdminGlobalStats = {
     total_tenants: 0,

@@ -24,6 +24,7 @@ const ICONS: Record<string, React.ElementType> = {
   ShieldCheck: LucideIcons.ShieldCheck,
   Palette: LucideIcons.Palette,
   BrainCircuit: LucideIcons.BrainCircuit,
+  LayoutGrid: LucideIcons.LayoutGrid,
 };
 
 interface NavItemProps {
@@ -40,39 +41,58 @@ export default function SidebarNavItem({
   isLocked = false,
 }: NavItemProps) {
   const pathname = usePathname();
-  const isActive = pathname === href;
+  const isActive =
+    pathname === href || (href !== "#" && pathname.startsWith(href));
   const Icon = ICONS[iconName] || LucideIcons.HelpCircle;
 
   return (
-    <div className="relative group px-1">
-      <Link
-        href={isLocked ? "#" : href}
-        className={`flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
-          isActive
-            ? "bg-white/10 text-white shadow-sm font-bold"
-            : isLocked
-              ? "text-slate-500 cursor-not-allowed opacity-60"
-              : "text-slate-400 hover:text-white hover:bg-white/5"
-        }`}
-      >
-        <div className="flex items-center gap-3">
-          <Icon
-            size={16}
-            className={
-              isActive
-                ? "text-white"
-                : "text-slate-500 group-hover:text-white transition-colors"
-            }
-          />
-          <span className="truncate">{label}</span>
-        </div>
+    <Link
+      href={isLocked ? "#" : href}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 8,
+        padding: "7px 12px",
+        borderRadius: 8,
+        fontSize: 13,
+        fontWeight: isActive ? 600 : 400,
+        color: isActive ? "#475569" : isLocked ? "#C4C4C4" : "#6F6F6F",
+        backgroundColor: isActive ? "#F1F5F9" : "transparent",
+        borderLeft: isActive ? "3px solid #475569" : "3px solid transparent",
+        textDecoration: "none",
+        transition: "all 120ms ease",
+        cursor: isLocked ? "not-allowed" : "pointer",
+        opacity: isLocked ? 0.5 : 1,
+      }}
+      className={
+        !isLocked && !isActive ? "hover:bg-[#F7F6F3] hover:!text-[#111111]" : ""
+      }
+      onClick={(e) => isLocked && e.preventDefault()}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <Icon
+          size={15}
+          strokeWidth={isActive ? 2 : 1.5}
+          style={{
+            flexShrink: 0,
+            color: isActive ? "#475569" : "currentColor",
+          }}
+        />
+        <span
+          style={{
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {label}
+        </span>
+      </div>
 
-        {isLocked && (
-          <div className="flex items-center gap-1 opacity-40 group-hover:opacity-100 transition-opacity">
-            <Lock size={12} className="text-slate-500" />
-          </div>
-        )}
-      </Link>
-    </div>
+      {isLocked && (
+        <Lock size={11} style={{ color: "#C4C4C4", flexShrink: 0 }} />
+      )}
+    </Link>
   );
 }
