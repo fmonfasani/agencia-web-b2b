@@ -1,4 +1,3 @@
-
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import PainPoints from "@/components/PainPoints";
@@ -37,7 +36,7 @@ export default async function Home({
   setRequestLocale(locale);
 
   return (
-    <main className="min-h-screen">
+    <main className="landing min-h-screen">
       <Header />
       <Hero />
       <PainPoints />

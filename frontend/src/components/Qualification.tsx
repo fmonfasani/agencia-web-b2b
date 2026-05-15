@@ -1,76 +1,38 @@
-"use client";
-import React from "react";
-import { ThumbsUp, ThumbsDown, CheckCircle2, XCircle } from "lucide-react";
-import { motion } from "framer-motion";
-import { useTranslations } from "next-intl";
-
-const Qualification = () => {
-  // Hook para acceder a las traducciones del namespace 'Qualification'
-  const t = useTranslations("Qualification");
-
+export default function Qualification() {
   return (
-    <section className="section-padding bg-white">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-24">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="p-10 rounded-3xl bg-primary/[0.02] border border-primary/5 shadow-premium"
-          >
-            <h3 className="text-xl font-bold text-text-main mb-8 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center">
-                <ThumbsUp className="text-green-600" size={18} />
-              </div>
-              {t("good.title")}
-            </h3>
-            <ul className="space-y-6">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <li key={i} className="flex gap-4">
-                  <CheckCircle2
-                    className="text-green-500 shrink-0 mt-0.5"
-                    size={18}
-                    strokeWidth={2.5}
-                  />
-                  <span className="text-text-secondary text-[15px] font-medium leading-relaxed">
-                    {t(`good.items.${i}`)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </motion.div>
+    <section id="final-cta" className="bg-[#1A2B4A] text-white py-24 md:py-32">
+      <div className="max-w-[960px] mx-auto px-6 sm:px-10 text-center">
+        <h2 className="text-white mb-10">
+          ¿Listo para tu{" "}
+          <em className="not-italic text-[#4DB8E8]">transformación digital</em>?
+        </h2>
 
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="p-10 rounded-3xl bg-slate-50/50 border border-slate-100/50 shadow-premium"
-          >
-            <h3 className="text-xl font-bold text-text-main mb-8 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center">
-                <ThumbsDown className="text-red-500" size={18} />
-              </div>
-              {t("bad.title")}
-            </h3>
-            <ul className="space-y-6">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <li key={i} className="flex gap-4">
-                  <XCircle
-                    className="text-red-400 shrink-0 mt-0.5"
-                    size={18}
-                    strokeWidth={2.5}
-                  />
-                  <span className="text-text-secondary text-[15px] font-medium leading-relaxed">
-                    {t(`bad.items.${i}`)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </motion.div>
+        <div className="bg-[#162444] border-2 border-[#2A3D6A] rounded-2xl p-8 md:p-12 grid grid-cols-1 md:grid-cols-[200px_1fr] gap-8 md:gap-12 items-center text-left">
+          <div className="bg-[#0F9AD4] rounded-2xl p-8 text-center">
+            <div className="text-6xl md:text-7xl font-black leading-none tracking-tighter">
+              15
+            </div>
+            <div className="text-base md:text-lg font-semibold mt-2 opacity-95">
+              minutos
+            </div>
+          </div>
+          <div className="text-center md:text-left">
+            <h3 className="text-white mb-3">Diagnóstico gratuito</h3>
+            <p className="text-base text-white/80 mb-6 leading-relaxed">
+              En 15 minutos te armamos un roadmap personalizado con presupuesto
+              y tiempos. Sin compromiso, sin vueltas.
+            </p>
+            <a
+              href="https://calendly.com/webshooks"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block bg-white text-[#1A2B4A] px-8 py-3.5 rounded-lg font-bold text-base hover:bg-[#4DB8E8] hover:text-white hover:-translate-y-0.5 transition-all"
+            >
+              Agendar cita gratuita →
+            </a>
+          </div>
         </div>
       </div>
     </section>
   );
-};
-
-export default Qualification;
+}
