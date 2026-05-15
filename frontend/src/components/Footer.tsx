@@ -9,7 +9,9 @@ export default function Footer() {
       <div className="max-w-[1440px] mx-auto px-6 sm:px-10 lg:px-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-10 lg:gap-16 mb-12">
           <div className="flex flex-col gap-4">
-            <div className="text-2xl font-black text-white">webshooks</div>
+            <div className="text-2xl font-black text-white">
+              webshooks<span className="text-[#F97316]">.</span>
+            </div>
             <div className="text-sm leading-relaxed max-w-[280px]">
               Transformamos negocios locales en operaciones digitales con IA.
               Presencia digital, automatización y agentes inteligentes en 14

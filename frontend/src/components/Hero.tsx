@@ -52,7 +52,7 @@ const COLUMN_RIGHT: Card[] = [
   },
   {
     kind: "stat",
-    gradient: "linear-gradient(135deg, #5b5fef 0%, #4a4ed8 100%)",
+    gradient: "linear-gradient(135deg, #F97316 0%, #EA580C 100%)",
     stat: "80%",
     label: "automatización",
   },
@@ -147,7 +147,7 @@ export default function Hero() {
           >
             <span
               className="w-2 h-2 rounded-full"
-              style={{ background: "#5b5fef" }}
+              style={{ background: "#F97316" }}
             />
             Transformación digital · LATAM · IA
           </div>
@@ -162,7 +162,7 @@ export default function Hero() {
           >
             Iniciá tu
             <br />
-            <span style={{ color: "#5b5fef" }}>transformación digital</span>
+            <span style={{ color: "#F97316" }}>transformación digital</span>
             <br />
             con nosotros.
           </h1>
@@ -176,7 +176,7 @@ export default function Hero() {
           <div className="flex flex-wrap items-center gap-5">
             <a
               href="#final-cta"
-              className="inline-block bg-[#5b5fef] hover:bg-[#4a4ed8] text-white px-9 py-[18px] rounded-xl text-base font-semibold transition-all hover:-translate-y-0.5 shadow-[0_8px_24px_rgba(91,95,239,0.3)] hover:shadow-[0_12px_32px_rgba(91,95,239,0.4)]"
+              className="inline-block bg-[#F97316] hover:bg-[#EA580C] text-white px-9 py-[18px] rounded-xl text-base font-semibold transition-all hover:-translate-y-0.5 shadow-[0_8px_24px_rgba(249,115,22,0.3)] hover:shadow-[0_12px_32px_rgba(249,115,22,0.4)]"
             >
               Agendar cita gratuita
             </a>
