@@ -442,4 +442,27 @@
       transparent 100%
     );
   }
+
+  @keyframes landing-bounce-up {
+    0% {
+      transform: translateY(0);
+    }
+    100% {
+      transform: translateY(-140px);
+    }
+  }
+  @keyframes landing-bounce-down {
+    0% {
+      transform: translateY(-140px);
+    }
+    100% {
+      transform: translateY(0);
+    }
+  }
+  .landing-bounce-up {
+    animation: landing-bounce-up 5s ease-in-out infinite alternate;
+  }
+  .landing-bounce-down {
+    animation: landing-bounce-down 5s ease-in-out infinite alternate;
+  }
 }

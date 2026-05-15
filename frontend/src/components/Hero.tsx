@@ -1,4 +1,113 @@
 /* eslint-disable @next/next/no-img-element */
+
+type Card =
+  | { kind: "stat"; gradient: string; stat: string; label: string }
+  | { kind: "photo"; src: string; alt: string; href: string };
+
+const COLUMN_LEFT: Card[] = [
+  {
+    kind: "stat",
+    gradient: "linear-gradient(135deg, #4fc3f7 0%, #29b6f6 100%)",
+    stat: "100%",
+    label: "personalizado",
+  },
+  {
+    kind: "photo",
+    src: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=480&h=360&fit=crop&auto=format",
+    alt: "Equipo trabajando",
+    href: "https://luzguffanti.com",
+  },
+  {
+    kind: "stat",
+    gradient: "linear-gradient(135deg, #66bb6a 0%, #4caf50 100%)",
+    stat: "5+",
+    label: "demos en vivo",
+  },
+  {
+    kind: "photo",
+    src: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=480&h=360&fit=crop&auto=format",
+    alt: "Oficina",
+    href: "https://joaquin.webshooks.com",
+  },
+];
+
+const COLUMN_RIGHT: Card[] = [
+  {
+    kind: "photo",
+    src: "https://images.unsplash.com/photo-1556761175-b413da4baf72?w=480&h=360&fit=crop&auto=format",
+    alt: "Workspace moderno",
+    href: "https://valentino.webshooks.com",
+  },
+  {
+    kind: "stat",
+    gradient: "linear-gradient(135deg, #ffa726 0%, #ff9800 100%)",
+    stat: "14",
+    label: "días",
+  },
+  {
+    kind: "photo",
+    src: "https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=480&h=360&fit=crop&auto=format",
+    alt: "Equipo creativo",
+    href: "https://mateo.webshooks.com",
+  },
+  {
+    kind: "stat",
+    gradient: "linear-gradient(135deg, #5b5fef 0%, #4a4ed8 100%)",
+    stat: "80%",
+    label: "automatización",
+  },
+];
+
+function CardItem({ card }: { card: Card }) {
+  if (card.kind === "stat") {
+    return (
+      <div
+        className="rounded-2xl overflow-hidden flex flex-col justify-center items-center text-center text-white p-8 h-[200px]"
+        style={{ background: card.gradient }}
+      >
+        <div className="text-[56px] font-bold leading-none mb-2">
+          {card.stat}
+        </div>
+        <div className="text-base font-medium opacity-95">{card.label}</div>
+      </div>
+    );
+  }
+  return (
+    <a
+      href={card.href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="rounded-2xl overflow-hidden block transition-transform hover:scale-[1.02] h-[200px]"
+    >
+      <img
+        src={card.src}
+        alt={card.alt}
+        className="w-full h-full object-cover"
+      />
+    </a>
+  );
+}
+
+function BounceColumn({
+  cards,
+  direction,
+}: {
+  cards: Card[];
+  direction: "up" | "down";
+}) {
+  const animClass =
+    direction === "up" ? "landing-bounce-up" : "landing-bounce-down";
+  return (
+    <div className="relative h-[580px] overflow-hidden">
+      <div className={`flex flex-col gap-4 ${animClass}`}>
+        {cards.map((card, i) => (
+          <CardItem key={i} card={card} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function Hero() {
   return (
     <section
@@ -21,80 +130,10 @@ export default function Hero() {
       </div>
 
       <div className="relative z-10 w-full max-w-[1440px] mx-auto flex flex-col lg:flex-row items-center gap-10 lg:gap-20">
-        {/* Bento grid: static 2x3 */}
-        <div className="grid grid-cols-2 grid-rows-3 gap-4 w-full max-w-[480px] h-[580px] shrink-0">
-          {/* Row 1: photo | blue stat */}
-          <a
-            href="https://luzguffanti.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-2xl overflow-hidden block transition-transform hover:scale-[1.02]"
-          >
-            <img
-              src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=300&fit=crop&auto=format"
-              alt="Equipo trabajando"
-              className="w-full h-full object-cover"
-            />
-          </a>
-          <div
-            className="rounded-2xl overflow-hidden flex flex-col justify-center items-center text-center text-white p-8"
-            style={{
-              background: "linear-gradient(135deg, #4fc3f7 0%, #29b6f6 100%)",
-            }}
-          >
-            <div className="text-[56px] font-bold leading-none mb-2">100%</div>
-            <div className="text-base font-medium opacity-95">
-              personalizado
-            </div>
-          </div>
-
-          {/* Row 2: green stat | photo */}
-          <div
-            className="rounded-2xl overflow-hidden flex flex-col justify-center items-center text-center text-white p-8"
-            style={{
-              background: "linear-gradient(135deg, #66bb6a 0%, #4caf50 100%)",
-            }}
-          >
-            <div className="text-[56px] font-bold leading-none mb-2">5+</div>
-            <div className="text-base font-medium opacity-95">
-              demos en vivo
-            </div>
-          </div>
-          <a
-            href="https://valentino.webshooks.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-2xl overflow-hidden block transition-transform hover:scale-[1.02]"
-          >
-            <img
-              src="https://images.unsplash.com/photo-1556761175-b413da4baf72?w=400&h=300&fit=crop&auto=format"
-              alt="Workspace moderno"
-              className="w-full h-full object-cover"
-            />
-          </a>
-
-          {/* Row 3: photo | orange stat */}
-          <a
-            href="https://joaquin.webshooks.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-2xl overflow-hidden block transition-transform hover:scale-[1.02]"
-          >
-            <img
-              src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&h=300&fit=crop&auto=format"
-              alt="Oficina"
-              className="w-full h-full object-cover"
-            />
-          </a>
-          <div
-            className="rounded-2xl overflow-hidden flex flex-col justify-center items-center text-center text-white p-8"
-            style={{
-              background: "linear-gradient(135deg, #ffa726 0%, #ff9800 100%)",
-            }}
-          >
-            <div className="text-[56px] font-bold leading-none mb-2">14</div>
-            <div className="text-base font-medium opacity-95">días</div>
-          </div>
+        {/* Two bouncing columns: left starts up, right starts down */}
+        <div className="grid grid-cols-2 gap-4 w-full max-w-[480px] shrink-0">
+          <BounceColumn cards={COLUMN_LEFT} direction="up" />
+          <BounceColumn cards={COLUMN_RIGHT} direction="down" />
         </div>
 
         {/* Hero content */}
