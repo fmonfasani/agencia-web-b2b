@@ -176,7 +176,7 @@ export default function Hero() {
           <div className="flex flex-wrap items-center gap-5">
             <a
               href="#final-cta"
-              className="inline-block bg-[#F97316] hover:bg-[#EA580C] text-white px-9 py-[18px] rounded-xl text-base font-semibold transition-all hover:-translate-y-0.5 shadow-[0_8px_24px_rgba(249,115,22,0.3)] hover:shadow-[0_12px_32px_rgba(249,115,22,0.4)]"
+              className="inline-block bg-[#1F2937] hover:bg-[#111827] text-white px-9 py-[18px] rounded-xl text-base font-semibold transition-all hover:-translate-y-0.5 shadow-[0_8px_24px_rgba(17,24,39,0.3)] hover:shadow-[0_12px_32px_rgba(17,24,39,0.4)]"
             >
               Agendar cita gratuita
             </a>
