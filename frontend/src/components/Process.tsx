@@ -1,10 +1,8 @@
-const LOGOS = [
-  "Luz Guffanti",
-  "Ana Murat\nReiki",
-  "Bit&Byte\nElectrónica",
-  "Querida\nPampa",
-  "Zapatería\nPremium",
-  "+ Tu negocio",
+const PORTFOLIO = [
+  { name: "Luz Guffanti", url: "https://luzguffanti.com" },
+  { name: "Mateo", url: "https://mateo.webshooks.com" },
+  { name: "Valentino", url: "https://valentino.webshooks.com" },
+  { name: "Joaquín", url: "https://joaquin.webshooks.com" },
 ];
 
 const STORIES = [
@@ -45,23 +43,35 @@ const STORIES = [
 export default function Process() {
   return (
     <>
-      {/* Customer Logos */}
+      {/* Portfolio Marquee */}
       <div
         id="customers"
-        className="bg-white border-t border-black/[0.08] py-20"
+        className="bg-white border-t border-black/[0.08] py-16 overflow-hidden"
       >
-        <div className="max-w-[1440px] mx-auto px-6 sm:px-10 lg:px-20">
-          <div className="text-center text-[13px] font-semibold text-[#6B7A8D] opacity-70 mb-8">
-            Ellos ya dieron el salto digital con webshooks
+        <div className="max-w-[1440px] mx-auto px-6 sm:px-10 lg:px-20 mb-8">
+          <div className="text-center text-[13px] font-semibold text-[#6B7A8D] opacity-70">
+            Portfolio · Ellos ya dieron el salto digital con webshooks
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-6">
-            {LOGOS.map((label, i) => (
-              <div
+        </div>
+        <div className="relative w-full overflow-hidden">
+          <div
+            className="flex gap-16 landing-ticker-track"
+            style={{ width: "max-content" }}
+          >
+            {[...PORTFOLIO, ...PORTFOLIO, ...PORTFOLIO].map((site, i) => (
+              <a
                 key={i}
-                className="border border-black/[0.08] p-8 flex items-center justify-center text-[15px] font-semibold text-[#6B7A8D] text-center transition-all hover:text-[#1A2B4A] hover:bg-[#EAF6FC] hover:border-[#0F9AD4] cursor-pointer whitespace-pre-line"
+                href={site.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 px-8 py-4 text-2xl font-black text-[#9CA3AF] grayscale hover:grayscale-0 hover:text-[#1A2B4A] transition-all whitespace-nowrap shrink-0 group"
               >
-                {label}
-              </div>
+                <span className="w-3 h-3 rounded-full bg-[#9CA3AF] group-hover:bg-[#4F46E5] transition-colors" />
+                {site.name}
+                <span className="text-sm font-medium text-[#9CA3AF] group-hover:text-[#4F46E5] transition-colors">
+                  ↗
+                </span>
+              </a>
             ))}
           </div>
         </div>

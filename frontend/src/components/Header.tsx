@@ -35,7 +35,7 @@ export default function Header() {
           <li>
             <a
               href="#final-cta"
-              className="inline-block bg-[#0F9AD4] hover:bg-[#4DB8E8] text-white px-6 py-3 rounded-lg text-[15px] font-semibold transition-all hover:-translate-y-0.5"
+              className="inline-block bg-[#4F46E5] hover:bg-[#6366F1] text-white px-6 py-3 rounded-lg text-[15px] font-semibold transition-all hover:-translate-y-0.5"
             >
               Agendar cita gratuita
             </a>
@@ -44,13 +44,13 @@ export default function Header() {
         <div className="md:hidden flex items-center gap-3">
           <Link
             href="/es/auth/sign-in"
-            className="text-sm font-medium text-[#6B7A8D] hover:text-[#0F9AD4] transition-colors"
+            className="text-sm font-medium text-[#6B7A8D] hover:text-[#4F46E5] transition-colors"
           >
             Login
           </Link>
           <a
             href="#final-cta"
-            className="inline-block bg-[#0F9AD4] text-white px-4 py-2 rounded-lg text-sm font-semibold"
+            className="inline-block bg-[#4F46E5] text-white px-4 py-2 rounded-lg text-sm font-semibold"
           >
             Agendar
           </a>

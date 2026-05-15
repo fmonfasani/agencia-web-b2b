@@ -102,7 +102,7 @@ export default function Hero() {
             <div className="flex flex-wrap gap-4 mt-2">
               <a
                 href="#final-cta"
-                className="inline-block bg-[#0F9AD4] hover:bg-[#4DB8E8] text-white px-6 py-3 rounded-lg text-[15px] font-semibold transition-all hover:-translate-y-0.5"
+                className="inline-block bg-[#4F46E5] hover:bg-[#6366F1] text-white px-6 py-3 rounded-lg text-[15px] font-semibold transition-all hover:-translate-y-0.5"
               >
                 Agendar cita gratuita
               </a>
