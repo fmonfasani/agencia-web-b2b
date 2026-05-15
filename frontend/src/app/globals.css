@@ -403,4 +403,43 @@
   .landing-ticker-track {
     animation: landing-ticker 28s linear infinite;
   }
+
+  @keyframes landing-marquee-up {
+    0% {
+      transform: translateY(0);
+    }
+    100% {
+      transform: translateY(-50%);
+    }
+  }
+  @keyframes landing-marquee-down {
+    0% {
+      transform: translateY(-50%);
+    }
+    100% {
+      transform: translateY(0);
+    }
+  }
+  .landing-marquee-up {
+    animation: landing-marquee-up 32s linear infinite;
+  }
+  .landing-marquee-down {
+    animation: landing-marquee-down 32s linear infinite;
+  }
+  .landing-marquee-mask {
+    mask-image: linear-gradient(
+      to bottom,
+      transparent 0%,
+      black 12%,
+      black 88%,
+      transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent 0%,
+      black 12%,
+      black 88%,
+      transparent 100%
+    );
+  }
 }
